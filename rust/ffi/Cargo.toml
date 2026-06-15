@@ -1,0 +1,21 @@
+[package]
+name = "mybriefcase-bookmarks-ffi"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+name = "mybriefcase_bookmarks_ffi"
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bindgen.rs"
+
+[dependencies]
+uniffi = { version = "0.28", features = ["cli", "bindgen"] }
+mybriefcase-bookmarks-core = { git = "https://github.com/johnspade/mybriefcase-bookmarks", rev = "4f69365" }
+autosurgeon = "0.9"
+tokio = { version = "1", features = ["rt-multi-thread"] }
+
+[build-dependencies]
+uniffi = { version = "0.28", features = ["build"] }

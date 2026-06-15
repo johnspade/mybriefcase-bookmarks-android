@@ -38,6 +38,7 @@ android {
 }
 
 dependencies {
+    implementation("net.java.dev.jna:jna:5.13.0@aar")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

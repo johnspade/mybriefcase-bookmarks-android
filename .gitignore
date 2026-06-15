@@ -13,3 +13,19 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Rust
+/rust/target/
+
+# Built native libraries (regenerated from rust/)
+/app/src/main/jniLibs/
+
+# Generated UniFFI bindings (regenerated from rust/)
+/app/src/main/java/uniffi/
+
+# Nix
+/result
+.direnv/
+
+# Cargo lock is committed for reproducible builds
+!/rust/Cargo.lock
