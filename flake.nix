@@ -80,6 +80,54 @@
         checks = nixpkgs.lib.getAttrs [ "x86_64-linux" ] self.checks;
       };
 
+      apps = forEachSupportedSystem ({ pkgs, ... }:
+        let
+          nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
+            toolchain.default.override {
+              extensions = [ "miri" "rust-src" ];
+            }
+          );
+        in {
+        miri = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "miri" ''
+            set -euo pipefail
+            export PATH="${nightlyToolchain}/bin:$PATH"
+            cargo miri test --manifest-path rust/Cargo.toml
+          '');
+        };
+
+        gradle-lint = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "gradle-lint" ''
+            set -euo pipefail
+            ./gradlew lint
+          '');
+        };
+
+        gradle-test = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "gradle-test" ''
+            set -euo pipefail
+            ./gradlew testDebugUnitTest
+          '');
+        };
+
+        validate = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "validate" ''
+            exec nix develop --command validate
+          '');
+        };
+
+        validate-all = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "validate-all" ''
+            exec nix develop --command validate-all
+          '');
+        };
+      });
+
       devShells = forEachSupportedSystem ({ pkgs, ... }:
         let
           nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
@@ -114,6 +162,14 @@
             gradle-test
             echo "==> All validations passed!"
           '';
+
+          validate-all = pkgs.writeShellScriptBin "validate-all" ''
+            set -euo pipefail
+            validate
+            echo "==> Running Miri..."
+            miri
+            echo "==> All validations (including Miri) passed!"
+          '';
         in {
         default = pkgs.mkShell {
           packages = with pkgs; [
@@ -124,6 +180,7 @@
             gradle-test
             miri
             validate
+            validate-all
           ];
 
           shellHook = ''

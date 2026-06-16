@@ -12,7 +12,14 @@ Use `!` after the type for breaking changes: `feat!: remove legacy endpoint`.
 
 ## Before Committing
 
-Run `validate` before committing. All checks must pass — CI will reject the PR otherwise. This runs: Nix flake checks (Rust fmt, clippy, test, deny, audit, doc), Android lint, and Android unit tests.
+Run `validate` before committing. All checks must pass — CI will reject the PR otherwise.
+
+Two validation tiers:
+
+| Command | What it runs |
+|---------|-------------|
+| `validate` | `nix flake check` + `gradle-lint` + `gradle-test` (fast, pre-commit) |
+| `validate-all` | `validate` + `miri` (full CI equivalent) |
 
 Individual steps:
 
