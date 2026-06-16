@@ -63,10 +63,9 @@
         checks = nixpkgs.lib.getAttrs [ "x86_64-linux" ] self.checks;
       };
 
-      apps = forEachSupportedSystem ({ pkgs, ... }: {
-        validate = {
-          type = "app";
-          program = toString (pkgs.writeShellScript "validate" ''
+      devShells = forEachSupportedSystem ({ pkgs, ... }:
+        let
+          validate = pkgs.writeShellScriptBin "validate" ''
             set -euo pipefail
             echo "==> Nix flake checks (Rust fmt, clippy, test)..."
             nix flake check --keep-going
@@ -75,16 +74,14 @@
             echo "==> Android unit tests..."
             ./gradlew testDebugUnitTest
             echo "==> All validations passed!"
-          '');
-        };
-      });
-
-      devShells = forEachSupportedSystem ({ pkgs, ... }: {
+          '';
+        in {
         default = pkgs.mkShell {
           packages = with pkgs; [
             rustToolchain
             cargo-ndk
             rust-analyzer
+            validate
           ];
 
           shellHook = ''
