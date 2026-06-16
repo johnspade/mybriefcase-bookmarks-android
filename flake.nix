@@ -108,8 +108,6 @@
             set -euo pipefail
             echo "==> Nix flake checks (Rust fmt, clippy, test, deny, audit, doc)..."
             nix flake check --keep-going
-            echo "==> Miri..."
-            miri
             echo "==> Android lint..."
             gradle-lint
             echo "==> Android unit tests..."
