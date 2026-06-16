@@ -20,17 +20,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,11 +61,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import dev.jspade.mybriefcase.bookmarks.ui.search.displayName
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
 import uniffi.mybriefcase_bookmarks_ffi.BreadcrumbDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderItemDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
+import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +75,7 @@ fun FolderScreen(
     viewModel: FolderViewModel,
     onBookmarkClick: (String) -> Unit = {},
     onSettingsClick: () -> Unit = {},
+    onSearchClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -171,6 +179,12 @@ fun FolderScreen(
                         }
                     },
                     actions = {
+                        IconButton(
+                            onClick = onSearchClick,
+                            modifier = Modifier.testTag("search_button"),
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = "Search")
+                        }
                         Box {
                             IconButton(
                                 onClick = { showOverflowMenu = true },
@@ -261,6 +275,8 @@ fun FolderScreen(
                         breadcrumbs = uiState.breadcrumbs,
                         folders = uiState.folders,
                         bookmarks = uiState.bookmarks,
+                        sortOrder = uiState.sortOrder,
+                        showSyncBanner = uiState.showSyncBanner,
                         onFolderClick = { viewModel.navigateToFolder(it) },
                         onBookmarkClick = onBookmarkClick,
                         onBookmarkLongClick = { bookmarkId ->
@@ -282,6 +298,8 @@ fun FolderScreen(
                             contextMenuBookmarkId = null
                             showDeleteConfirmation = bookmarkId
                         },
+                        onSortChange = { viewModel.setSortOrder(it) },
+                        onDismissSyncBanner = { viewModel.dismissSyncBanner() },
                         modifier = Modifier.padding(innerPadding),
                     )
                 }
@@ -359,6 +377,8 @@ private fun FolderContent(
     breadcrumbs: List<BreadcrumbDto>,
     folders: List<FolderItemDto>,
     bookmarks: List<BookmarkItemDto>,
+    sortOrder: SortOrder,
+    showSyncBanner: Boolean,
     onFolderClick: (String) -> Unit,
     onBookmarkClick: (String) -> Unit,
     onBookmarkLongClick: (String) -> Unit,
@@ -371,13 +391,27 @@ private fun FolderContent(
     onDismissContextMenu: () -> Unit,
     onEditBookmark: (String) -> Unit,
     onDeleteBookmark: (String) -> Unit,
+    onSortChange: (SortOrder) -> Unit,
+    onDismissSyncBanner: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
+        // Sync banner
+        if (showSyncBanner) {
+            SyncBanner(onDismiss = onDismissSyncBanner)
+        }
+
         // Breadcrumbs
         if (breadcrumbs.size > 1) {
             BreadcrumbBar(breadcrumbs = breadcrumbs, onClick = onBreadcrumbClick)
         }
+
+        // Sort chip
+        FolderSortChip(
+            currentSort = sortOrder,
+            onSortChange = onSortChange,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        )
 
         if (folders.isEmpty() && bookmarks.isEmpty()) {
             // Empty state
@@ -540,6 +574,68 @@ private fun BookmarkListItem(
             onLongClick = onLongClick,
         ),
     )
+}
+
+@Composable
+private fun SyncBanner(onDismiss: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .testTag("sync_banner"),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "To sync with other devices, add this folder to Syncthing-Fork",
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.weight(1f),
+            )
+            IconButton(onClick = onDismiss) {
+                Icon(Icons.Default.Close, contentDescription = "Dismiss")
+            }
+        }
+    }
+}
+
+@Composable
+private fun FolderSortChip(
+    currentSort: SortOrder,
+    onSortChange: (SortOrder) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier) {
+        FilterChip(
+            selected = true,
+            onClick = { expanded = true },
+            label = { Text(currentSort.displayName()) },
+            modifier = Modifier.testTag("folder_sort_chip"),
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+        ) {
+            SortOrder.entries.forEach { sort ->
+                DropdownMenuItem(
+                    text = { Text(sort.displayName()) },
+                    onClick = {
+                        onSortChange(sort)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
 }
 
 @Composable

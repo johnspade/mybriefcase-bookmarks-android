@@ -24,6 +24,9 @@ tokio = { version = "1", features = ["rt-multi-thread"] }
 
 [dev-dependencies]
 tempfile = "3"
+automerge = "0.7"
+automerge_repo = { version = "0.3", features = ["tokio"] }
+mybriefcase-bookmarks-core = { git = "https://github.com/johnspade/mybriefcase-bookmarks", rev = "4f69365" }
 
 [build-dependencies]
 uniffi = { version = "0.28", features = ["build"] }

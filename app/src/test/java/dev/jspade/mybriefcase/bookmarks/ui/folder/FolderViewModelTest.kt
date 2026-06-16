@@ -5,20 +5,28 @@ import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FolderViewModelTest {
+
+    @get:Rule
+    val tempFolder = TemporaryFolder()
 
     private val testDispatcher = StandardTestDispatcher()
     private lateinit var fakeRepo: FakeBookmarkRepository
@@ -255,6 +263,88 @@ class FolderViewModelTest {
         viewModel.uiState.test {
             val state = expectMostRecentItem()
             assertEquals("cannot move into descendant", state.error)
+        }
+    }
+
+    @Test
+    fun `polling calls merge at interval`() = runTest {
+        var mergeCallCount = 0
+        fakeRepo.onMergeCalled = { mergeCallCount++ }
+        val viewModel = FolderViewModel(
+            repository = fakeRepo,
+            ioDispatcher = testDispatcher,
+            pollIntervalMs = 1000L,
+        )
+        advanceUntilIdle()
+
+        viewModel.startPolling()
+
+        // Advance past first interval
+        advanceTimeBy(1100)
+        runCurrent()
+        assertEquals(1, mergeCallCount)
+
+        // Advance past second interval
+        advanceTimeBy(1100)
+        runCurrent()
+        assertEquals(2, mergeCallCount)
+
+        viewModel.stopPolling()
+        advanceTimeBy(1100)
+        runCurrent()
+        // No more calls after stop
+        assertEquals(2, mergeCallCount)
+    }
+
+    @Test
+    fun `sync banner shown when marker file missing`() = runTest {
+        val syncDir = tempFolder.newFolder("sync")
+        // No .bookmarks-sync file exists
+        val viewModel = FolderViewModel(
+            repository = fakeRepo,
+            ioDispatcher = testDispatcher,
+            syncDirPath = syncDir.absolutePath,
+        )
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertTrue(state.showSyncBanner)
+        }
+    }
+
+    @Test
+    fun `sync banner hidden when marker file exists`() = runTest {
+        val syncDir = tempFolder.newFolder("sync")
+        java.io.File(syncDir, ".bookmarks-sync").writeText("")
+        val viewModel = FolderViewModel(
+            repository = fakeRepo,
+            ioDispatcher = testDispatcher,
+            syncDirPath = syncDir.absolutePath,
+        )
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertFalse(state.showSyncBanner)
+        }
+    }
+
+    @Test
+    fun `dismissSyncBanner hides the banner`() = runTest {
+        val syncDir = tempFolder.newFolder("sync")
+        val viewModel = FolderViewModel(
+            repository = fakeRepo,
+            ioDispatcher = testDispatcher,
+            syncDirPath = syncDir.absolutePath,
+        )
+        advanceUntilIdle()
+
+        viewModel.dismissSyncBanner()
+
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertFalse(state.showSyncBanner)
         }
     }
 }

@@ -2,7 +2,9 @@ package dev.jspade.mybriefcase.bookmarks.ui.folder
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
@@ -15,6 +17,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -26,6 +29,9 @@ class FolderScreenTest {
 
     @get:Rule
     val composeTestRule = createComposeRule()
+
+    @get:Rule
+    val tempFolder = TemporaryFolder()
 
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var fakeRepo: FakeBookmarkRepository
@@ -114,5 +120,85 @@ class FolderScreenTest {
 
         // Folder tree header should be displayed
         composeTestRule.onNodeWithText("Folders").assertIsDisplayed()
+    }
+
+    @Test
+    fun `sync banner shown when sync dir has no marker`() {
+        val syncDir = tempFolder.newFolder("sync")
+        val viewModel = FolderViewModel(
+            repository = fakeRepo,
+            ioDispatcher = testDispatcher,
+            syncDirPath = syncDir.absolutePath,
+        )
+
+        composeTestRule.setContent {
+            FolderScreen(viewModel = viewModel)
+        }
+
+        composeTestRule.onNodeWithTag("sync_banner").assertIsDisplayed()
+        composeTestRule.onNodeWithText("To sync with other devices, add this folder to Syncthing-Fork")
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun `sync banner dismissible`() {
+        val syncDir = tempFolder.newFolder("sync")
+        val viewModel = FolderViewModel(
+            repository = fakeRepo,
+            ioDispatcher = testDispatcher,
+            syncDirPath = syncDir.absolutePath,
+        )
+
+        composeTestRule.setContent {
+            FolderScreen(viewModel = viewModel)
+        }
+
+        composeTestRule.onNodeWithTag("sync_banner").assertIsDisplayed()
+
+        // Dismiss
+        composeTestRule.onNode(hasContentDescription("Dismiss")).performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNode(hasTestTag("sync_banner")).assertDoesNotExist()
+    }
+
+    @Test
+    fun `sync banner not shown when marker file exists`() {
+        val syncDir = tempFolder.newFolder("sync")
+        java.io.File(syncDir, ".bookmarks-sync").writeText("")
+        val viewModel = FolderViewModel(
+            repository = fakeRepo,
+            ioDispatcher = testDispatcher,
+            syncDirPath = syncDir.absolutePath,
+        )
+
+        composeTestRule.setContent {
+            FolderScreen(viewModel = viewModel)
+        }
+
+        composeTestRule.onNode(hasTestTag("sync_banner")).assertDoesNotExist()
+    }
+
+    @Test
+    fun `search button is displayed`() {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+        composeTestRule.setContent {
+            FolderScreen(viewModel = viewModel)
+        }
+
+        composeTestRule.onNode(hasContentDescription("Search")).assertIsDisplayed()
+    }
+
+    @Test
+    fun `sort chip is displayed in folder view`() {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+        composeTestRule.setContent {
+            FolderScreen(viewModel = viewModel)
+        }
+
+        composeTestRule.onNodeWithTag("folder_sort_chip").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Name A-Z").assertIsDisplayed()
     }
 }

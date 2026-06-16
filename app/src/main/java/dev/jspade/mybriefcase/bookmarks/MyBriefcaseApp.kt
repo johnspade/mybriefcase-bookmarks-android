@@ -9,16 +9,20 @@ class MyBriefcaseApp : Application() {
     lateinit var repository: BookmarkRepository
         private set
 
+    lateinit var syncDir: String
+        private set
+
     override fun onCreate() {
         super.onCreate()
         instance = this
         repository = BookmarkRepositoryImpl()
 
         val dataDir = filesDir.absolutePath
-        val syncDir = resolveSyncDir()
+        syncDir = resolveSyncDir()
         val clientId = getOrCreateClientId()
 
         repository.initRepo(dataDir, syncDir, clientId)
+        SyncWorker.enqueue(this)
     }
 
     private fun resolveSyncDir(): String {

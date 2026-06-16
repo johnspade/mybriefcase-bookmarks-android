@@ -106,6 +106,12 @@ class FakeBookmarkRepository : BookmarkRepository {
     var getFolderChildrenCallCount = 0
     var getNavTreeCallCount = 0
 
+    // Search/sync callbacks (from PR #11)
+    var searchResults: List<BookmarkDto> = emptyList()
+    var lastSearchQuery: String? = null
+    var onSearchCalled: (() -> Unit)? = null
+    var onMergeCalled: (() -> Unit)? = null
+
     override fun initRepo(dataDir: String, syncDir: String, clientId: String) {}
     override fun shutdown() {}
 
@@ -196,7 +202,12 @@ class FakeBookmarkRepository : BookmarkRepository {
         moveItemThrow?.let { throw it }
         moveItemCalls.add(Triple(itemId, fromFolderId, toFolderId))
     }
-    override fun searchBookmarks(query: String, sortBy: SortOrder): List<BookmarkDto> = emptyList()
+
+    override fun searchBookmarks(query: String, sortBy: SortOrder): List<BookmarkDto> {
+        lastSearchQuery = query
+        onSearchCalled?.invoke()
+        return searchResults
+    }
 
     override fun importHtml(folderId: String, html: String): ImportResultDto {
         shouldThrow?.let { throw it }
@@ -209,5 +220,8 @@ class FakeBookmarkRepository : BookmarkRepository {
         return exportResult
     }
 
-    override fun triggerFullMerge(): Boolean = mergeResult
+    override fun triggerFullMerge(): Boolean {
+        onMergeCalled?.invoke()
+        return mergeResult
+    }
 }
