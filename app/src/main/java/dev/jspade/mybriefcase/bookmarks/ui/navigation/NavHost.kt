@@ -28,6 +28,8 @@ import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheet
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
+import dev.jspade.mybriefcase.bookmarks.ui.search.SearchScreen
+import dev.jspade.mybriefcase.bookmarks.ui.search.SearchViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.settings.SettingsScreen
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -35,6 +37,7 @@ import java.time.format.DateTimeFormatter
 
 private enum class Screen {
     FOLDER,
+    SEARCH,
     SETTINGS,
 }
 
@@ -102,6 +105,19 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     showDetailSheet = true
                 },
                 onSettingsClick = { currentScreen = Screen.SETTINGS },
+                onSearchClick = { currentScreen = Screen.SEARCH },
+                modifier = modifier,
+            )
+        }
+        Screen.SEARCH -> {
+            val searchViewModel: SearchViewModel = viewModel()
+            SearchScreen(
+                viewModel = searchViewModel,
+                onBookmarkClick = { bookmarkId ->
+                    folderViewModel.loadBookmarkDetail(bookmarkId)
+                    showDetailSheet = true
+                },
+                onBack = { currentScreen = Screen.FOLDER },
                 modifier = modifier,
             )
         }
