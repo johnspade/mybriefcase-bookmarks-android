@@ -1,9 +1,5 @@
 package dev.jspade.mybriefcase.bookmarks.ui.navigation
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -25,7 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
-import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheet
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchScreen
@@ -67,6 +64,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val uiState by folderViewModel.uiState.collectAsState()
 
     var showDetailSheet by remember { mutableStateOf(false) }
+    var showEditFromSearch by remember { mutableStateOf(false) }
 
     // SAF file picker for import
     val importLauncher = rememberLauncherForActivityResult(
@@ -100,10 +98,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         Screen.FOLDER -> {
             FolderScreen(
                 viewModel = folderViewModel,
-                onBookmarkClick = { bookmarkId ->
-                    folderViewModel.loadBookmarkDetail(bookmarkId)
-                    showDetailSheet = true
-                },
                 onSettingsClick = { currentScreen = Screen.SETTINGS },
                 onSearchClick = { currentScreen = Screen.SEARCH },
                 modifier = modifier,
@@ -149,9 +143,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         folderViewModel.clearImportResult()
     }
 
-    // Bookmark detail bottom sheet
+    // Bookmark detail bottom sheet (from search screen)
     if (showDetailSheet && uiState.selectedBookmark != null) {
-        BookmarkDetailSheet(
+        BookmarkDetailSheetWithActions(
             bookmark = uiState.selectedBookmark!!,
             onDismiss = {
                 showDetailSheet = false
@@ -159,23 +153,21 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             },
             onEdit = {
                 showDetailSheet = false
-                // Edit is handled in FolderScreen via the edit dialog trigger
+                showEditFromSearch = true
             },
-            onOpenInBrowser = { url ->
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                context.startActivity(intent)
+        )
+    }
+
+    if (showEditFromSearch && uiState.selectedBookmark != null) {
+        EditBookmarkDialog(
+            bookmark = uiState.selectedBookmark!!,
+            onDismiss = {
+                showEditFromSearch = false
+                folderViewModel.clearSelectedBookmark()
             },
-            onShare = { url ->
-                val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, url)
-                }
-                context.startActivity(Intent.createChooser(intent, "Share URL"))
-            },
-            onCopyUrl = { url ->
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("URL", url))
-                Toast.makeText(context, "URL copied", Toast.LENGTH_SHORT).show()
+            onConfirm = { url, title, notes ->
+                showEditFromSearch = false
+                folderViewModel.updateBookmark(uiState.selectedBookmark!!.id, url, title, notes)
             },
         )
     }

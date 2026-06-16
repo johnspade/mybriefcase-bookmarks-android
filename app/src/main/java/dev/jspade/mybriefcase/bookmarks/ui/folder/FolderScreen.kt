@@ -61,6 +61,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
 import dev.jspade.mybriefcase.bookmarks.ui.search.displayName
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
 import uniffi.mybriefcase_bookmarks_ffi.BreadcrumbDto
@@ -73,7 +74,6 @@ import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 @Composable
 fun FolderScreen(
     viewModel: FolderViewModel,
-    onBookmarkClick: (String) -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -95,6 +95,7 @@ fun FolderScreen(
     var contextMenuBookmarkId by remember { mutableStateOf<String?>(null) }
     var showDeleteConfirmation by remember { mutableStateOf<String?>(null) }
     var showEditDialog by remember { mutableStateOf(false) }
+    var showDetailSheet by remember { mutableStateOf(false) }
 
     // Folder CRUD Dialogs
     if (showCreateFolderDialog) {
@@ -278,7 +279,10 @@ fun FolderScreen(
                         sortOrder = uiState.sortOrder,
                         showSyncBanner = uiState.showSyncBanner,
                         onFolderClick = { viewModel.navigateToFolder(it) },
-                        onBookmarkClick = onBookmarkClick,
+                        onBookmarkClick = { bookmarkId ->
+                            viewModel.loadBookmarkDetail(bookmarkId)
+                            showDetailSheet = true
+                        },
                         onBookmarkLongClick = { bookmarkId ->
                             contextMenuBookmarkId = bookmarkId
                         },
@@ -337,6 +341,20 @@ fun FolderScreen(
             onConfirm = {
                 showDeleteConfirmation = null
                 viewModel.deleteBookmark(bookmarkId)
+            },
+        )
+    }
+
+    if (showDetailSheet && uiState.selectedBookmark != null) {
+        BookmarkDetailSheetWithActions(
+            bookmark = uiState.selectedBookmark!!,
+            onDismiss = {
+                showDetailSheet = false
+                viewModel.clearSelectedBookmark()
+            },
+            onEdit = {
+                showDetailSheet = false
+                showEditDialog = true
             },
         )
     }
