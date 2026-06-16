@@ -8,13 +8,17 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     crane.url = "github:ipetkov/crane";
+    advisory-db = {
+      url = "github:rustsec/advisory-db";
+      flake = false;
+    };
     nix-github-actions = {
       url = "github:nix-community/nix-github-actions";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, crane, nix-github-actions }:
+  outputs = { self, nixpkgs, rust-overlay, crane, advisory-db, nix-github-actions }:
     let
       supportedSystems = [ "x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin" ];
       forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
@@ -37,7 +41,8 @@
             src = ./rust;
             filter = path: type:
               (craneLib.filterCargoSources path type) ||
-              (builtins.match ".*\\.udl$" path != null);
+              (builtins.match ".*\\.udl$" path != null) ||
+              (builtins.match ".*deny\\.toml$" path != null);
           };
           commonArgs = {
             inherit src;
@@ -56,6 +61,18 @@
           test = craneLib.cargoTest (commonArgs // {
             inherit cargoArtifacts;
           });
+
+          deny = craneLib.cargoDeny { inherit src; };
+
+          audit = craneLib.cargoAudit {
+            inherit src advisory-db;
+          };
+
+          doc = craneLib.cargoDoc (commonArgs // {
+            inherit cargoArtifacts;
+            RUSTDOCFLAGS = "-D warnings";
+            cargoDocExtraArgs = "--no-deps";
+          });
         }
       );
 
@@ -65,6 +82,12 @@
 
       devShells = forEachSupportedSystem ({ pkgs, ... }:
         let
+          nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
+            toolchain.default.override {
+              extensions = [ "miri" "rust-src" ];
+            }
+          );
+
           gradle-lint = pkgs.writeShellScriptBin "gradle-lint" ''
             set -euo pipefail
             ./gradlew lint
@@ -75,10 +98,18 @@
             ./gradlew testDebugUnitTest
           '';
 
+          miri = pkgs.writeShellScriptBin "miri" ''
+            set -euo pipefail
+            export PATH="${nightlyToolchain}/bin:$PATH"
+            cargo miri test --manifest-path rust/Cargo.toml
+          '';
+
           validate = pkgs.writeShellScriptBin "validate" ''
             set -euo pipefail
-            echo "==> Nix flake checks (Rust fmt, clippy, test)..."
+            echo "==> Nix flake checks (Rust fmt, clippy, test, deny, audit, doc)..."
             nix flake check --keep-going
+            echo "==> Miri..."
+            miri
             echo "==> Android lint..."
             gradle-lint
             echo "==> Android unit tests..."
@@ -93,6 +124,7 @@
             rust-analyzer
             gradle-lint
             gradle-test
+            miri
             validate
           ];
 
