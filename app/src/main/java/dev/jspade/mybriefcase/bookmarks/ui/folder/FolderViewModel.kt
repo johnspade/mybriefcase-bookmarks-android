@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,7 @@ data class FolderUiState(
 
 class FolderViewModel(
     private val repository: BookmarkRepository = MyBriefcaseApp.instance.repository,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FolderUiState())
@@ -49,7 +51,7 @@ class FolderViewModel(
     }
 
     fun refresh() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             try {
                 val changed = repository.triggerFullMerge()
                 if (changed) {
@@ -63,7 +65,7 @@ class FolderViewModel(
     }
 
     private fun loadNavTree() {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             try {
                 val tree = repository.getFolderNavTree()
                 _uiState.value = _uiState.value.copy(navTree = tree)
@@ -78,7 +80,7 @@ class FolderViewModel(
     }
 
     private fun loadFolderContents(folderId: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(ioDispatcher) {
             try {
                 val children = repository.getFolderChildren(folderId, _uiState.value.sortOrder)
                 _uiState.value = _uiState.value.copy(
