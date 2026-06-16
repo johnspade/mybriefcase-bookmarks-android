@@ -15,10 +15,21 @@ class MyBriefcaseApp : Application() {
         repository = BookmarkRepositoryImpl()
 
         val dataDir = filesDir.absolutePath
-        val syncDir = SYNC_ROOT
+        val syncDir = resolveSyncDir()
         val clientId = getOrCreateClientId()
 
         repository.initRepo(dataDir, syncDir, clientId)
+    }
+
+    private fun resolveSyncDir(): String {
+        val external = java.io.File(SYNC_ROOT)
+        if ((external.exists() || external.mkdirs()) && external.canWrite()) {
+            return external.absolutePath
+        }
+        // Fall back to internal storage when external sync dir is inaccessible
+        val internal = java.io.File(filesDir, "sync")
+        internal.mkdirs()
+        return internal.absolutePath
     }
 
     override fun onTerminate() {
