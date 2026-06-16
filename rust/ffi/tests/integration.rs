@@ -291,7 +291,9 @@ fn search_by_url_substring() {
     let results =
         search_bookmarks("unique-url-search-test".to_string(), SortOrder::NameAsc).unwrap();
     assert!(
-        results.iter().any(|b| b.url == "https://unique-url-search-test.dev"),
+        results
+            .iter()
+            .any(|b| b.url == "https://unique-url-search-test.dev"),
         "search by URL substring should find the bookmark"
     );
 }
@@ -362,7 +364,10 @@ fn search_no_matches_returns_empty() {
         SortOrder::NameAsc,
     )
     .unwrap();
-    assert!(results.is_empty(), "search with no matches should return empty");
+    assert!(
+        results.is_empty(),
+        "search with no matches should return empty"
+    );
 }
 
 #[test]
@@ -399,7 +404,10 @@ fn search_results_sort_name_asc_and_desc() {
     let a_pos = titles.iter().position(|t| *t == "SortTestA").unwrap();
     let b_pos = titles.iter().position(|t| *t == "SortTestB").unwrap();
     let c_pos = titles.iter().position(|t| *t == "SortTestC").unwrap();
-    assert!(a_pos < b_pos && b_pos < c_pos, "NameAsc should sort A < B < C");
+    assert!(
+        a_pos < b_pos && b_pos < c_pos,
+        "NameAsc should sort A < B < C"
+    );
 
     // NameDesc
     let results = search_bookmarks("SortTest".to_string(), SortOrder::NameDesc).unwrap();
@@ -407,7 +415,10 @@ fn search_results_sort_name_asc_and_desc() {
     let a_pos = titles.iter().position(|t| *t == "SortTestA").unwrap();
     let b_pos = titles.iter().position(|t| *t == "SortTestB").unwrap();
     let c_pos = titles.iter().position(|t| *t == "SortTestC").unwrap();
-    assert!(c_pos < b_pos && b_pos < a_pos, "NameDesc should sort C < B < A");
+    assert!(
+        c_pos < b_pos && b_pos < a_pos,
+        "NameDesc should sort C < B < A"
+    );
 }
 
 #[test]
@@ -435,14 +446,26 @@ fn search_results_sort_date_asc_and_desc() {
 
     let asc = search_bookmarks("DateSort".to_string(), SortOrder::DateAsc).unwrap();
     let asc_titles: Vec<&str> = asc.iter().map(|b| b.title.as_str()).collect();
-    let first_pos = asc_titles.iter().position(|t| *t == "DateSortFirst").unwrap();
-    let second_pos = asc_titles.iter().position(|t| *t == "DateSortSecond").unwrap();
+    let first_pos = asc_titles
+        .iter()
+        .position(|t| *t == "DateSortFirst")
+        .unwrap();
+    let second_pos = asc_titles
+        .iter()
+        .position(|t| *t == "DateSortSecond")
+        .unwrap();
     assert!(first_pos < second_pos, "DateAsc should put earlier first");
 
     let desc = search_bookmarks("DateSort".to_string(), SortOrder::DateDesc).unwrap();
     let desc_titles: Vec<&str> = desc.iter().map(|b| b.title.as_str()).collect();
-    let first_pos = desc_titles.iter().position(|t| *t == "DateSortFirst").unwrap();
-    let second_pos = desc_titles.iter().position(|t| *t == "DateSortSecond").unwrap();
+    let first_pos = desc_titles
+        .iter()
+        .position(|t| *t == "DateSortFirst")
+        .unwrap();
+    let second_pos = desc_titles
+        .iter()
+        .position(|t| *t == "DateSortSecond")
+        .unwrap();
     assert!(second_pos < first_pos, "DateDesc should put later first");
 }
 

@@ -46,7 +46,7 @@ class SearchScreenTest {
 
     @Test
     fun `search input is displayed`() {
-        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
 
         composeTestRule.setContent {
             SearchScreen(viewModel = viewModel)
@@ -67,7 +67,7 @@ class SearchScreenTest {
                 updatedAt = "2024-01-01T00:00:00Z",
             )
         )
-        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
 
         composeTestRule.setContent {
             SearchScreen(viewModel = viewModel)
@@ -83,7 +83,7 @@ class SearchScreenTest {
     @Test
     fun `empty state shown for no matches`() {
         fakeRepo.searchResults = emptyList()
-        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
 
         composeTestRule.setContent {
             SearchScreen(viewModel = viewModel)
@@ -108,7 +108,7 @@ class SearchScreenTest {
                 updatedAt = "2024-01-01T00:00:00Z",
             )
         )
-        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
 
         composeTestRule.setContent {
             SearchScreen(viewModel = viewModel)
@@ -141,7 +141,7 @@ class SearchScreenTest {
                 updatedAt = "2024-01-01T00:00:00Z",
             )
         )
-        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
 
         composeTestRule.setContent {
             SearchScreen(viewModel = viewModel)

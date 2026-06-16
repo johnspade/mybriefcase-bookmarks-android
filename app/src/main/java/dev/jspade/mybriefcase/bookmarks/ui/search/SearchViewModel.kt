@@ -26,6 +26,7 @@ import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 class SearchViewModel(
     private val repository: BookmarkRepository = MyBriefcaseApp.instance.repository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    debounceMs: Long = 300L,
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
@@ -34,7 +35,7 @@ class SearchViewModel(
     private val _sortOrder = MutableStateFlow(SortOrder.NAME_ASC)
     val sortOrder: StateFlow<SortOrder> = _sortOrder.asStateFlow()
 
-    val searchResults: StateFlow<List<BookmarkDto>> = combine(_query.debounce(300), _sortOrder) { q, sort ->
+    val searchResults: StateFlow<List<BookmarkDto>> = combine(_query.debounce(debounceMs), _sortOrder) { q, sort ->
         q to sort
     }.flatMapLatest { (query, sort) ->
         if (query.isBlank()) flowOf(emptyList())
