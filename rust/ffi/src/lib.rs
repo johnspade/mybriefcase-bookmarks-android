@@ -1,12 +1,21 @@
 uniffi::setup_scaffolding!();
 
-mod bookmarks;
-mod folders;
-mod import_export;
-mod lifecycle;
-mod read;
-mod search;
-mod sync;
+pub mod bookmarks;
+pub mod folders;
+pub mod import_export;
+pub mod lifecycle;
+pub mod read;
+pub mod search;
+pub mod sync;
+
+// Re-export all FFI functions for integration tests
+pub use bookmarks::{add_bookmark, delete_bookmark, update_bookmark};
+pub use folders::{create_folder, delete_folder, move_item, rename_folder};
+pub use import_export::{export_html, import_html};
+pub use lifecycle::{init_repo, shutdown};
+pub use read::{get_bookmark, get_folder_children, get_folder_nav_tree};
+pub use search::search_bookmarks;
+pub use sync::trigger_full_merge;
 
 use automerge_repo::{DocHandle, RepoHandle};
 use autosurgeon::hydrate;
