@@ -65,14 +65,24 @@
 
       devShells = forEachSupportedSystem ({ pkgs, ... }:
         let
+          gradle-lint = pkgs.writeShellScriptBin "gradle-lint" ''
+            set -euo pipefail
+            ./gradlew lint
+          '';
+
+          gradle-test = pkgs.writeShellScriptBin "gradle-test" ''
+            set -euo pipefail
+            ./gradlew testDebugUnitTest
+          '';
+
           validate = pkgs.writeShellScriptBin "validate" ''
             set -euo pipefail
             echo "==> Nix flake checks (Rust fmt, clippy, test)..."
             nix flake check --keep-going
             echo "==> Android lint..."
-            ./gradlew lint
+            gradle-lint
             echo "==> Android unit tests..."
-            ./gradlew testDebugUnitTest
+            gradle-test
             echo "==> All validations passed!"
           '';
         in {
@@ -81,6 +91,8 @@
             rustToolchain
             cargo-ndk
             rust-analyzer
+            gradle-lint
+            gradle-test
             validate
           ];
 
