@@ -24,7 +24,15 @@ class MyBriefcaseApp : Application() {
     private fun resolveSyncDir(): String {
         val external = java.io.File(SYNC_ROOT)
         if ((external.exists() || external.mkdirs()) && external.canWrite()) {
-            return external.absolutePath
+            // Verify actual write access (canWrite() is unreliable with scoped storage)
+            val probe = java.io.File(external, ".probe")
+            try {
+                probe.writeText("ok")
+                probe.delete()
+                return external.absolutePath
+            } catch (_: Exception) {
+                // Fall through to internal storage
+            }
         }
         // Fall back to internal storage when external sync dir is inaccessible
         val internal = java.io.File(filesDir, "sync")
