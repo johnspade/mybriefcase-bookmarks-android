@@ -16,33 +16,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  rust-checks:
-    name: Rust checks
+  nix-checks:
+    name: Nix checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4aca1571f7d6 # v17
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
       - uses: DeterminateSystems/magic-nix-cache-action@908b263ff629f4cc17666315b7fd3ec127c6244d # v14
         with:
           use-flakehub: false
-      - name: Check formatting
-        run: nix develop --command cargo fmt --manifest-path rust/Cargo.toml -- --check
-      - name: Clippy
-        run: nix develop --command cargo clippy --manifest-path rust/Cargo.toml -- -D warnings
-      - name: Tests
-        run: nix develop --command cargo test --manifest-path rust/Cargo.toml
+      - run: nix flake check --keep-going
 
   android-checks:
     name: Android checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4
         with:
           distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
-      - name: Lint
-        run: ./gradlew lint
-      - name: Unit tests
-        run: ./gradlew testDebugUnitTest
+      - run: ./gradlew lint
+      - run: ./gradlew testDebugUnitTest
