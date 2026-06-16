@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dev.jspade.mybriefcase.bookmarks.ui.navigation.AppNavHost
 import dev.jspade.mybriefcase.bookmarks.ui.theme.MyBriefcaseBookmarksTheme
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 

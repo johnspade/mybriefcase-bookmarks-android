@@ -1185,6 +1185,7 @@ name = "mybriefcase-bookmarks-ffi"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "automerge",
  "automerge_repo",
  "autosurgeon",
  "mybriefcase-bookmarks-core",

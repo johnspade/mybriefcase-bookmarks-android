@@ -6,10 +6,12 @@ use mybriefcase_bookmarks_ffi::*;
 
 /// Initialize the repo singleton once for all tests in this module.
 /// Uses `std::sync::Once` to ensure it happens exactly once.
-fn ensure_initialized() {
+/// Returns the path to the sync directory for tests that need to simulate peers.
+fn ensure_initialized() -> &'static str {
     use std::sync::Once;
     static INIT: Once = Once::new();
     static mut DATA_DIR: Option<tempfile::TempDir> = None;
+    static mut SYNC_DIR: Option<String> = None;
 
     INIT.call_once(|| {
         let tmp = tempfile::tempdir().unwrap();
@@ -18,18 +20,23 @@ fn ensure_initialized() {
         std::fs::create_dir_all(&data_dir).unwrap();
         std::fs::create_dir_all(&sync_dir).unwrap();
 
+        let sync_dir_str = sync_dir.to_str().unwrap().to_string();
+
         init_repo(
             data_dir.to_str().unwrap().to_string(),
-            sync_dir.to_str().unwrap().to_string(),
+            sync_dir_str.clone(),
             "test-android-client".to_string(),
         )
         .unwrap();
 
         // Keep tempdir alive for the process lifetime
         unsafe {
+            SYNC_DIR = Some(sync_dir_str);
             DATA_DIR = Some(tmp);
         }
     });
+
+    unsafe { SYNC_DIR.as_ref().unwrap() }
 }
 
 #[test]
@@ -797,5 +804,77 @@ fn move_item_into_self_or_descendant_returns_error() {
     assert!(
         result.is_err(),
         "moving folder into its own descendant should return error"
+    );
+}
+
+// ── trigger_full_merge tests ────────────────────────────────────────────────
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn trigger_full_merge_picks_up_peer_bookmark_and_returns_true() {
+    let sync_dir = ensure_initialized();
+    let sync_path = std::path::Path::new(sync_dir);
+
+    // Get the current doc state from the singleton by reading its export
+    let own_snapshot = sync_path
+        .join("test-android-client")
+        .join("store")
+        .join("document.snapshot");
+    let base_data = std::fs::read(&own_snapshot).unwrap();
+
+    // Create a peer doc that forks from the current state and adds a bookmark
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    let peer_store = tempfile::tempdir().unwrap();
+    let peer_doc = rt.block_on(async {
+        let store = automerge_repo::tokio::FsStorage::open(peer_store.path()).unwrap();
+        let repo = automerge_repo::Repo::new(Some("peer-device".to_string()), Box::new(store));
+        let repo_handle = repo.run();
+        let doc = repo_handle.new_document();
+
+        // Load the base document state into the peer
+        doc.with_doc_mut(|d| {
+            let mut base = automerge::Automerge::load(&base_data).unwrap();
+            d.merge(&mut base).unwrap();
+        });
+        doc
+    });
+
+    // Add a bookmark via the core ops on the peer doc
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let target_folder_id = root_children.folders[0].id.clone();
+
+    mybriefcase_bookmarks_core::ops::add_bookmark(
+        &peer_doc,
+        &target_folder_id,
+        "https://from-peer.example.com",
+        "Peer Bookmark",
+    )
+    .unwrap();
+
+    // Export the peer doc to the sync directory
+    mybriefcase_bookmarks_core::repo::export_doc_to_shared(&peer_doc, sync_path, "peer-device");
+
+    // Now trigger_full_merge should find the peer's data and return true
+    let changed = trigger_full_merge().unwrap();
+    assert!(
+        changed,
+        "trigger_full_merge should return true when peer has new data"
+    );
+
+    // Verify the peer's bookmark is now visible via the FFI
+    let results = search_bookmarks("Peer Bookmark".to_string(), SortOrder::NameAsc).unwrap();
+    assert!(
+        results.iter().any(|b| b.title == "Peer Bookmark"),
+        "peer's bookmark should be visible after merge"
+    );
+
+    // Clean up peer directory and call again — should return false
+    std::fs::remove_dir_all(sync_path.join("peer-device")).unwrap();
+    let changed_again = trigger_full_merge().unwrap();
+    assert!(
+        !changed_again,
+        "trigger_full_merge should return false when no peer data exists"
     );
 }
