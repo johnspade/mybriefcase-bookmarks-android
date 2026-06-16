@@ -247,6 +247,205 @@ fn get_bookmark_deleted_returns_none() {
     assert!(result.is_none());
 }
 
+// ── Search tests ────────────────────────────────────────────────────────────
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn search_by_title_substring() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    add_bookmark(
+        folder_id.clone(),
+        "https://search-title.com".to_string(),
+        "UniqueSearchTitle".to_string(),
+    )
+    .unwrap();
+
+    let results = search_bookmarks("UniqueSearch".to_string(), SortOrder::NameAsc).unwrap();
+    assert!(
+        results.iter().any(|b| b.title == "UniqueSearchTitle"),
+        "search by title substring should find the bookmark"
+    );
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn search_by_url_substring() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    add_bookmark(
+        folder_id.clone(),
+        "https://unique-url-search-test.dev".to_string(),
+        "URL Search Bookmark".to_string(),
+    )
+    .unwrap();
+
+    let results =
+        search_bookmarks("unique-url-search-test".to_string(), SortOrder::NameAsc).unwrap();
+    assert!(
+        results.iter().any(|b| b.url == "https://unique-url-search-test.dev"),
+        "search by URL substring should find the bookmark"
+    );
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn search_by_notes_substring() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    let bm_id = add_bookmark(
+        folder_id.clone(),
+        "https://notes-search.com".to_string(),
+        "Notes Search BM".to_string(),
+    )
+    .unwrap();
+
+    update_bookmark(
+        bm_id,
+        None,
+        None,
+        Some("xyzUniqueNotesContent123".to_string()),
+    )
+    .unwrap();
+
+    let results =
+        search_bookmarks("xyzUniqueNotesContent".to_string(), SortOrder::NameAsc).unwrap();
+    assert!(
+        results
+            .iter()
+            .any(|b| b.notes == "xyzUniqueNotesContent123"),
+        "search by notes substring should find the bookmark"
+    );
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn search_is_case_insensitive() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    add_bookmark(
+        folder_id.clone(),
+        "https://case-test.com".to_string(),
+        "CaSeInSeNsItIvE".to_string(),
+    )
+    .unwrap();
+
+    let results = search_bookmarks("caseinsensitive".to_string(), SortOrder::NameAsc).unwrap();
+    assert!(
+        results.iter().any(|b| b.title == "CaSeInSeNsItIvE"),
+        "search should be case-insensitive"
+    );
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn search_no_matches_returns_empty() {
+    ensure_initialized();
+    let results = search_bookmarks(
+        "zzzNonExistentQueryThatMatchesNothing999".to_string(),
+        SortOrder::NameAsc,
+    )
+    .unwrap();
+    assert!(results.is_empty(), "search with no matches should return empty");
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn search_results_sort_name_asc_and_desc() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    add_bookmark(
+        folder_id.clone(),
+        "https://sort-c.com".to_string(),
+        "SortTestC".to_string(),
+    )
+    .unwrap();
+    add_bookmark(
+        folder_id.clone(),
+        "https://sort-a.com".to_string(),
+        "SortTestA".to_string(),
+    )
+    .unwrap();
+    add_bookmark(
+        folder_id.clone(),
+        "https://sort-b.com".to_string(),
+        "SortTestB".to_string(),
+    )
+    .unwrap();
+
+    // NameAsc
+    let results = search_bookmarks("SortTest".to_string(), SortOrder::NameAsc).unwrap();
+    let titles: Vec<&str> = results.iter().map(|b| b.title.as_str()).collect();
+    let a_pos = titles.iter().position(|t| *t == "SortTestA").unwrap();
+    let b_pos = titles.iter().position(|t| *t == "SortTestB").unwrap();
+    let c_pos = titles.iter().position(|t| *t == "SortTestC").unwrap();
+    assert!(a_pos < b_pos && b_pos < c_pos, "NameAsc should sort A < B < C");
+
+    // NameDesc
+    let results = search_bookmarks("SortTest".to_string(), SortOrder::NameDesc).unwrap();
+    let titles: Vec<&str> = results.iter().map(|b| b.title.as_str()).collect();
+    let a_pos = titles.iter().position(|t| *t == "SortTestA").unwrap();
+    let b_pos = titles.iter().position(|t| *t == "SortTestB").unwrap();
+    let c_pos = titles.iter().position(|t| *t == "SortTestC").unwrap();
+    assert!(c_pos < b_pos && b_pos < a_pos, "NameDesc should sort C < B < A");
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn search_results_sort_date_asc_and_desc() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    add_bookmark(
+        folder_id.clone(),
+        "https://datesort-first.com".to_string(),
+        "DateSortFirst".to_string(),
+    )
+    .unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(10));
+    add_bookmark(
+        folder_id.clone(),
+        "https://datesort-second.com".to_string(),
+        "DateSortSecond".to_string(),
+    )
+    .unwrap();
+
+    let asc = search_bookmarks("DateSort".to_string(), SortOrder::DateAsc).unwrap();
+    let asc_titles: Vec<&str> = asc.iter().map(|b| b.title.as_str()).collect();
+    let first_pos = asc_titles.iter().position(|t| *t == "DateSortFirst").unwrap();
+    let second_pos = asc_titles.iter().position(|t| *t == "DateSortSecond").unwrap();
+    assert!(first_pos < second_pos, "DateAsc should put earlier first");
+
+    let desc = search_bookmarks("DateSort".to_string(), SortOrder::DateDesc).unwrap();
+    let desc_titles: Vec<&str> = desc.iter().map(|b| b.title.as_str()).collect();
+    let first_pos = desc_titles.iter().position(|t| *t == "DateSortFirst").unwrap();
+    let second_pos = desc_titles.iter().position(|t| *t == "DateSortSecond").unwrap();
+    assert!(second_pos < first_pos, "DateDesc should put later first");
+}
+
 #[test]
 #[cfg_attr(miri, ignore)]
 fn folder_children_item_count_increases_after_add() {

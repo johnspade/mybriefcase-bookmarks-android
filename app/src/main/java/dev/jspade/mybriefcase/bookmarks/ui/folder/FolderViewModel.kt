@@ -34,12 +34,14 @@ data class FolderUiState(
     val selectedBookmark: BookmarkDto? = null,
     val importResult: ImportResultDto? = null,
     val exportedHtml: String? = null,
+    val showSyncBanner: Boolean = false,
 )
 
 class FolderViewModel(
     private val repository: BookmarkRepository = MyBriefcaseApp.instance.repository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val pollIntervalMs: Long = 30_000L,
+    private val syncDirPath: String? = null,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FolderUiState())
@@ -49,6 +51,7 @@ class FolderViewModel(
 
     init {
         loadNavTree()
+        checkSyncBanner()
     }
 
     fun navigateToFolder(folderId: String) {
@@ -232,6 +235,18 @@ class FolderViewModel(
 
     fun clearExportedHtml() {
         _uiState.value = _uiState.value.copy(exportedHtml = null)
+    }
+
+    fun dismissSyncBanner() {
+        _uiState.value = _uiState.value.copy(showSyncBanner = false)
+    }
+
+    private fun checkSyncBanner() {
+        val path = syncDirPath ?: return
+        val syncMarker = java.io.File(path, ".bookmarks-sync")
+        if (!syncMarker.exists()) {
+            _uiState.value = _uiState.value.copy(showSyncBanner = true)
+        }
     }
 
     private fun refreshAfterMutation() {
