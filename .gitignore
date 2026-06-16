@@ -23,6 +23,9 @@ local.properties
 # Generated UniFFI bindings (regenerated from rust/)
 /app/src/main/java/uniffi/
 
+# Claude Code
+.claude/settings.local.json
+
 # Nix
 /result
 .direnv/
