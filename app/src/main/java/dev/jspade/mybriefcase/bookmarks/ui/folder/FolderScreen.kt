@@ -1,7 +1,9 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,13 +16,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -55,11 +61,65 @@ import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 fun FolderScreen(
     viewModel: FolderViewModel,
     onBookmarkClick: (String) -> Unit = {},
+    onCreateFolder: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    // Dialog state
+    var showCreateFolderDialog by remember { mutableStateOf(false) }
+    var renameFolderTarget by remember { mutableStateOf<FolderItemDto?>(null) }
+    var deleteFolderTarget by remember { mutableStateOf<FolderItemDto?>(null) }
+    var moveItemTarget by remember { mutableStateOf<MoveTarget?>(null) }
+
+    // Dialogs
+    if (showCreateFolderDialog) {
+        CreateFolderDialog(
+            onConfirm = { title ->
+                viewModel.createFolder(title)
+                showCreateFolderDialog = false
+            },
+            onDismiss = { showCreateFolderDialog = false },
+        )
+    }
+
+    renameFolderTarget?.let { folder ->
+        RenameFolderDialog(
+            currentTitle = folder.title,
+            onConfirm = { newTitle ->
+                viewModel.renameFolder(folder.id, newTitle)
+                renameFolderTarget = null
+            },
+            onDismiss = { renameFolderTarget = null },
+        )
+    }
+
+    deleteFolderTarget?.let { folder ->
+        DeleteFolderDialog(
+            folderTitle = folder.title,
+            onConfirm = {
+                viewModel.deleteFolder(folder.id)
+                deleteFolderTarget = null
+            },
+            onDismiss = { deleteFolderTarget = null },
+        )
+    }
+
+    moveItemTarget?.let { target ->
+        uiState.navTree?.let { tree ->
+            MoveItemDialog(
+                navTree = tree,
+                currentFolderId = uiState.currentFolderId,
+                onConfirm = { destinationId ->
+                    viewModel.moveItem(target.itemId, uiState.currentFolderId, destinationId)
+                    moveItemTarget = null
+                },
+                onDismiss = { moveItemTarget = null },
+            )
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -98,6 +158,20 @@ fun FolderScreen(
                     },
                 )
             },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        if (onCreateFolder != null) {
+                            onCreateFolder()
+                        } else {
+                            showCreateFolderDialog = true
+                        }
+                    },
+                    modifier = Modifier.testTag("fab_create_folder"),
+                ) {
+                    Icon(Icons.Default.CreateNewFolder, contentDescription = "Create folder")
+                }
+            },
         ) { innerPadding ->
             when {
                 uiState.isLoading -> {
@@ -131,6 +205,10 @@ fun FolderScreen(
                         onFolderClick = { viewModel.navigateToFolder(it) },
                         onBookmarkClick = onBookmarkClick,
                         onBreadcrumbClick = { viewModel.navigateToFolder(it) },
+                        onFolderRename = { renameFolderTarget = it },
+                        onFolderDelete = { deleteFolderTarget = it },
+                        onFolderMove = { moveItemTarget = MoveTarget(it.id) },
+                        onBookmarkMove = { moveItemTarget = MoveTarget(it.id) },
                         modifier = Modifier.padding(innerPadding),
                     )
                 }
@@ -138,6 +216,9 @@ fun FolderScreen(
         }
     }
 }
+
+/** Identifies an item to be moved. */
+data class MoveTarget(val itemId: String)
 
 @Composable
 private fun FolderContent(
@@ -147,6 +228,10 @@ private fun FolderContent(
     onFolderClick: (String) -> Unit,
     onBookmarkClick: (String) -> Unit,
     onBreadcrumbClick: (String) -> Unit,
+    onFolderRename: (FolderItemDto) -> Unit,
+    onFolderDelete: (FolderItemDto) -> Unit,
+    onFolderMove: (FolderItemDto) -> Unit,
+    onBookmarkMove: (BookmarkItemDto) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -170,12 +255,19 @@ private fun FolderContent(
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(folders, key = { it.id }) { folder ->
-                    FolderListItem(folder = folder, onClick = { onFolderClick(folder.id) })
+                    FolderListItem(
+                        folder = folder,
+                        onClick = { onFolderClick(folder.id) },
+                        onRename = { onFolderRename(folder) },
+                        onDelete = { onFolderDelete(folder) },
+                        onMove = { onFolderMove(folder) },
+                    )
                 }
                 items(bookmarks, key = { it.id }) { bookmark ->
                     BookmarkListItem(
                         bookmark = bookmark,
                         onClick = { onBookmarkClick(bookmark.id) },
+                        onMove = { onBookmarkMove(bookmark) },
                     )
                 }
             }
@@ -217,25 +309,89 @@ private fun BreadcrumbBar(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun FolderListItem(folder: FolderItemDto, onClick: () -> Unit) {
-    ListItem(
-        headlineContent = { Text(folder.title) },
-        supportingContent = { Text("${folder.itemCount} items") },
-        leadingContent = {
-            Icon(Icons.Default.Folder, contentDescription = null)
-        },
-        modifier = Modifier.clickable(onClick = onClick),
-    )
+private fun FolderListItem(
+    folder: FolderItemDto,
+    onClick: () -> Unit,
+    onRename: () -> Unit,
+    onDelete: () -> Unit,
+    onMove: () -> Unit,
+) {
+    var showContextMenu by remember { mutableStateOf(false) }
+
+    Box {
+        ListItem(
+            headlineContent = { Text(folder.title) },
+            supportingContent = { Text("${folder.itemCount} items") },
+            leadingContent = {
+                Icon(Icons.Default.Folder, contentDescription = null)
+            },
+            modifier = Modifier.combinedClickable(
+                onClick = onClick,
+                onLongClick = { showContextMenu = true },
+            ),
+        )
+        DropdownMenu(
+            expanded = showContextMenu,
+            onDismissRequest = { showContextMenu = false },
+        ) {
+            DropdownMenuItem(
+                text = { Text("Rename") },
+                onClick = {
+                    showContextMenu = false
+                    onRename()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("Move") },
+                onClick = {
+                    showContextMenu = false
+                    onMove()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("Delete") },
+                onClick = {
+                    showContextMenu = false
+                    onDelete()
+                },
+            )
+        }
+    }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun BookmarkListItem(bookmark: BookmarkItemDto, onClick: () -> Unit) {
-    ListItem(
-        headlineContent = { Text(bookmark.title) },
-        supportingContent = { Text(bookmark.url) },
-        modifier = Modifier.clickable(onClick = onClick),
-    )
+private fun BookmarkListItem(
+    bookmark: BookmarkItemDto,
+    onClick: () -> Unit,
+    onMove: () -> Unit,
+) {
+    var showContextMenu by remember { mutableStateOf(false) }
+
+    Box {
+        ListItem(
+            headlineContent = { Text(bookmark.title) },
+            supportingContent = { Text(bookmark.url) },
+            modifier = Modifier.combinedClickable(
+                onClick = onClick,
+                onLongClick = { showContextMenu = true },
+            ),
+        )
+        DropdownMenu(
+            expanded = showContextMenu,
+            onDismissRequest = { showContextMenu = false },
+        ) {
+            DropdownMenuItem(
+                text = { Text("Move") },
+                onClick = {
+                    showContextMenu = false
+                    onMove()
+                },
+            )
+        }
+    }
 }
 
 @Composable

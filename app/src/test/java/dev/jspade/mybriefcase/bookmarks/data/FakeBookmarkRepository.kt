@@ -77,18 +77,29 @@ class FakeBookmarkRepository : BookmarkRepository {
     )
 
     var shouldThrow: Exception? = null
+    var moveItemThrow: Exception? = null
     var mergeResult = false
+
+    // Tracking calls
+    var createFolderCalls = mutableListOf<Pair<String, String>>() // (parentId, title)
+    var renameFolderCalls = mutableListOf<Pair<String, String>>() // (folderId, title)
+    var deleteFolderCalls = mutableListOf<String>() // folderId
+    var moveItemCalls = mutableListOf<Triple<String, String, String>>() // (itemId, from, to)
+    var getFolderChildrenCallCount = 0
+    var getNavTreeCallCount = 0
 
     override fun initRepo(dataDir: String, syncDir: String, clientId: String) {}
     override fun shutdown() {}
 
     override fun getFolderChildren(folderId: String, sortBy: SortOrder): FolderChildrenDto {
+        getFolderChildrenCallCount++
         shouldThrow?.let { throw it }
         return folderChildren[folderId]
             ?: throw RuntimeException("folder not found: $folderId")
     }
 
     override fun getFolderNavTree(): FolderNavTreeDto {
+        getNavTreeCallCount++
         shouldThrow?.let { throw it }
         return navTree
     }
@@ -97,10 +108,23 @@ class FakeBookmarkRepository : BookmarkRepository {
     override fun addBookmark(folderId: String, url: String, title: String): String = "new-id"
     override fun updateBookmark(bookmarkId: String, url: String?, title: String?, notes: String?) {}
     override fun deleteBookmark(bookmarkId: String) {}
-    override fun createFolder(parentFolderId: String, title: String): String = "new-folder-id"
-    override fun renameFolder(folderId: String, title: String) {}
-    override fun deleteFolder(folderId: String) {}
-    override fun moveItem(itemId: String, fromFolderId: String, toFolderId: String) {}
+    override fun createFolder(parentFolderId: String, title: String): String {
+        createFolderCalls.add(parentFolderId to title)
+        return "new-folder-id"
+    }
+
+    override fun renameFolder(folderId: String, title: String) {
+        renameFolderCalls.add(folderId to title)
+    }
+
+    override fun deleteFolder(folderId: String) {
+        deleteFolderCalls.add(folderId)
+    }
+
+    override fun moveItem(itemId: String, fromFolderId: String, toFolderId: String) {
+        moveItemThrow?.let { throw it }
+        moveItemCalls.add(Triple(itemId, fromFolderId, toFolderId))
+    }
     override fun searchBookmarks(query: String, sortBy: SortOrder): List<BookmarkDto> = emptyList()
     override fun importHtml(folderId: String, html: String): ImportResultDto =
         ImportResultDto(bookmarksImported = 0u, foldersImported = 0u)

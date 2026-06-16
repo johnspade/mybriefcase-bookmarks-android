@@ -153,4 +153,108 @@ class FolderViewModelTest {
             assertEquals(3, navTree?.folders?.size)
         }
     }
+
+    @Test
+    fun `createFolder calls repository and re-fetches`() = runTest {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
+
+        val callsBefore = fakeRepo.getFolderChildrenCallCount
+        val navCallsBefore = fakeRepo.getNavTreeCallCount
+
+        viewModel.createFolder("New Folder")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertNull(state.error)
+        }
+
+        assertEquals(1, fakeRepo.createFolderCalls.size)
+        assertEquals("root-id" to "New Folder", fakeRepo.createFolderCalls[0])
+        // Should re-fetch folder contents and nav tree
+        assertTrue(fakeRepo.getFolderChildrenCallCount > callsBefore)
+        assertTrue(fakeRepo.getNavTreeCallCount > navCallsBefore)
+    }
+
+    @Test
+    fun `renameFolder calls repository and re-fetches`() = runTest {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
+
+        val callsBefore = fakeRepo.getFolderChildrenCallCount
+        val navCallsBefore = fakeRepo.getNavTreeCallCount
+
+        viewModel.renameFolder("folder-1", "Renamed")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertNull(state.error)
+        }
+
+        assertEquals(1, fakeRepo.renameFolderCalls.size)
+        assertEquals("folder-1" to "Renamed", fakeRepo.renameFolderCalls[0])
+        assertTrue(fakeRepo.getFolderChildrenCallCount > callsBefore)
+        assertTrue(fakeRepo.getNavTreeCallCount > navCallsBefore)
+    }
+
+    @Test
+    fun `deleteFolder calls repository and re-fetches`() = runTest {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
+
+        val callsBefore = fakeRepo.getFolderChildrenCallCount
+        val navCallsBefore = fakeRepo.getNavTreeCallCount
+
+        viewModel.deleteFolder("folder-1")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertNull(state.error)
+        }
+
+        assertEquals(1, fakeRepo.deleteFolderCalls.size)
+        assertEquals("folder-1", fakeRepo.deleteFolderCalls[0])
+        assertTrue(fakeRepo.getFolderChildrenCallCount > callsBefore)
+        assertTrue(fakeRepo.getNavTreeCallCount > navCallsBefore)
+    }
+
+    @Test
+    fun `moveItem calls repository and re-fetches`() = runTest {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
+
+        val callsBefore = fakeRepo.getFolderChildrenCallCount
+        val navCallsBefore = fakeRepo.getNavTreeCallCount
+
+        viewModel.moveItem("bm-1", "folder-1", "folder-2")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertNull(state.error)
+        }
+
+        assertEquals(1, fakeRepo.moveItemCalls.size)
+        assertEquals(Triple("bm-1", "folder-1", "folder-2"), fakeRepo.moveItemCalls[0])
+        assertTrue(fakeRepo.getFolderChildrenCallCount > callsBefore)
+        assertTrue(fakeRepo.getNavTreeCallCount > navCallsBefore)
+    }
+
+    @Test
+    fun `moveItem error sets error state`() = runTest {
+        fakeRepo.moveItemThrow = RuntimeException("cannot move into descendant")
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
+
+        viewModel.moveItem("folder-1", "root-id", "folder-1")
+        advanceUntilIdle()
+
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertEquals("cannot move into descendant", state.error)
+        }
+    }
 }

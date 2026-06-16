@@ -50,6 +50,50 @@ class FolderViewModel(
         loadFolderContents(_uiState.value.currentFolderId)
     }
 
+    fun createFolder(title: String) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.createFolder(_uiState.value.currentFolderId, title)
+                refreshAfterMutation()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+    fun renameFolder(folderId: String, title: String) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.renameFolder(folderId, title)
+                refreshAfterMutation()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+    fun deleteFolder(folderId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.deleteFolder(folderId)
+                refreshAfterMutation()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+    fun moveItem(itemId: String, fromFolderId: String, toFolderId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.moveItem(itemId, fromFolderId, toFolderId)
+                refreshAfterMutation()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
     fun refresh() {
         viewModelScope.launch(ioDispatcher) {
             try {
@@ -62,6 +106,11 @@ class FolderViewModel(
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
+    }
+
+    private fun refreshAfterMutation() {
+        loadFolderContents(_uiState.value.currentFolderId)
+        loadNavTree()
     }
 
     private fun loadNavTree() {

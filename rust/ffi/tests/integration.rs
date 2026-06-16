@@ -280,3 +280,159 @@ fn folder_children_item_count_is_correct() {
         .unwrap();
     assert_eq!(other_updated.item_count, initial_count + 1);
 }
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn create_folder_appears_in_parent_children_and_nav_tree() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let parent_id = &root_children.folders[0].id;
+
+    let new_id = create_folder(parent_id.clone(), "CRUD Test Folder".to_string()).unwrap();
+
+    // Appears in parent's children
+    let children = get_folder_children(parent_id.clone(), SortOrder::NameAsc).unwrap();
+    assert!(
+        children.folders.iter().any(|f| f.id == new_id),
+        "new folder should appear in parent's children"
+    );
+    let folder_item = children.folders.iter().find(|f| f.id == new_id).unwrap();
+    assert_eq!(folder_item.title, "CRUD Test Folder");
+
+    // Appears in nav tree
+    let tree = get_folder_nav_tree().unwrap();
+    assert!(
+        tree.folders.iter().any(|f| f.id == new_id),
+        "new folder should appear in nav tree"
+    );
+    let nav_node = tree.folders.iter().find(|f| f.id == new_id).unwrap();
+    assert_eq!(nav_node.title, "CRUD Test Folder");
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn rename_folder_updates_title_in_children_and_nav_tree() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let parent_id = &root_children.folders[0].id;
+
+    let folder_id = create_folder(parent_id.clone(), "Before Rename".to_string()).unwrap();
+
+    rename_folder(folder_id.clone(), "After Rename".to_string()).unwrap();
+
+    // Title updated in parent's children
+    let children = get_folder_children(parent_id.clone(), SortOrder::NameAsc).unwrap();
+    let renamed = children.folders.iter().find(|f| f.id == folder_id).unwrap();
+    assert_eq!(renamed.title, "After Rename");
+
+    // Title updated in nav tree
+    let tree = get_folder_nav_tree().unwrap();
+    let nav_node = tree.folders.iter().find(|f| f.id == folder_id).unwrap();
+    assert_eq!(nav_node.title, "After Rename");
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn delete_folder_removes_folder_and_nested_items() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let parent_id = &root_children.folders[0].id;
+
+    // Create a folder with a nested bookmark
+    let folder_id = create_folder(parent_id.clone(), "To Delete Folder".to_string()).unwrap();
+    let _nested_bm = add_bookmark(
+        folder_id.clone(),
+        "https://nested.com".to_string(),
+        "Nested BM".to_string(),
+    )
+    .unwrap();
+
+    delete_folder(folder_id.clone()).unwrap();
+
+    // Folder gone from parent's children
+    let children = get_folder_children(parent_id.clone(), SortOrder::NameAsc).unwrap();
+    assert!(
+        !children.folders.iter().any(|f| f.id == folder_id),
+        "deleted folder should not appear in parent's children"
+    );
+
+    // Folder gone from nav tree
+    let tree = get_folder_nav_tree().unwrap();
+    assert!(
+        !tree.folders.iter().any(|f| f.id == folder_id),
+        "deleted folder should not appear in nav tree"
+    );
+
+    // Nested bookmark also gone
+    let bm = get_bookmark(_nested_bm).unwrap();
+    assert!(bm.is_none(), "nested bookmark should be deleted");
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn move_item_moves_between_folders() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let source_id = &root_children.folders[0].id;
+    let dest_id = &root_children.folders[1].id;
+
+    // Create a bookmark in source folder
+    let bm_id = add_bookmark(
+        source_id.clone(),
+        "https://moveme.com".to_string(),
+        "Move Me".to_string(),
+    )
+    .unwrap();
+
+    move_item(bm_id.clone(), source_id.clone(), dest_id.clone()).unwrap();
+
+    // Removed from source
+    let source_children = get_folder_children(source_id.clone(), SortOrder::NameAsc).unwrap();
+    assert!(
+        !source_children.bookmarks.iter().any(|b| b.id == bm_id),
+        "moved item should not be in source folder"
+    );
+
+    // Present in destination
+    let dest_children = get_folder_children(dest_id.clone(), SortOrder::NameAsc).unwrap();
+    assert!(
+        dest_children.bookmarks.iter().any(|b| b.id == bm_id),
+        "moved item should be in destination folder"
+    );
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn move_item_into_self_or_descendant_returns_error() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let parent_id = &root_children.folders[0].id;
+
+    // Create a parent folder with a child folder
+    let folder_a = create_folder(parent_id.clone(), "Folder A".to_string()).unwrap();
+    let folder_b = create_folder(folder_a.clone(), "Folder B (child of A)".to_string()).unwrap();
+
+    // Moving a folder into itself should error
+    let result = move_item(folder_a.clone(), parent_id.clone(), folder_a.clone());
+    assert!(
+        result.is_err(),
+        "moving folder into itself should return error"
+    );
+
+    // Moving a folder into its own descendant should error
+    let result = move_item(folder_a.clone(), parent_id.clone(), folder_b.clone());
+    assert!(
+        result.is_err(),
+        "moving folder into its own descendant should return error"
+    );
+}
