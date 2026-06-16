@@ -1,5 +1,11 @@
 package dev.jspade.mybriefcase.bookmarks.ui.bookmark
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
@@ -128,4 +135,35 @@ private fun formatDate(isoString: String): String {
     } catch (e: Exception) {
         isoString
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BookmarkDetailSheetWithActions(
+    bookmark: BookmarkDto,
+    onDismiss: () -> Unit,
+    onEdit: () -> Unit,
+) {
+    val context = LocalContext.current
+    BookmarkDetailSheet(
+        bookmark = bookmark,
+        onDismiss = onDismiss,
+        onEdit = onEdit,
+        onOpenInBrowser = { url ->
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            context.startActivity(intent)
+        },
+        onShare = { url ->
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, url)
+            }
+            context.startActivity(Intent.createChooser(intent, "Share URL"))
+        },
+        onCopyUrl = { url ->
+            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            clipboard.setPrimaryClip(ClipData.newPlainText("URL", url))
+            Toast.makeText(context, "URL copied", Toast.LENGTH_SHORT).show()
+        },
+    )
 }
