@@ -5,15 +5,13 @@
 use mybriefcase_bookmarks_ffi::*;
 
 /// Initialize the repo singleton once for all tests in this module.
-/// Uses `std::sync::Once` to ensure it happens exactly once.
+/// Uses `OnceLock` to ensure it happens exactly once.
 /// Returns the path to the sync directory for tests that need to simulate peers.
 fn ensure_initialized() -> &'static str {
-    use std::sync::Once;
-    static INIT: Once = Once::new();
-    static mut DATA_DIR: Option<tempfile::TempDir> = None;
-    static mut SYNC_DIR: Option<String> = None;
+    use std::sync::OnceLock;
+    static STATE: OnceLock<(tempfile::TempDir, String)> = OnceLock::new();
 
-    INIT.call_once(|| {
+    let (_, sync_dir) = STATE.get_or_init(|| {
         let tmp = tempfile::tempdir().unwrap();
         let data_dir = tmp.path().join("data");
         let sync_dir = tmp.path().join("sync");
@@ -29,14 +27,10 @@ fn ensure_initialized() -> &'static str {
         )
         .unwrap();
 
-        // Keep tempdir alive for the process lifetime
-        unsafe {
-            SYNC_DIR = Some(sync_dir_str);
-            DATA_DIR = Some(tmp);
-        }
+        (tmp, sync_dir_str)
     });
 
-    unsafe { SYNC_DIR.as_ref().unwrap() }
+    sync_dir.as_str()
 }
 
 #[test]
