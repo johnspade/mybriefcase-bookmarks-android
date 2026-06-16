@@ -1,88 +1,135 @@
 uniffi::setup_scaffolding!();
 
-use mybriefcase_bookmarks_core::model::BookmarkStore;
-use std::path::Path;
+mod bookmarks;
+mod folders;
+mod import_export;
+mod lifecycle;
+mod read;
+mod search;
+mod sync;
 
-#[derive(uniffi::Record)]
+use automerge_repo::{DocHandle, RepoHandle};
+use autosurgeon::hydrate;
+use mybriefcase_bookmarks_core::model::BookmarkStore;
+use std::sync::{OnceLock, RwLock};
+use tokio::runtime::Runtime;
+
+/// Shared state held in a module-level singleton.
+struct RepoState {
+    #[allow(dead_code)] // held to keep the runtime alive
+    runtime: Runtime,
+    _repo_handle: RepoHandle,
+    doc_handle: DocHandle,
+    sync_root: std::path::PathBuf,
+    client_id: String,
+    cache: RwLock<BookmarkStore>,
+}
+
+static REPO: OnceLock<RepoState> = OnceLock::new();
+
+/// Access the singleton, panicking if not initialized.
+fn repo() -> &'static RepoState {
+    REPO.get()
+        .expect("repo not initialized: call init_repo first")
+}
+
+/// Re-hydrates the cache from the document. Call after mutations and merges.
+fn refresh_cache(state: &RepoState) {
+    let store: BookmarkStore = state.doc_handle.with_doc(|doc| hydrate(doc).unwrap());
+    *state.cache.write().unwrap() = store;
+}
+
+// ── FFI Error type ──────────────────────────────────────────────────────────
+
+#[derive(Debug, thiserror::Error, uniffi::Error)]
+#[uniffi(flat_error)]
+pub enum FfiError {
+    #[error("{message}")]
+    General { message: String },
+}
+
+impl From<anyhow::Error> for FfiError {
+    fn from(e: anyhow::Error) -> Self {
+        FfiError::General {
+            message: format!("{e:#}"),
+        }
+    }
+}
+
+// ── DTOs ────────────────────────────────────────────────────────────────────
+
+#[derive(uniffi::Record, Clone, Debug)]
 pub struct BookmarkDto {
     pub id: String,
     pub url: String,
     pub title: String,
+    pub notes: String,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
-#[derive(uniffi::Record)]
+#[derive(uniffi::Record, Clone, Debug)]
 pub struct FolderDto {
+    pub id: String,
+    pub title: String,
+    pub children: Vec<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct BookmarkItemDto {
+    pub id: String,
+    pub title: String,
+    pub url: String,
+    pub created_at: String,
+}
+
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct FolderItemDto {
+    pub id: String,
+    pub title: String,
+    pub item_count: u32,
+}
+
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct FolderNavDto {
+    pub id: String,
+    pub title: String,
+    pub item_count: u32,
+    pub child_folder_ids: Vec<String>,
+}
+
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct FolderNavTreeDto {
+    pub root_folder_id: String,
+    pub folders: Vec<FolderNavDto>,
+}
+
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct BreadcrumbDto {
     pub id: String,
     pub title: String,
 }
 
-#[uniffi::export]
-pub fn list_bookmarks(data_dir: String) -> Vec<BookmarkDto> {
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    rt.block_on(async {
-        let data_path = Path::new(&data_dir);
-        let sync_path = data_path.join("sync");
-        let (_repo_handle, doc_handle, _doc_id) =
-            mybriefcase_bookmarks_core::repo::init_repo(data_path, &sync_path, "android").await;
-
-        let store: BookmarkStore = doc_handle.with_doc(|doc| autosurgeon::hydrate(doc).unwrap());
-
-        store
-            .bookmarks
-            .iter()
-            .filter(|(_, b)| !b.deleted)
-            .map(|(id, b)| BookmarkDto {
-                id: id.clone(),
-                url: b.url.clone(),
-                title: b.title.clone(),
-            })
-            .collect()
-    })
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct FolderChildrenDto {
+    pub folder_title: String,
+    pub breadcrumbs: Vec<BreadcrumbDto>,
+    pub folders: Vec<FolderItemDto>,
+    pub bookmarks: Vec<BookmarkItemDto>,
 }
 
-#[uniffi::export]
-pub fn list_folders(data_dir: String) -> Vec<FolderDto> {
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    rt.block_on(async {
-        let data_path = Path::new(&data_dir);
-        let sync_path = data_path.join("sync");
-        let (_repo_handle, doc_handle, _doc_id) =
-            mybriefcase_bookmarks_core::repo::init_repo(data_path, &sync_path, "android").await;
-
-        let store: BookmarkStore = doc_handle.with_doc(|doc| autosurgeon::hydrate(doc).unwrap());
-
-        store
-            .folders
-            .iter()
-            .filter(|(_, f)| !f.deleted)
-            .map(|(id, f)| FolderDto {
-                id: id.clone(),
-                title: f.title.clone(),
-            })
-            .collect()
-    })
+#[derive(uniffi::Record, Clone, Debug)]
+pub struct ImportResultDto {
+    pub bookmarks_imported: u32,
+    pub folders_imported: u32,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    #[cfg_attr(miri, ignore)]
-    fn list_bookmarks_returns_empty_for_fresh_repo() {
-        let tmp = tempfile::tempdir().unwrap();
-        let result = list_bookmarks(tmp.path().to_str().unwrap().to_string());
-        assert!(result.is_empty());
-    }
-
-    #[test]
-    #[cfg_attr(miri, ignore)]
-    fn list_folders_returns_root_for_fresh_repo() {
-        let tmp = tempfile::tempdir().unwrap();
-        let result = list_folders(tmp.path().to_str().unwrap().to_string());
-        assert!(
-            !result.is_empty(),
-            "Fresh repo should have at least one folder"
-        );
-    }
+#[derive(uniffi::Enum, Clone, Copy, Debug)]
+pub enum SortOrder {
+    NameAsc,
+    NameDesc,
+    DateDesc,
+    DateAsc,
 }
