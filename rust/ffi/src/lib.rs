@@ -62,3 +62,27 @@ pub fn list_folders(data_dir: String) -> Vec<FolderDto> {
             .collect()
     })
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    fn list_bookmarks_returns_empty_for_fresh_repo() {
+        let tmp = tempfile::tempdir().unwrap();
+        let result = list_bookmarks(tmp.path().to_str().unwrap().to_string());
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    #[cfg_attr(miri, ignore)]
+    fn list_folders_returns_root_for_fresh_repo() {
+        let tmp = tempfile::tempdir().unwrap();
+        let result = list_folders(tmp.path().to_str().unwrap().to_string());
+        assert!(
+            !result.is_empty(),
+            "Fresh repo should have at least one folder"
+        );
+    }
+}
