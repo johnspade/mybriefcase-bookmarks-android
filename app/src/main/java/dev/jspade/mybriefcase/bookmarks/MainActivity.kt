@@ -7,9 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.viewmodel.compose.viewModel
-import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
-import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
+import dev.jspade.mybriefcase.bookmarks.ui.navigation.AppNavHost
 import dev.jspade.mybriefcase.bookmarks.ui.theme.MyBriefcaseBookmarksTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,11 +17,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MyBriefcaseBookmarksTheme {
-                val folderViewModel: FolderViewModel = viewModel()
-                FolderScreen(
-                    viewModel = folderViewModel,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                AppNavHost(modifier = Modifier.fillMaxSize())
             }
         }
     }

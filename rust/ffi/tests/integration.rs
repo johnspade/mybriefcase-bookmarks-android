@@ -249,36 +249,177 @@ fn get_bookmark_deleted_returns_none() {
 
 #[test]
 #[cfg_attr(miri, ignore)]
-fn folder_children_item_count_is_correct() {
+fn folder_children_item_count_increases_after_add() {
     ensure_initialized();
     let tree = get_folder_nav_tree().unwrap();
     let root_children =
         get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
 
-    // Find the "Other Bookmarks" folder (should have 0 items initially)
-    let other = root_children
-        .folders
-        .iter()
-        .find(|f| f.title == "Other Bookmarks")
-        .unwrap();
-    let initial_count = other.item_count;
+    // Create a fresh folder to avoid interference from other tests
+    let parent_id = &root_children.folders[0].id;
+    let fresh_folder = create_folder(parent_id.clone(), "CountTest".to_string()).unwrap();
+
+    // Initially empty
+    let children = get_folder_children(fresh_folder.clone(), SortOrder::NameAsc).unwrap();
+    assert_eq!(children.bookmarks.len(), 0);
 
     // Add a bookmark to it
     add_bookmark(
-        other.id.clone(),
+        fresh_folder.clone(),
         "https://count.com".to_string(),
         "Count Test".to_string(),
     )
     .unwrap();
 
-    let updated_children =
-        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
-    let other_updated = updated_children
+    // Check that the parent now shows item_count = 1 for the fresh folder
+    let parent_children = get_folder_children(parent_id.clone(), SortOrder::NameAsc).unwrap();
+    let fresh = parent_children
         .folders
         .iter()
-        .find(|f| f.title == "Other Bookmarks")
+        .find(|f| f.id == fresh_folder)
         .unwrap();
-    assert_eq!(other_updated.item_count, initial_count + 1);
+    assert_eq!(fresh.item_count, 1);
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn update_bookmark_changes_fields() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    let bm_id = add_bookmark(
+        folder_id.clone(),
+        "https://original.com".to_string(),
+        "Original Title".to_string(),
+    )
+    .unwrap();
+
+    // Update URL and title
+    update_bookmark(
+        bm_id.clone(),
+        Some("https://updated.com".to_string()),
+        Some("Updated Title".to_string()),
+        Some("Some notes".to_string()),
+    )
+    .unwrap();
+
+    let bm = get_bookmark(bm_id).unwrap().unwrap();
+    assert_eq!(bm.url, "https://updated.com");
+    assert_eq!(bm.title, "Updated Title");
+    assert_eq!(bm.notes, "Some notes");
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn update_bookmark_partial_update() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    let bm_id = add_bookmark(
+        folder_id.clone(),
+        "https://partial.com".to_string(),
+        "Partial Title".to_string(),
+    )
+    .unwrap();
+
+    // Only update notes, leave url and title unchanged
+    update_bookmark(bm_id.clone(), None, None, Some("Just notes".to_string())).unwrap();
+
+    let bm = get_bookmark(bm_id).unwrap().unwrap();
+    assert_eq!(bm.url, "https://partial.com");
+    assert_eq!(bm.title, "Partial Title");
+    assert_eq!(bm.notes, "Just notes");
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn delete_bookmark_removes_from_folder_children() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    let bm_id = add_bookmark(
+        folder_id.clone(),
+        "https://willdelete.com".to_string(),
+        "Will Delete".to_string(),
+    )
+    .unwrap();
+
+    // Verify it exists in folder children
+    let children = get_folder_children(folder_id.clone(), SortOrder::NameAsc).unwrap();
+    assert!(children.bookmarks.iter().any(|b| b.id == bm_id));
+
+    delete_bookmark(bm_id.clone()).unwrap();
+
+    // Verify it no longer appears in folder children
+    let children_after = get_folder_children(folder_id.clone(), SortOrder::NameAsc).unwrap();
+    assert!(!children_after.bookmarks.iter().any(|b| b.id == bm_id));
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn export_empty_store_returns_valid_html() {
+    ensure_initialized();
+    let html = export_html().unwrap();
+    assert!(html.contains("<!DOCTYPE NETSCAPE-Bookmark-file-1>") || html.contains("<DL>"));
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn import_valid_netscape_html() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[1].id; // Use "Other Bookmarks" to avoid collisions
+
+    let html = r#"<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+    <DT><H3>Imported Folder</H3>
+    <DL><p>
+        <DT><A HREF="https://imported1.com">Imported Site 1</A>
+        <DT><A HREF="https://imported2.com">Imported Site 2</A>
+    </DL><p>
+    <DT><A HREF="https://imported3.com">Imported Site 3</A>
+</DL><p>"#;
+
+    let result = import_html(folder_id.clone(), html.to_string()).unwrap();
+    assert_eq!(result.bookmarks_imported, 3);
+    assert_eq!(result.folders_imported, 1);
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn import_then_export_roundtrip() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[1].id;
+
+    let html_input = r#"<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+    <DT><A HREF="https://roundtrip.com">Roundtrip Test</A>
+</DL><p>"#;
+
+    import_html(folder_id.clone(), html_input.to_string()).unwrap();
+    let exported = export_html().unwrap();
+    assert!(exported.contains("https://roundtrip.com"));
+    assert!(exported.contains("Roundtrip Test"));
 }
 
 #[test]

@@ -8,19 +8,24 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
@@ -35,6 +40,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
@@ -61,20 +67,28 @@ import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 fun FolderScreen(
     viewModel: FolderViewModel,
     onBookmarkClick: (String) -> Unit = {},
-    onCreateFolder: (() -> Unit)? = null,
+    onSettingsClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Dialog state
+    // Dialog state (folder CRUD from PR #9)
     var showCreateFolderDialog by remember { mutableStateOf(false) }
     var renameFolderTarget by remember { mutableStateOf<FolderItemDto?>(null) }
     var deleteFolderTarget by remember { mutableStateOf<FolderItemDto?>(null) }
     var moveItemTarget by remember { mutableStateOf<MoveTarget?>(null) }
 
-    // Dialogs
+    // Dialog state (bookmark CRUD from PR #10)
+    var showFab by remember { mutableStateOf(false) }
+    var showAddBookmarkDialog by remember { mutableStateOf(false) }
+    var showOverflowMenu by remember { mutableStateOf(false) }
+    var contextMenuBookmarkId by remember { mutableStateOf<String?>(null) }
+    var showDeleteConfirmation by remember { mutableStateOf<String?>(null) }
+    var showEditDialog by remember { mutableStateOf(false) }
+
+    // Folder CRUD Dialogs
     if (showCreateFolderDialog) {
         CreateFolderDialog(
             onConfirm = { title ->
@@ -156,20 +170,65 @@ fun FolderScreen(
                             Icon(Icons.Default.Menu, contentDescription = "Open drawer")
                         }
                     },
+                    actions = {
+                        Box {
+                            IconButton(
+                                onClick = { showOverflowMenu = true },
+                                modifier = Modifier.testTag("overflow_menu_button"),
+                            ) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                            }
+                            DropdownMenu(
+                                expanded = showOverflowMenu,
+                                onDismissRequest = { showOverflowMenu = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Settings") },
+                                    onClick = {
+                                        showOverflowMenu = false
+                                        onSettingsClick()
+                                    },
+                                    modifier = Modifier.testTag("menu_settings"),
+                                )
+                            }
+                        }
+                    },
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
-                        if (onCreateFolder != null) {
-                            onCreateFolder()
-                        } else {
-                            showCreateFolderDialog = true
+                Column(horizontalAlignment = Alignment.End) {
+                    AnimatedVisibility(visible = showFab) {
+                        Column(
+                            horizontalAlignment = Alignment.End,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            SmallFloatingActionButton(
+                                onClick = {
+                                    showFab = false
+                                    showAddBookmarkDialog = true
+                                },
+                                modifier = Modifier.testTag("fab_add_bookmark"),
+                            ) {
+                                Icon(Icons.Default.Bookmark, contentDescription = "Add Bookmark")
+                            }
+                            SmallFloatingActionButton(
+                                onClick = {
+                                    showFab = false
+                                    showCreateFolderDialog = true
+                                },
+                                modifier = Modifier.testTag("fab_add_folder"),
+                            ) {
+                                Icon(Icons.Default.CreateNewFolder, contentDescription = "Add Folder")
+                            }
                         }
-                    },
-                    modifier = Modifier.testTag("fab_create_folder"),
-                ) {
-                    Icon(Icons.Default.CreateNewFolder, contentDescription = "Create folder")
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    FloatingActionButton(
+                        onClick = { showFab = !showFab },
+                        modifier = Modifier.testTag("fab_main"),
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add")
+                    }
                 }
             },
         ) { innerPadding ->
@@ -204,16 +263,64 @@ fun FolderScreen(
                         bookmarks = uiState.bookmarks,
                         onFolderClick = { viewModel.navigateToFolder(it) },
                         onBookmarkClick = onBookmarkClick,
+                        onBookmarkLongClick = { bookmarkId ->
+                            contextMenuBookmarkId = bookmarkId
+                        },
                         onBreadcrumbClick = { viewModel.navigateToFolder(it) },
                         onFolderRename = { renameFolderTarget = it },
                         onFolderDelete = { deleteFolderTarget = it },
                         onFolderMove = { moveItemTarget = MoveTarget(it.id) },
                         onBookmarkMove = { moveItemTarget = MoveTarget(it.id) },
+                        contextMenuBookmarkId = contextMenuBookmarkId,
+                        onDismissContextMenu = { contextMenuBookmarkId = null },
+                        onEditBookmark = { bookmarkId ->
+                            contextMenuBookmarkId = null
+                            viewModel.loadBookmarkDetail(bookmarkId)
+                            showEditDialog = true
+                        },
+                        onDeleteBookmark = { bookmarkId ->
+                            contextMenuBookmarkId = null
+                            showDeleteConfirmation = bookmarkId
+                        },
                         modifier = Modifier.padding(innerPadding),
                     )
                 }
             }
         }
+    }
+
+    if (showAddBookmarkDialog) {
+        dev.jspade.mybriefcase.bookmarks.ui.bookmark.AddBookmarkDialog(
+            onDismiss = { showAddBookmarkDialog = false },
+            onConfirm = { url, title ->
+                showAddBookmarkDialog = false
+                viewModel.addBookmark(url, title)
+            },
+        )
+    }
+
+    if (showEditDialog && uiState.selectedBookmark != null) {
+        dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog(
+            bookmark = uiState.selectedBookmark!!,
+            onDismiss = {
+                showEditDialog = false
+                viewModel.clearSelectedBookmark()
+            },
+            onConfirm = { url, title, notes ->
+                showEditDialog = false
+                viewModel.updateBookmark(uiState.selectedBookmark!!.id, url, title, notes)
+            },
+        )
+    }
+
+    showDeleteConfirmation?.let { bookmarkId ->
+        DeleteConfirmationDialog(
+            onDismiss = { showDeleteConfirmation = null },
+            onConfirm = {
+                showDeleteConfirmation = null
+                viewModel.deleteBookmark(bookmarkId)
+            },
+        )
     }
 }
 
@@ -221,17 +328,49 @@ fun FolderScreen(
 data class MoveTarget(val itemId: String)
 
 @Composable
+private fun DeleteConfirmationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete Bookmark") },
+        text = { Text("Are you sure you want to delete this bookmark?") },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onConfirm,
+                modifier = Modifier.testTag("delete_confirm_button"),
+            ) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        modifier = Modifier.testTag("delete_confirmation_dialog"),
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
 private fun FolderContent(
     breadcrumbs: List<BreadcrumbDto>,
     folders: List<FolderItemDto>,
     bookmarks: List<BookmarkItemDto>,
     onFolderClick: (String) -> Unit,
     onBookmarkClick: (String) -> Unit,
+    onBookmarkLongClick: (String) -> Unit,
     onBreadcrumbClick: (String) -> Unit,
     onFolderRename: (FolderItemDto) -> Unit,
     onFolderDelete: (FolderItemDto) -> Unit,
     onFolderMove: (FolderItemDto) -> Unit,
     onBookmarkMove: (BookmarkItemDto) -> Unit,
+    contextMenuBookmarkId: String?,
+    onDismissContextMenu: () -> Unit,
+    onEditBookmark: (String) -> Unit,
+    onDeleteBookmark: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -264,11 +403,36 @@ private fun FolderContent(
                     )
                 }
                 items(bookmarks, key = { it.id }) { bookmark ->
-                    BookmarkListItem(
-                        bookmark = bookmark,
-                        onClick = { onBookmarkClick(bookmark.id) },
-                        onMove = { onBookmarkMove(bookmark) },
-                    )
+                    Box {
+                        BookmarkListItem(
+                            bookmark = bookmark,
+                            onClick = { onBookmarkClick(bookmark.id) },
+                            onLongClick = { onBookmarkLongClick(bookmark.id) },
+                        )
+                        DropdownMenu(
+                            expanded = contextMenuBookmarkId == bookmark.id,
+                            onDismissRequest = onDismissContextMenu,
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Edit") },
+                                onClick = { onEditBookmark(bookmark.id) },
+                                modifier = Modifier.testTag("context_edit"),
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Move") },
+                                onClick = {
+                                    onDismissContextMenu()
+                                    onBookmarkMove(bookmark)
+                                },
+                                modifier = Modifier.testTag("context_move"),
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete") },
+                                onClick = { onDeleteBookmark(bookmark.id) },
+                                modifier = Modifier.testTag("context_delete"),
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -366,32 +530,16 @@ private fun FolderListItem(
 private fun BookmarkListItem(
     bookmark: BookmarkItemDto,
     onClick: () -> Unit,
-    onMove: () -> Unit,
+    onLongClick: () -> Unit,
 ) {
-    var showContextMenu by remember { mutableStateOf(false) }
-
-    Box {
-        ListItem(
-            headlineContent = { Text(bookmark.title) },
-            supportingContent = { Text(bookmark.url) },
-            modifier = Modifier.combinedClickable(
-                onClick = onClick,
-                onLongClick = { showContextMenu = true },
-            ),
-        )
-        DropdownMenu(
-            expanded = showContextMenu,
-            onDismissRequest = { showContextMenu = false },
-        ) {
-            DropdownMenuItem(
-                text = { Text("Move") },
-                onClick = {
-                    showContextMenu = false
-                    onMove()
-                },
-            )
-        }
-    }
+    ListItem(
+        headlineContent = { Text(bookmark.title) },
+        supportingContent = { Text(bookmark.url) },
+        modifier = Modifier.combinedClickable(
+            onClick = onClick,
+            onLongClick = onLongClick,
+        ),
+    )
 }
 
 @Composable

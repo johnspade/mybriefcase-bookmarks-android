@@ -6,14 +6,19 @@ import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
 import uniffi.mybriefcase_bookmarks_ffi.BreadcrumbDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderItemDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
+import uniffi.mybriefcase_bookmarks_ffi.ImportResultDto
 import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 
 data class FolderUiState(
@@ -26,15 +31,21 @@ data class FolderUiState(
     val sortOrder: SortOrder = SortOrder.NAME_ASC,
     val isLoading: Boolean = true,
     val error: String? = null,
+    val selectedBookmark: BookmarkDto? = null,
+    val importResult: ImportResultDto? = null,
+    val exportedHtml: String? = null,
 )
 
 class FolderViewModel(
     private val repository: BookmarkRepository = MyBriefcaseApp.instance.repository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val pollIntervalMs: Long = 30_000L,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FolderUiState())
     val uiState: StateFlow<FolderUiState> = _uiState.asStateFlow()
+
+    private var pollingJob: Job? = null
 
     init {
         loadNavTree()
@@ -106,6 +117,121 @@ class FolderViewModel(
                 _uiState.value = _uiState.value.copy(error = e.message)
             }
         }
+    }
+
+    fun startPolling() {
+        if (pollingJob?.isActive == true) return
+        pollingJob = viewModelScope.launch(ioDispatcher) {
+            while (isActive) {
+                delay(pollIntervalMs)
+                try {
+                    val changed = repository.triggerFullMerge()
+                    if (changed) {
+                        loadFolderContents(_uiState.value.currentFolderId)
+                        loadNavTree()
+                    }
+                } catch (_: Exception) {
+                    // Polling errors are non-fatal
+                }
+            }
+        }
+    }
+
+    fun stopPolling() {
+        pollingJob?.cancel()
+        pollingJob = null
+    }
+
+    fun addBookmark(url: String, title: String) {
+        val folderId = _uiState.value.currentFolderId
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.addBookmark(folderId, url, title)
+                refreshAfterMutation()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+    fun loadBookmarkDetail(bookmarkId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val bookmark = repository.getBookmark(bookmarkId)
+                if (bookmark != null) {
+                    _uiState.value = _uiState.value.copy(selectedBookmark = bookmark)
+                } else {
+                    _uiState.value = _uiState.value.copy(error = "Bookmark not found")
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+    fun clearSelectedBookmark() {
+        _uiState.value = _uiState.value.copy(selectedBookmark = null)
+    }
+
+    fun updateBookmark(bookmarkId: String, url: String?, title: String?, notes: String?) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.updateBookmark(bookmarkId, url, title, notes)
+                // Reload the bookmark detail
+                val updated = repository.getBookmark(bookmarkId)
+                _uiState.value = _uiState.value.copy(selectedBookmark = updated)
+                loadFolderContents(_uiState.value.currentFolderId)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+    fun deleteBookmark(bookmarkId: String) {
+        val folderId = _uiState.value.currentFolderId
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.deleteBookmark(bookmarkId)
+                _uiState.value = _uiState.value.copy(selectedBookmark = null)
+                loadFolderContents(folderId)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+    fun importHtml(html: String) {
+        val folderId = _uiState.value.currentFolderId.ifEmpty {
+            _uiState.value.navTree?.rootFolderId ?: return
+        }
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val result = repository.importHtml(folderId, html)
+                _uiState.value = _uiState.value.copy(importResult = result)
+                refreshAfterMutation()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+    fun clearImportResult() {
+        _uiState.value = _uiState.value.copy(importResult = null)
+    }
+
+    fun exportHtml() {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val html = repository.exportHtml()
+                _uiState.value = _uiState.value.copy(exportedHtml = html)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
+    fun clearExportedHtml() {
+        _uiState.value = _uiState.value.copy(exportedHtml = null)
     }
 
     private fun refreshAfterMutation() {
