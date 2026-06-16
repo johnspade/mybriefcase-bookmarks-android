@@ -68,6 +68,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg_attr(miri, ignore)]
     fn list_bookmarks_returns_empty_for_fresh_repo() {
         let tmp = tempfile::tempdir().unwrap();
         let result = list_bookmarks(tmp.path().to_str().unwrap().to_string());
@@ -75,6 +76,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore)]
     fn list_folders_returns_root_for_fresh_repo() {
         let tmp = tempfile::tempdir().unwrap();
         let result = list_folders(tmp.path().to_str().unwrap().to_string());
