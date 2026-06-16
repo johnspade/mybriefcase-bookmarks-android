@@ -17,5 +17,8 @@ mybriefcase-bookmarks-core = { git = "https://github.com/johnspade/mybriefcase-b
 autosurgeon = "0.9"
 tokio = { version = "1", features = ["rt-multi-thread"] }
 
+[dev-dependencies]
+tempfile = "3"
+
 [build-dependencies]
 uniffi = { version = "0.28", features = ["build"] }
