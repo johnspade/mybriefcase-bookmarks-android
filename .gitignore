@@ -20,8 +20,8 @@ local.properties
 # Built native libraries (regenerated from rust/)
 /app/src/main/jniLibs/
 
-# Generated UniFFI bindings (regenerated from rust/)
-/app/src/main/java/uniffi/
+# Generated UniFFI bindings — committed for CI (regenerate with uniffi-bindgen)
+# /app/src/main/java/uniffi/
 
 # Claude Code
 .claude/settings.local.json
