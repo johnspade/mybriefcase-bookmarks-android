@@ -1,5 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,23 +11,46 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
 import uniffi.mybriefcase_bookmarks_ffi.BreadcrumbDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderItemDto
+import uniffi.mybriefcase_bookmarks_ffi.FolderNavDto
+import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FolderScreen(
     viewModel: FolderViewModel,
@@ -34,31 +58,83 @@ fun FolderScreen(
     modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
 
-    when {
-        uiState.isLoading -> {
-            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        }
-        uiState.error != null -> {
-            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(modifier = Modifier.testTag("drawer_sheet")) {
                 Text(
-                    text = uiState.error ?: "Unknown error",
-                    color = MaterialTheme.colorScheme.error,
+                    text = "Folders",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(16.dp),
                 )
+                uiState.navTree?.let { tree ->
+                    FolderNavTree(
+                        tree = tree,
+                        currentFolderId = uiState.currentFolderId,
+                        onFolderClick = { folderId ->
+                            viewModel.navigateToFolder(folderId)
+                            scope.launch { drawerState.close() }
+                        },
+                    )
+                }
             }
-        }
-        else -> {
-            FolderContent(
-                breadcrumbs = uiState.breadcrumbs,
-                folders = uiState.folders,
-                bookmarks = uiState.bookmarks,
-                onFolderClick = { viewModel.navigateToFolder(it) },
-                onBookmarkClick = onBookmarkClick,
-                onBreadcrumbClick = { viewModel.navigateToFolder(it) },
-                modifier = modifier,
-            )
+        },
+        modifier = modifier,
+    ) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(uiState.folderTitle) },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = { scope.launch { drawerState.open() } },
+                            modifier = Modifier.testTag("drawer_button"),
+                        ) {
+                            Icon(Icons.Default.Menu, contentDescription = "Open drawer")
+                        }
+                    },
+                )
+            },
+        ) { innerPadding ->
+            when {
+                uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                uiState.error != null -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = uiState.error ?: "Unknown error",
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+                else -> {
+                    FolderContent(
+                        breadcrumbs = uiState.breadcrumbs,
+                        folders = uiState.folders,
+                        bookmarks = uiState.bookmarks,
+                        onFolderClick = { viewModel.navigateToFolder(it) },
+                        onBookmarkClick = onBookmarkClick,
+                        onBreadcrumbClick = { viewModel.navigateToFolder(it) },
+                        modifier = Modifier.padding(innerPadding),
+                    )
+                }
+            }
         }
     }
 }
@@ -160,4 +236,75 @@ private fun BookmarkListItem(bookmark: BookmarkItemDto, onClick: () -> Unit) {
         supportingContent = { Text(bookmark.url) },
         modifier = Modifier.clickable(onClick = onClick),
     )
+}
+
+@Composable
+private fun FolderNavTree(
+    tree: FolderNavTreeDto,
+    currentFolderId: String,
+    onFolderClick: (String) -> Unit,
+) {
+    val folderMap = remember(tree) { tree.folders.associateBy { it.id } }
+
+    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+        folderMap[tree.rootFolderId]?.let { root ->
+            FolderNavNode(
+                folder = root,
+                folderMap = folderMap,
+                currentFolderId = currentFolderId,
+                depth = 0,
+                onFolderClick = onFolderClick,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FolderNavNode(
+    folder: FolderNavDto,
+    folderMap: Map<String, FolderNavDto>,
+    currentFolderId: String,
+    depth: Int,
+    onFolderClick: (String) -> Unit,
+) {
+    val hasChildren = folder.childFolderIds.isNotEmpty()
+    var expanded by remember { mutableStateOf(true) }
+
+    NavigationDrawerItem(
+        label = { Text(folder.title) },
+        selected = folder.id == currentFolderId,
+        onClick = { onFolderClick(folder.id) },
+        icon = { Icon(Icons.Default.Folder, contentDescription = null) },
+        badge = if (hasChildren) {
+            {
+                IconButton(onClick = { expanded = !expanded }) {
+                    Icon(
+                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                    )
+                }
+            }
+        } else {
+            null
+        },
+        modifier = Modifier.padding(start = (depth * 16).dp),
+    )
+
+    if (hasChildren) {
+        AnimatedVisibility(visible = expanded) {
+            Column {
+                for (childId in folder.childFolderIds) {
+                    folderMap[childId]?.let { child ->
+                        FolderNavNode(
+                            folder = child,
+                            folderMap = folderMap,
+                            currentFolderId = currentFolderId,
+                            depth = depth + 1,
+                            onFolderClick = onFolderClick,
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
