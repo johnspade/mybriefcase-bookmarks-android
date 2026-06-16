@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -280,17 +281,17 @@ class FolderViewModelTest {
 
         // Advance past first interval
         advanceTimeBy(1100)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(1, mergeCallCount)
 
         // Advance past second interval
         advanceTimeBy(1100)
-        advanceUntilIdle()
+        runCurrent()
         assertEquals(2, mergeCallCount)
 
         viewModel.stopPolling()
         advanceTimeBy(1100)
-        advanceUntilIdle()
+        runCurrent()
         // No more calls after stop
         assertEquals(2, mergeCallCount)
     }

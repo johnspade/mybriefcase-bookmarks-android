@@ -1,8 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks
 
 import android.app.Application
-import androidx.work.Configuration
-import androidx.work.WorkManager
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepositoryImpl
 
@@ -24,8 +22,6 @@ class MyBriefcaseApp : Application() {
         val clientId = getOrCreateClientId()
 
         repository.initRepo(dataDir, syncDir, clientId)
-
-        WorkManager.initialize(this, Configuration.Builder().build())
         SyncWorker.enqueue(this)
     }
 
