@@ -5,28 +5,26 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
+import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.theme.MyBriefcaseBookmarksTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyBriefcaseBookmarksTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    PlaceholderScreen(modifier = Modifier.padding(innerPadding))
-                }
+                val folderViewModel: FolderViewModel = viewModel()
+                FolderScreen(
+                    viewModel = folderViewModel,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
         }
     }
-}
-
-@Composable
-fun PlaceholderScreen(modifier: Modifier = Modifier) {
-    Text(text = "MyBriefcase Bookmarks", modifier = modifier)
 }

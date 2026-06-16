@@ -2,4 +2,9 @@
 <resources>
 
     <style name="Theme.MyBriefcaseBookmarks" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.MyBriefcaseBookmarks.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@android:color/white</item>
+        <item name="postSplashScreenTheme">@style/Theme.MyBriefcaseBookmarks</item>
+    </style>
 </resources>
