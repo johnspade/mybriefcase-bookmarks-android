@@ -60,6 +60,7 @@
 
           test = craneLib.cargoTest (commonArgs // {
             inherit cargoArtifacts;
+            cargoTestExtraArgs = "-- --test-threads=1";
           });
 
           deny = craneLib.cargoDeny { inherit src; };

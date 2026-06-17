@@ -7,7 +7,7 @@ pub fn add_bookmark(folder_id: String, url: String, title: String) -> Result<Str
     let state = repo();
     let id = ops::add_bookmark(&state.doc_handle, &folder_id, &url, &title)?;
     refresh_cache(state);
-    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id);
+    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id)?;
     Ok(id)
 }
 
@@ -27,7 +27,7 @@ pub fn update_bookmark(
         notes.as_deref(),
     )?;
     refresh_cache(state);
-    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id);
+    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id)?;
     Ok(())
 }
 
@@ -36,6 +36,6 @@ pub fn delete_bookmark(bookmark_id: String) -> Result<(), FfiError> {
     let state = repo();
     ops::delete_bookmark(&state.doc_handle, &bookmark_id)?;
     refresh_cache(state);
-    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id);
+    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id)?;
     Ok(())
 }
