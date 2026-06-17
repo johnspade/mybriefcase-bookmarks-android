@@ -161,13 +161,17 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     if (showEditFromSearch && uiState.selectedBookmark != null) {
         EditBookmarkDialog(
             bookmark = uiState.selectedBookmark!!,
+            navTree = uiState.navTree,
+            currentFolderId = uiState.currentFolderId,
             onDismiss = {
                 showEditFromSearch = false
                 folderViewModel.clearSelectedBookmark()
             },
-            onConfirm = { url, title, notes ->
+            onConfirm = { url, title, notes, newFolderId ->
                 showEditFromSearch = false
-                folderViewModel.updateBookmark(uiState.selectedBookmark!!.id, url, title, notes)
+                folderViewModel.updateBookmarkAndMove(
+                    uiState.selectedBookmark!!.id, url, title, notes, newFolderId,
+                )
             },
         )
     }

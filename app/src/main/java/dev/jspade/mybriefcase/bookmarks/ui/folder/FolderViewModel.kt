@@ -190,6 +190,20 @@ class FolderViewModel(
         }
     }
 
+    fun updateBookmarkAndMove(bookmarkId: String, url: String?, title: String?, notes: String?, newFolderId: String?) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.updateBookmark(bookmarkId, url, title, notes)
+                if (newFolderId != null) {
+                    repository.moveItem(bookmarkId, _uiState.value.currentFolderId, newFolderId)
+                }
+                refreshAfterMutation()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(error = e.message)
+            }
+        }
+    }
+
     fun deleteBookmark(bookmarkId: String) {
         val folderId = _uiState.value.currentFolderId
         viewModelScope.launch(ioDispatcher) {

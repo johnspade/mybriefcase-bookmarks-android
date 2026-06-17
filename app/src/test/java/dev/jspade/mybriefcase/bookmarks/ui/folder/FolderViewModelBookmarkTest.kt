@@ -210,4 +210,36 @@ class FolderViewModelBookmarkTest {
             assertEquals("export failed", state.error)
         }
     }
+
+    @Test
+    fun `updateBookmarkAndMove calls both updateBookmark and moveItem`() = runTest {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
+
+        viewModel.navigateToFolder("folder-1")
+        advanceUntilIdle()
+
+        viewModel.updateBookmarkAndMove("bm-1", "https://updated.com", "Updated", "notes", "folder-2")
+        advanceUntilIdle()
+
+        assertEquals(1, fakeRepo.updateBookmarkCalls.size)
+        assertEquals(listOf("bm-1", "https://updated.com", "Updated", "notes"), fakeRepo.updateBookmarkCalls[0])
+        assertEquals(1, fakeRepo.moveItemCalls.size)
+        assertEquals(Triple("bm-1", "folder-1", "folder-2"), fakeRepo.moveItemCalls[0])
+    }
+
+    @Test
+    fun `updateBookmarkAndMove with null folderId does not move`() = runTest {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
+
+        viewModel.navigateToFolder("folder-1")
+        advanceUntilIdle()
+
+        viewModel.updateBookmarkAndMove("bm-1", "https://updated.com", "Updated", "notes", null)
+        advanceUntilIdle()
+
+        assertEquals(1, fakeRepo.updateBookmarkCalls.size)
+        assertTrue(fakeRepo.moveItemCalls.isEmpty())
+    }
 }
