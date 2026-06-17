@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -23,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
@@ -79,7 +81,7 @@ fun EditBookmarkDialog(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("Title") },
-                    singleLine = true,
+                    maxLines = 3,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("edit_bookmark_title"),
@@ -118,7 +120,7 @@ fun EditBookmarkDialog(
                         ) {
                             flatFolderList.forEach { (folder, depth) ->
                                 DropdownMenuItem(
-                                    text = { Text(" ".repeat(depth * 4) + folder.title) },
+                                    text = { Text(" ".repeat(depth * 4) + folder.title) },
                                     onClick = {
                                         selectedFolderId = folder.id
                                         folderPickerExpanded = false
@@ -154,7 +156,10 @@ fun EditBookmarkDialog(
                 Text("Cancel")
             }
         },
-        modifier = Modifier.testTag("edit_bookmark_dialog"),
+        properties = DialogProperties(decorFitsSystemWindows = false),
+        modifier = Modifier
+            .imePadding()
+            .testTag("edit_bookmark_dialog"),
     )
 }
 
