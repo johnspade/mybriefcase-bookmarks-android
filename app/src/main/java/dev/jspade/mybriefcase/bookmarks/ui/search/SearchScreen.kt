@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
@@ -47,6 +50,11 @@ fun SearchScreen(
     val query by viewModel.query.collectAsState()
     val results by viewModel.searchResults.collectAsState()
     val sortOrder by viewModel.sortOrder.collectAsState()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     Scaffold(
         topBar = {
@@ -59,6 +67,7 @@ fun SearchScreen(
                         singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
+                            .focusRequester(focusRequester)
                             .testTag("search_input"),
                         trailingIcon = {
                             if (query.isNotEmpty()) {
