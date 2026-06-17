@@ -123,6 +123,24 @@ class FolderScreenTest {
     }
 
     @Test
+    fun `drawer shows item count badges for folders`() {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+        composeTestRule.setContent {
+            FolderScreen(viewModel = viewModel)
+        }
+
+        // Open drawer
+        composeTestRule.onNode(hasContentDescription("Open drawer")).performClick()
+        composeTestRule.waitForIdle()
+
+        // FakeBookmarkRepository has: Bookmarks(2), Work(1), Personal(0)
+        composeTestRule.onNodeWithTag("nav_folder_count_root-id", useUnmergedTree = true).assertExists()
+        composeTestRule.onNodeWithTag("nav_folder_count_folder-1", useUnmergedTree = true).assertExists()
+        composeTestRule.onNodeWithTag("nav_folder_count_folder-2", useUnmergedTree = true).assertExists()
+    }
+
+    @Test
     fun `sync banner shown when sync dir has no marker`() {
         val syncDir = tempFolder.newFolder("sync")
         val viewModel = FolderViewModel(

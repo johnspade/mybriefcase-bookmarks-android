@@ -324,13 +324,17 @@ fun FolderScreen(
     if (showEditDialog && uiState.selectedBookmark != null) {
         dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog(
             bookmark = uiState.selectedBookmark!!,
+            navTree = uiState.navTree,
+            currentFolderId = uiState.currentFolderId,
             onDismiss = {
                 showEditDialog = false
                 viewModel.clearSelectedBookmark()
             },
-            onConfirm = { url, title, notes ->
+            onConfirm = { url, title, notes, newFolderId ->
                 showEditDialog = false
-                viewModel.updateBookmark(uiState.selectedBookmark!!.id, url, title, notes)
+                viewModel.updateBookmarkAndMove(
+                    uiState.selectedBookmark!!.id, url, title, notes, newFolderId,
+                )
             },
         )
     }
@@ -693,17 +697,23 @@ private fun FolderNavNode(
         selected = folder.id == currentFolderId,
         onClick = { onFolderClick(folder.id) },
         icon = { Icon(Icons.Default.Folder, contentDescription = null) },
-        badge = if (hasChildren) {
-            {
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (expanded) "Collapse" else "Expand",
-                    )
+        badge = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = folder.itemCount.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag("nav_folder_count_${folder.id}"),
+                )
+                if (hasChildren) {
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(
+                            if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (expanded) "Collapse" else "Expand",
+                        )
+                    }
                 }
             }
-        } else {
-            null
         },
         modifier = Modifier.padding(start = (depth * 16).dp),
     )
