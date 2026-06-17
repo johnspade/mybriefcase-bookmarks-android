@@ -117,8 +117,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         }
         Screen.SETTINGS -> {
             SettingsScreen(
-                syncDir = MyBriefcaseApp.SYNC_ROOT,
-                clientId = "device-client",
+                syncDir = MyBriefcaseApp.instance.syncDir,
+                clientId = MyBriefcaseApp.instance.clientId,
                 appVersion = "1.0",
                 onBack = { currentScreen = Screen.FOLDER },
                 onImport = {

@@ -12,6 +12,9 @@ class MyBriefcaseApp : Application() {
     lateinit var syncDir: String
         private set
 
+    lateinit var clientId: String
+        private set
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -19,7 +22,7 @@ class MyBriefcaseApp : Application() {
 
         val dataDir = filesDir.absolutePath
         syncDir = resolveSyncDir()
-        val clientId = getOrCreateClientId()
+        clientId = getOrCreateClientId()
 
         repository.initRepo(dataDir, syncDir, clientId)
         SyncWorker.enqueue(this)
