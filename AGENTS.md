@@ -56,6 +56,12 @@ When a PR touches the UI (Compose), attach before and after screenshots.
 
 Use the Android MCP for manual testing, debugging, and taking screenshots. Connect to the running emulator or device via `ConnectDevice`, then use `Snapshot` to capture the current screen.
 
+## Native Rust Libraries
+
+The app depends on a native Rust library (`libmybriefcase_bookmarks_ffi.so`). The Gradle `preBuild` task compiles it automatically via `cargo-ndk` — no manual steps needed. Requires the Nix dev shell for `cargo-ndk` on PATH; without it (e.g. CI lint/test), the task is skipped.
+
+Rust sources live in `rust/ffi/`. The generated Kotlin bindings are at `app/src/main/java/uniffi/`.
+
 ## Project Context
 
 See [README.md](README.md) for build prerequisites, launch parameters, and dev workflow. See [CONTEXT.md](CONTEXT.md) for domain language and architecture.
