@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MyBriefcase Bookmarks</string>
+    <string name="launcher_name">Bookmarks</string>
 </resources>
