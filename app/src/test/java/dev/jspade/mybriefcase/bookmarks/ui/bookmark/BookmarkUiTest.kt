@@ -20,6 +20,8 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -27,6 +29,8 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import uniffi.mybriefcase_bookmarks_ffi.FolderNavDto
+import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -176,7 +180,7 @@ class BookmarkUiTest {
             EditBookmarkDialog(
                 bookmark = bookmark,
                 onDismiss = {},
-                onConfirm = { _, _, _ -> },
+                onConfirm = { _, _, _, _ -> },
             )
         }
 
@@ -246,5 +250,120 @@ class BookmarkUiTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("Settings").assertIsDisplayed()
+    }
+
+    @Test
+    fun `edit dialog shows folder picker with current folder`() {
+        val bookmark = BookmarkDto(
+            id = "test-id",
+            url = "https://example.com",
+            title = "Example",
+            notes = "",
+            createdAt = "2024-01-01T00:00:00Z",
+            updatedAt = "2024-01-01T00:00:00Z",
+        )
+        val navTree = FolderNavTreeDto(
+            rootFolderId = "root-id",
+            folders = listOf(
+                FolderNavDto(id = "root-id", title = "Bookmarks", itemCount = 2u, childFolderIds = listOf("folder-1", "folder-2")),
+                FolderNavDto(id = "folder-1", title = "Work", itemCount = 1u, childFolderIds = emptyList()),
+                FolderNavDto(id = "folder-2", title = "Personal", itemCount = 0u, childFolderIds = emptyList()),
+            ),
+        )
+
+        composeTestRule.setContent {
+            EditBookmarkDialog(
+                bookmark = bookmark,
+                navTree = navTree,
+                currentFolderId = "folder-1",
+                onDismiss = {},
+                onConfirm = { _, _, _, _ -> },
+            )
+        }
+
+        // Folder picker should be displayed showing current folder name
+        composeTestRule.onNodeWithTag("edit_bookmark_folder_picker").performScrollTo().assertIsDisplayed()
+        composeTestRule.onNodeWithText("Work").assertIsDisplayed()
+    }
+
+    @Test
+    fun `edit dialog folder picker allows selecting different folder`() {
+        val bookmark = BookmarkDto(
+            id = "test-id",
+            url = "https://example.com",
+            title = "Example",
+            notes = "",
+            createdAt = "2024-01-01T00:00:00Z",
+            updatedAt = "2024-01-01T00:00:00Z",
+        )
+        val navTree = FolderNavTreeDto(
+            rootFolderId = "root-id",
+            folders = listOf(
+                FolderNavDto(id = "root-id", title = "Bookmarks", itemCount = 2u, childFolderIds = listOf("folder-1", "folder-2")),
+                FolderNavDto(id = "folder-1", title = "Work", itemCount = 1u, childFolderIds = emptyList()),
+                FolderNavDto(id = "folder-2", title = "Personal", itemCount = 0u, childFolderIds = emptyList()),
+            ),
+        )
+        var confirmedFolderId: String? = null
+
+        composeTestRule.setContent {
+            EditBookmarkDialog(
+                bookmark = bookmark,
+                navTree = navTree,
+                currentFolderId = "folder-1",
+                onDismiss = {},
+                onConfirm = { _, _, _, folderId -> confirmedFolderId = folderId },
+            )
+        }
+
+        // Click the folder picker to expand it
+        composeTestRule.onNodeWithTag("edit_bookmark_folder_picker").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        // Select "Personal" folder
+        composeTestRule.onNodeWithText("Personal").performClick()
+        composeTestRule.waitForIdle()
+
+        // Save
+        composeTestRule.onNodeWithTag("edit_bookmark_confirm").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals("folder-2", confirmedFolderId)
+    }
+
+    @Test
+    fun `edit dialog confirm passes null folderId when folder not changed`() {
+        val bookmark = BookmarkDto(
+            id = "test-id",
+            url = "https://example.com",
+            title = "Example",
+            notes = "",
+            createdAt = "2024-01-01T00:00:00Z",
+            updatedAt = "2024-01-01T00:00:00Z",
+        )
+        val navTree = FolderNavTreeDto(
+            rootFolderId = "root-id",
+            folders = listOf(
+                FolderNavDto(id = "root-id", title = "Bookmarks", itemCount = 2u, childFolderIds = listOf("folder-1")),
+                FolderNavDto(id = "folder-1", title = "Work", itemCount = 1u, childFolderIds = emptyList()),
+            ),
+        )
+        var confirmedFolderId: String? = "sentinel"
+
+        composeTestRule.setContent {
+            EditBookmarkDialog(
+                bookmark = bookmark,
+                navTree = navTree,
+                currentFolderId = "folder-1",
+                onDismiss = {},
+                onConfirm = { _, _, _, folderId -> confirmedFolderId = folderId },
+            )
+        }
+
+        // Save without changing folder
+        composeTestRule.onNodeWithTag("edit_bookmark_confirm").performClick()
+        composeTestRule.waitForIdle()
+
+        assertNull(confirmedFolderId)
     }
 }

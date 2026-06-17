@@ -872,3 +872,36 @@ fn trigger_full_merge_picks_up_peer_bookmark_and_returns_true() {
         "trigger_full_merge should return false when no peer data exists"
     );
 }
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn item_count_reflects_recursive_bookmark_count() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let parent_id = root_children.folders[0].id.clone();
+
+    // Create a sub-folder inside parent
+    let child_id = create_folder(parent_id.clone(), "Nested".to_string()).unwrap();
+
+    // Add bookmarks: 1 in parent, 2 in child
+    add_bookmark(parent_id.clone(), "https://a.test".into(), "A".into()).unwrap();
+    add_bookmark(child_id.clone(), "https://b.test".into(), "B".into()).unwrap();
+    add_bookmark(child_id.clone(), "https://c.test".into(), "C".into()).unwrap();
+
+    // Parent item_count should include nested bookmarks
+    let tree = get_folder_nav_tree().unwrap();
+    let parent_nav = tree.folders.iter().find(|f| f.id == parent_id).unwrap();
+    let child_nav = tree.folders.iter().find(|f| f.id == child_id).unwrap();
+
+    assert_eq!(
+        child_nav.item_count, 2,
+        "child should count its 2 bookmarks"
+    );
+    assert!(
+        parent_nav.item_count >= 3,
+        "parent should count at least 3 bookmarks recursively, got {}",
+        parent_nav.item_count
+    );
+}

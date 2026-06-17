@@ -45,6 +45,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -324,13 +325,17 @@ fun FolderScreen(
     if (showEditDialog && uiState.selectedBookmark != null) {
         dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog(
             bookmark = uiState.selectedBookmark!!,
+            navTree = uiState.navTree,
+            currentFolderId = uiState.currentFolderId,
             onDismiss = {
                 showEditDialog = false
                 viewModel.clearSelectedBookmark()
             },
-            onConfirm = { url, title, notes ->
+            onConfirm = { url, title, notes, newFolderId ->
                 showEditDialog = false
-                viewModel.updateBookmark(uiState.selectedBookmark!!.id, url, title, notes)
+                viewModel.updateBookmarkAndMove(
+                    uiState.selectedBookmark!!.id, url, title, notes, newFolderId,
+                )
             },
         )
     }
@@ -539,7 +544,7 @@ private fun FolderListItem(
     Box {
         ListItem(
             headlineContent = { Text(folder.title) },
-            supportingContent = { Text("${folder.itemCount} items") },
+            supportingContent = { Text("${folder.itemCount} " + if (folder.itemCount == 1u) "item" else "items") },
             leadingContent = {
                 Icon(Icons.Default.Folder, contentDescription = null)
             },
@@ -693,17 +698,31 @@ private fun FolderNavNode(
         selected = folder.id == currentFolderId,
         onClick = { onFolderClick(folder.id) },
         icon = { Icon(Icons.Default.Folder, contentDescription = null) },
-        badge = if (hasChildren) {
-            {
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = if (expanded) "Collapse" else "Expand",
-                    )
+        badge = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (depth > 0 && folder.itemCount > 0u) {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.testTag("nav_folder_count_${folder.id}"),
+                    ) {
+                        Text(
+                            text = folder.itemCount.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        )
+                    }
+                }
+                if (hasChildren) {
+                    IconButton(onClick = { expanded = !expanded }) {
+                        Icon(
+                            if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (expanded) "Collapse" else "Expand",
+                        )
+                    }
                 }
             }
-        } else {
-            null
         },
         modifier = Modifier.padding(start = (depth * 16).dp),
     )

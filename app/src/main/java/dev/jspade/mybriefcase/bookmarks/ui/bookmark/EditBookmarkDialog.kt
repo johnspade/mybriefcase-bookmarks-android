@@ -4,7 +4,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -17,23 +24,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditBookmarkDialog(
     bookmark: BookmarkDto,
+    navTree: FolderNavTreeDto? = null,
+    currentFolderId: String? = null,
     onDismiss: () -> Unit,
-    onConfirm: (url: String, title: String, notes: String) -> Unit,
+    onConfirm: (url: String, title: String, notes: String, newFolderId: String?) -> Unit,
 ) {
     var url by remember { mutableStateOf(bookmark.url) }
     var title by remember { mutableStateOf(bookmark.title) }
     var notes by remember { mutableStateOf(bookmark.notes) }
     var urlError by remember { mutableStateOf(false) }
+    var selectedFolderId by remember { mutableStateOf(currentFolderId) }
+    var folderPickerExpanded by remember { mutableStateOf(false) }
+
+    val folderMap = remember(navTree) {
+        navTree?.folders?.associateBy { it.id } ?: emptyMap()
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Edit Bookmark") },
         text = {
-            Column {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(
                     value = url,
                     onValueChange = {
@@ -72,6 +89,40 @@ fun EditBookmarkDialog(
                         .fillMaxWidth()
                         .testTag("edit_bookmark_notes"),
                 )
+                if (navTree != null && currentFolderId != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ExposedDropdownMenuBox(
+                        expanded = folderPickerExpanded,
+                        onExpandedChange = { folderPickerExpanded = it },
+                        modifier = Modifier.testTag("edit_bookmark_folder_picker"),
+                    ) {
+                        OutlinedTextField(
+                            value = folderMap[selectedFolderId]?.title ?: "",
+                            onValueChange = {},
+                            label = { Text("Folder") },
+                            readOnly = true,
+                            singleLine = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = folderPickerExpanded) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                        )
+                        ExposedDropdownMenu(
+                            expanded = folderPickerExpanded,
+                            onDismissRequest = { folderPickerExpanded = false },
+                        ) {
+                            navTree.folders.forEach { folder ->
+                                DropdownMenuItem(
+                                    text = { Text(folder.title) },
+                                    onClick = {
+                                        selectedFolderId = folder.id
+                                        folderPickerExpanded = false
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
@@ -80,7 +131,12 @@ fun EditBookmarkDialog(
                     if (url.isBlank()) {
                         urlError = true
                     } else {
-                        onConfirm(url.trim(), title.trim(), notes.trim())
+                        val newFolderId = if (selectedFolderId != null && selectedFolderId != currentFolderId) {
+                            selectedFolderId
+                        } else {
+                            null
+                        }
+                        onConfirm(url.trim(), title.trim(), notes.trim(), newFolderId)
                     }
                 },
                 modifier = Modifier.testTag("edit_bookmark_confirm"),

@@ -26,19 +26,7 @@ pub fn get_folder_children(
             if sub.deleted {
                 continue;
             }
-            let item_count = sub
-                .children
-                .iter()
-                .filter(|c| {
-                    cache
-                        .folders
-                        .get(*c)
-                        .map(|f| !f.deleted)
-                        .unwrap_or_else(|| {
-                            cache.bookmarks.get(*c).map(|b| !b.deleted).unwrap_or(false)
-                        })
-                })
-                .count() as u32;
+            let item_count = count_bookmarks_recursive(&cache, sub);
             folder_items.push(FolderItemDto {
                 id: child_id.clone(),
                 title: sub.title.clone(),
@@ -89,17 +77,7 @@ pub fn get_folder_nav_tree() -> Result<FolderNavTreeDto, FfiError> {
             .filter(|c| cache.folders.get(*c).map(|f| !f.deleted).unwrap_or(false))
             .cloned()
             .collect();
-        let item_count = folder
-            .children
-            .iter()
-            .filter(|c| {
-                cache
-                    .folders
-                    .get(*c)
-                    .map(|f| !f.deleted)
-                    .unwrap_or_else(|| cache.bookmarks.get(*c).map(|b| !b.deleted).unwrap_or(false))
-            })
-            .count() as u32;
+        let item_count = count_bookmarks_recursive(&cache, folder);
         nav_folders.push(FolderNavDto {
             id: id.clone(),
             title: folder.title.clone(),
@@ -155,6 +133,25 @@ fn sort_bookmark_items(items: &mut [BookmarkItemDto], sort_by: SortOrder) {
         SortOrder::DateDesc => items.sort_by_key(|a| std::cmp::Reverse(a.created_at.clone())),
         SortOrder::DateAsc => items.sort_by_key(|a| a.created_at.clone()),
     }
+}
+
+fn count_bookmarks_recursive(
+    store: &mybriefcase_bookmarks_core::model::BookmarkStore,
+    folder: &mybriefcase_bookmarks_core::model::Folder,
+) -> u32 {
+    let mut count: u32 = 0;
+    for child_id in &folder.children {
+        if let Some(bm) = store.bookmarks.get(child_id) {
+            if !bm.deleted {
+                count += 1;
+            }
+        } else if let Some(sub) = store.folders.get(child_id) {
+            if !sub.deleted {
+                count += count_bookmarks_recursive(store, sub);
+            }
+        }
+    }
+    count
 }
 
 fn build_breadcrumbs(

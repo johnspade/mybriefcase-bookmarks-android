@@ -56,7 +56,7 @@ class FolderScreenTest {
         }
 
         // Check item count text which is unique to the main list folder items
-        composeTestRule.onNodeWithText("1 items").assertIsDisplayed()
+        composeTestRule.onNodeWithText("1 item").assertIsDisplayed()
         composeTestRule.onNodeWithText("0 items").assertIsDisplayed()
     }
 
@@ -68,8 +68,8 @@ class FolderScreenTest {
             FolderScreen(viewModel = viewModel)
         }
 
-        // Tap on "1 items" (the Work folder's supporting text in the list)
-        composeTestRule.onNodeWithText("1 items").performClick()
+        // Tap on "1 item" (the Work folder's supporting text in the list)
+        composeTestRule.onNodeWithText("1 item").performClick()
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithText("GitHub").assertIsDisplayed()
@@ -84,7 +84,7 @@ class FolderScreenTest {
             FolderScreen(viewModel = viewModel)
         }
 
-        composeTestRule.onNodeWithText("1 items").performClick()
+        composeTestRule.onNodeWithText("1 item").performClick()
         composeTestRule.waitForIdle()
 
         // Breadcrumb separator indicates we're at a nested level
@@ -120,6 +120,24 @@ class FolderScreenTest {
 
         // Folder tree header should be displayed
         composeTestRule.onNodeWithText("Folders").assertIsDisplayed()
+    }
+
+    @Test
+    fun `drawer shows item count badges for folders`() {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+        composeTestRule.setContent {
+            FolderScreen(viewModel = viewModel)
+        }
+
+        // Open drawer
+        composeTestRule.onNode(hasContentDescription("Open drawer")).performClick()
+        composeTestRule.waitForIdle()
+
+        // FakeBookmarkRepository has: Work(1), Personal(0); root badge is hidden
+        composeTestRule.onNodeWithTag("nav_folder_count_root-id", useUnmergedTree = true).assertDoesNotExist()
+        composeTestRule.onNodeWithTag("nav_folder_count_folder-1", useUnmergedTree = true).assertExists()
+        composeTestRule.onNodeWithTag("nav_folder_count_folder-2", useUnmergedTree = true).assertDoesNotExist()
     }
 
     @Test
