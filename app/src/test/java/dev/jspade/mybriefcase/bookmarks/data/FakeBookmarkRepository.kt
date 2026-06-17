@@ -115,25 +115,25 @@ class FakeBookmarkRepository : BookmarkRepository {
     override fun initRepo(dataDir: String, syncDir: String, clientId: String) {}
     override fun shutdown() {}
 
-    override fun getFolderChildren(folderId: String, sortBy: SortOrder): FolderChildrenDto {
+    override suspend fun getFolderChildren(folderId: String, sortBy: SortOrder): FolderChildrenDto {
         getFolderChildrenCallCount++
         shouldThrow?.let { throw it }
         return folderChildren[folderId]
             ?: throw RuntimeException("folder not found: $folderId")
     }
 
-    override fun getFolderNavTree(): FolderNavTreeDto {
+    override suspend fun getFolderNavTree(): FolderNavTreeDto {
         getNavTreeCallCount++
         shouldThrow?.let { throw it }
         return navTree
     }
 
-    override fun getBookmark(bookmarkId: String): BookmarkDto? {
+    override suspend fun getBookmark(bookmarkId: String): BookmarkDto? {
         shouldThrow?.let { throw it }
         return bookmarks[bookmarkId]
     }
 
-    override fun addBookmark(folderId: String, url: String, title: String): String {
+    override suspend fun addBookmark(folderId: String, url: String, title: String): String {
         shouldThrow?.let { throw it }
         addBookmarkCalls.add(Triple(folderId, url, title))
         val id = nextBookmarkId
@@ -160,7 +160,7 @@ class FakeBookmarkRepository : BookmarkRepository {
         return id
     }
 
-    override fun updateBookmark(bookmarkId: String, url: String?, title: String?, notes: String?) {
+    override suspend fun updateBookmark(bookmarkId: String, url: String?, title: String?, notes: String?) {
         shouldThrow?.let { throw it }
         updateBookmarkCalls.add(listOf(bookmarkId, url, title, notes))
         val existing = bookmarks[bookmarkId] ?: return
@@ -172,7 +172,7 @@ class FakeBookmarkRepository : BookmarkRepository {
         )
     }
 
-    override fun deleteBookmark(bookmarkId: String) {
+    override suspend fun deleteBookmark(bookmarkId: String) {
         shouldThrow?.let { throw it }
         deleteBookmarkCalls.add(bookmarkId)
         bookmarks.remove(bookmarkId)
@@ -185,42 +185,42 @@ class FakeBookmarkRepository : BookmarkRepository {
         }
     }
 
-    override fun createFolder(parentFolderId: String, title: String): String {
+    override suspend fun createFolder(parentFolderId: String, title: String): String {
         createFolderCalls.add(parentFolderId to title)
         return "new-folder-id"
     }
 
-    override fun renameFolder(folderId: String, title: String) {
+    override suspend fun renameFolder(folderId: String, title: String) {
         renameFolderCalls.add(folderId to title)
     }
 
-    override fun deleteFolder(folderId: String) {
+    override suspend fun deleteFolder(folderId: String) {
         deleteFolderCalls.add(folderId)
     }
 
-    override fun moveItem(itemId: String, fromFolderId: String, toFolderId: String) {
+    override suspend fun moveItem(itemId: String, fromFolderId: String, toFolderId: String) {
         moveItemThrow?.let { throw it }
         moveItemCalls.add(Triple(itemId, fromFolderId, toFolderId))
     }
 
-    override fun searchBookmarks(query: String, sortBy: SortOrder): List<BookmarkDto> {
+    override suspend fun searchBookmarks(query: String, sortBy: SortOrder): List<BookmarkDto> {
         lastSearchQuery = query
         onSearchCalled?.invoke()
         return searchResults
     }
 
-    override fun importHtml(folderId: String, html: String): ImportResultDto {
+    override suspend fun importHtml(folderId: String, html: String): ImportResultDto {
         shouldThrow?.let { throw it }
         importHtmlCalls.add(Pair(folderId, html))
         return importResult
     }
 
-    override fun exportHtml(): String {
+    override suspend fun exportHtml(): String {
         shouldThrow?.let { throw it }
         return exportResult
     }
 
-    override fun triggerFullMerge(): Boolean {
+    override suspend fun triggerFullMerge(): Boolean {
         onMergeCalled?.invoke()
         return mergeResult
     }

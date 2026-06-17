@@ -12,28 +12,28 @@ interface BookmarkRepository {
     fun shutdown()
 
     // Read
-    fun getFolderChildren(folderId: String, sortBy: SortOrder): FolderChildrenDto
-    fun getFolderNavTree(): FolderNavTreeDto
-    fun getBookmark(bookmarkId: String): BookmarkDto?
+    suspend fun getFolderChildren(folderId: String, sortBy: SortOrder): FolderChildrenDto
+    suspend fun getFolderNavTree(): FolderNavTreeDto
+    suspend fun getBookmark(bookmarkId: String): BookmarkDto?
 
     // Bookmarks
-    fun addBookmark(folderId: String, url: String, title: String): String
-    fun updateBookmark(bookmarkId: String, url: String?, title: String?, notes: String?)
-    fun deleteBookmark(bookmarkId: String)
+    suspend fun addBookmark(folderId: String, url: String, title: String): String
+    suspend fun updateBookmark(bookmarkId: String, url: String?, title: String?, notes: String?)
+    suspend fun deleteBookmark(bookmarkId: String)
 
     // Folders
-    fun createFolder(parentFolderId: String, title: String): String
-    fun renameFolder(folderId: String, title: String)
-    fun deleteFolder(folderId: String)
-    fun moveItem(itemId: String, fromFolderId: String, toFolderId: String)
+    suspend fun createFolder(parentFolderId: String, title: String): String
+    suspend fun renameFolder(folderId: String, title: String)
+    suspend fun deleteFolder(folderId: String)
+    suspend fun moveItem(itemId: String, fromFolderId: String, toFolderId: String)
 
     // Search
-    fun searchBookmarks(query: String, sortBy: SortOrder): List<BookmarkDto>
+    suspend fun searchBookmarks(query: String, sortBy: SortOrder): List<BookmarkDto>
 
     // Import/Export
-    fun importHtml(folderId: String, html: String): ImportResultDto
-    fun exportHtml(): String
+    suspend fun importHtml(folderId: String, html: String): ImportResultDto
+    suspend fun exportHtml(): String
 
     // Sync
-    fun triggerFullMerge(): Boolean
+    suspend fun triggerFullMerge(): Boolean
 }
