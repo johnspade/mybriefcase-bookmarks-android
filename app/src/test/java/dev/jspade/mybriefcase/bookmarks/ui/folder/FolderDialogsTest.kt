@@ -204,4 +204,286 @@ class FolderDialogsTest {
 
         assert(selectedFolderId == "folder-2")
     }
+
+    @Test
+    fun `bookmark move from folder with children keeps subfolders clickable`() {
+        val navTree = FolderNavTreeDto(
+            rootFolderId = "root-id",
+            folders = listOf(
+                FolderNavDto(
+                    id = "root-id",
+                    title = "Bookmarks",
+                    itemCount = 3u,
+                    childFolderIds = listOf("folder-1"),
+                ),
+                FolderNavDto(
+                    id = "folder-1",
+                    title = "Work",
+                    itemCount = 1u,
+                    childFolderIds = listOf("folder-1-1"),
+                ),
+                FolderNavDto(
+                    id = "folder-1-1",
+                    title = "Projects",
+                    itemCount = 0u,
+                    childFolderIds = emptyList(),
+                ),
+            ),
+        )
+
+        var selectedFolderId: String? = null
+
+        composeTestRule.setContent {
+            MoveItemDialog(
+                navTree = navTree,
+                currentFolderId = "folder-1",
+                movedFolderId = null,
+                onConfirm = { selectedFolderId = it },
+                onDismiss = {},
+            )
+        }
+
+        // Subfolder "Projects" should be clickable (bookmark move, not folder move)
+        composeTestRule.onNodeWithText("Projects").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Move here").performClick()
+
+        assert(selectedFolderId == "folder-1-1")
+    }
+
+    @Test
+    fun `bookmark move from root keeps all child folders clickable`() {
+        val navTree = FolderNavTreeDto(
+            rootFolderId = "root-id",
+            folders = listOf(
+                FolderNavDto(
+                    id = "root-id",
+                    title = "Bookmarks",
+                    itemCount = 5u,
+                    childFolderIds = listOf("folder-1", "folder-2"),
+                ),
+                FolderNavDto(
+                    id = "folder-1",
+                    title = "Work",
+                    itemCount = 1u,
+                    childFolderIds = listOf("folder-1-1"),
+                ),
+                FolderNavDto(
+                    id = "folder-1-1",
+                    title = "Projects",
+                    itemCount = 0u,
+                    childFolderIds = emptyList(),
+                ),
+                FolderNavDto(
+                    id = "folder-2",
+                    title = "Personal",
+                    itemCount = 0u,
+                    childFolderIds = emptyList(),
+                ),
+            ),
+        )
+
+        var selectedFolderId: String? = null
+
+        composeTestRule.setContent {
+            MoveItemDialog(
+                navTree = navTree,
+                currentFolderId = "root-id",
+                movedFolderId = null,
+                onConfirm = { selectedFolderId = it },
+                onDismiss = {},
+            )
+        }
+
+        // All non-root folders should be clickable
+        composeTestRule.onNodeWithText("Work").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Move here").performClick()
+        assert(selectedFolderId == "folder-1")
+
+        // Reset and try a deeper folder
+        selectedFolderId = null
+        composeTestRule.onNodeWithText("Projects").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Move here").performClick()
+        assert(selectedFolderId == "folder-1-1")
+    }
+
+    @Test
+    fun `folder move disables self and descendants`() {
+        val navTree = FolderNavTreeDto(
+            rootFolderId = "root-id",
+            folders = listOf(
+                FolderNavDto(
+                    id = "root-id",
+                    title = "Bookmarks",
+                    itemCount = 3u,
+                    childFolderIds = listOf("folder-1", "folder-2"),
+                ),
+                FolderNavDto(
+                    id = "folder-1",
+                    title = "Work",
+                    itemCount = 1u,
+                    childFolderIds = listOf("folder-1-1"),
+                ),
+                FolderNavDto(
+                    id = "folder-1-1",
+                    title = "Projects",
+                    itemCount = 0u,
+                    childFolderIds = emptyList(),
+                ),
+                FolderNavDto(
+                    id = "folder-2",
+                    title = "Personal",
+                    itemCount = 0u,
+                    childFolderIds = emptyList(),
+                ),
+            ),
+        )
+
+        var selectedFolderId: String? = null
+
+        composeTestRule.setContent {
+            MoveItemDialog(
+                navTree = navTree,
+                currentFolderId = "root-id",
+                movedFolderId = "folder-1",
+                onConfirm = { selectedFolderId = it },
+                onDismiss = {},
+            )
+        }
+
+        // "Work" (the moved folder) should be disabled — clicking should do nothing
+        composeTestRule.onNodeWithText("Work").performClick()
+        composeTestRule.waitForIdle()
+        assert(selectedFolderId == null)
+
+        // "Projects" (descendant of moved folder) should be disabled
+        composeTestRule.onNodeWithText("Projects").performClick()
+        composeTestRule.waitForIdle()
+        assert(selectedFolderId == null)
+
+        // "Personal" (sibling) should be enabled
+        composeTestRule.onNodeWithText("Personal").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Move here").performClick()
+        assert(selectedFolderId == "folder-2")
+    }
+
+    @Test
+    fun `folder move leaves unrelated branches enabled`() {
+        val navTree = FolderNavTreeDto(
+            rootFolderId = "root-id",
+            folders = listOf(
+                FolderNavDto(
+                    id = "root-id",
+                    title = "Bookmarks",
+                    itemCount = 4u,
+                    childFolderIds = listOf("branch-a", "branch-b"),
+                ),
+                FolderNavDto(
+                    id = "branch-a",
+                    title = "Branch A",
+                    itemCount = 1u,
+                    childFolderIds = listOf("branch-a-child"),
+                ),
+                FolderNavDto(
+                    id = "branch-a-child",
+                    title = "A Child",
+                    itemCount = 0u,
+                    childFolderIds = emptyList(),
+                ),
+                FolderNavDto(
+                    id = "branch-b",
+                    title = "Branch B",
+                    itemCount = 1u,
+                    childFolderIds = listOf("branch-b-child"),
+                ),
+                FolderNavDto(
+                    id = "branch-b-child",
+                    title = "B Child",
+                    itemCount = 0u,
+                    childFolderIds = emptyList(),
+                ),
+            ),
+        )
+
+        var selectedFolderId: String? = null
+
+        composeTestRule.setContent {
+            MoveItemDialog(
+                navTree = navTree,
+                currentFolderId = "root-id",
+                movedFolderId = "branch-a",
+                onConfirm = { selectedFolderId = it },
+                onDismiss = {},
+            )
+        }
+
+        // branch-a subtree should be disabled
+        composeTestRule.onNodeWithText("Branch A").performClick()
+        composeTestRule.waitForIdle()
+        assert(selectedFolderId == null)
+
+        composeTestRule.onNodeWithText("A Child").performClick()
+        composeTestRule.waitForIdle()
+        assert(selectedFolderId == null)
+
+        // branch-b subtree should be fully enabled
+        composeTestRule.onNodeWithText("Branch B").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Move here").performClick()
+        assert(selectedFolderId == "branch-b")
+
+        selectedFolderId = null
+        composeTestRule.onNodeWithText("B Child").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Move here").performClick()
+        assert(selectedFolderId == "branch-b-child")
+    }
+
+    @Test
+    fun `bookmark move allows selecting parent folder`() {
+        val navTree = FolderNavTreeDto(
+            rootFolderId = "root-id",
+            folders = listOf(
+                FolderNavDto(
+                    id = "root-id",
+                    title = "Bookmarks",
+                    itemCount = 2u,
+                    childFolderIds = listOf("folder-1"),
+                ),
+                FolderNavDto(
+                    id = "folder-1",
+                    title = "Work",
+                    itemCount = 1u,
+                    childFolderIds = listOf("folder-1-1"),
+                ),
+                FolderNavDto(
+                    id = "folder-1-1",
+                    title = "Projects",
+                    itemCount = 1u,
+                    childFolderIds = emptyList(),
+                ),
+            ),
+        )
+
+        var selectedFolderId: String? = null
+
+        composeTestRule.setContent {
+            MoveItemDialog(
+                navTree = navTree,
+                currentFolderId = "folder-1-1",
+                movedFolderId = null,
+                onConfirm = { selectedFolderId = it },
+                onDismiss = {},
+            )
+        }
+
+        // Parent folder "Work" should be clickable
+        composeTestRule.onNodeWithText("Work").performClick()
+        composeTestRule.waitForIdle()
+        composeTestRule.onNodeWithText("Move here").performClick()
+        assert(selectedFolderId == "folder-1")
+    }
 }
