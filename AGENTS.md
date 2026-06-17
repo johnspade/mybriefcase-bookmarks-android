@@ -58,6 +58,17 @@ When a PR touches the UI (Compose), attach before and after screenshots.
 
 Use the Android MCP for manual testing, debugging, and taking screenshots. Connect to the running emulator or device via `ConnectDevice`, then use `Snapshot` to capture the current screen.
 
+## Roborazzi Screenshot Tests
+
+Golden-file screenshot regression tests live in `app/src/test/java/.../ui/screenshot/`. They run on JVM via Robolectric (no emulator needed).
+
+| Command | Purpose |
+|---------|---------|
+| `./gradlew recordRoborazziDebug` | Record new golden PNGs to `app/src/test/snapshots/` |
+| `./gradlew verifyRoborazziDebug` | Verify current UI matches golden PNGs (fails on diff) |
+
+When adding or changing UI components, re-record goldens and commit the updated PNGs.
+
 ## Native Rust Libraries
 
 The app depends on a native Rust library (`libmybriefcase_bookmarks_ffi.so`). The Gradle `preBuild` task compiles it automatically via `cargo-ndk` — no manual steps needed. Requires the Nix dev shell for `cargo-ndk` on PATH; without it (e.g. CI lint/test), the task is skipped.
