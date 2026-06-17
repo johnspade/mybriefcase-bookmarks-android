@@ -18,7 +18,6 @@ import uniffi.mybriefcase_bookmarks_ffi.FolderNavDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 import uniffi.mybriefcase_bookmarks_ffi.ImportResultDto
 import uniffi.mybriefcase_bookmarks_ffi.SortOrder
-import kotlin.coroutines.ContinuationInterceptor
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BookmarkRepositoryImplTest {
@@ -31,29 +30,6 @@ class BookmarkRepositoryImplTest {
     fun setup() {
         fakeFfi = RecordingFfi()
         repo = BookmarkRepositoryImpl(ffi = fakeFfi, ioDispatcher = testDispatcher)
-    }
-
-    // --- Dispatcher verification ---
-
-    @Test
-    fun `getFolderChildren dispatches on ioDispatcher`() = runTest(testDispatcher) {
-        repo.getFolderChildren("root", SortOrder.NAME_ASC)
-        val interceptor = coroutineContext[ContinuationInterceptor]
-        assertEquals(testDispatcher, interceptor)
-    }
-
-    @Test
-    fun `triggerFullMerge dispatches on ioDispatcher`() = runTest(testDispatcher) {
-        repo.triggerFullMerge()
-        val interceptor = coroutineContext[ContinuationInterceptor]
-        assertEquals(testDispatcher, interceptor)
-    }
-
-    @Test
-    fun `searchBookmarks dispatches on ioDispatcher`() = runTest(testDispatcher) {
-        repo.searchBookmarks("test", SortOrder.NAME_ASC)
-        val interceptor = coroutineContext[ContinuationInterceptor]
-        assertEquals(testDispatcher, interceptor)
     }
 
     // --- triggerFullMerge return value ---
