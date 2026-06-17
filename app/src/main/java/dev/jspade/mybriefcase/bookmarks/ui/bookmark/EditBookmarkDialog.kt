@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import uniffi.mybriefcase_bookmarks_ffi.FolderNavDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,6 +45,10 @@ fun EditBookmarkDialog(
 
     val folderMap = remember(navTree) {
         navTree?.folders?.associateBy { it.id } ?: emptyMap()
+    }
+    val flatFolderList = remember(navTree) {
+        if (navTree == null) emptyList()
+        else buildFlatFolderList(navTree.rootFolderId, navTree.folders.associateBy { it.id }, 0)
     }
 
     AlertDialog(
@@ -111,9 +116,9 @@ fun EditBookmarkDialog(
                             expanded = folderPickerExpanded,
                             onDismissRequest = { folderPickerExpanded = false },
                         ) {
-                            navTree.folders.forEach { folder ->
+                            flatFolderList.forEach { (folder, depth) ->
                                 DropdownMenuItem(
-                                    text = { Text(folder.title) },
+                                    text = { Text(" ".repeat(depth * 4) + folder.title) },
                                     onClick = {
                                         selectedFolderId = folder.id
                                         folderPickerExpanded = false
@@ -151,4 +156,17 @@ fun EditBookmarkDialog(
         },
         modifier = Modifier.testTag("edit_bookmark_dialog"),
     )
+}
+
+private fun buildFlatFolderList(
+    folderId: String,
+    folderMap: Map<String, FolderNavDto>,
+    depth: Int,
+): List<Pair<FolderNavDto, Int>> {
+    val folder = folderMap[folderId] ?: return emptyList()
+    val result = mutableListOf(folder to depth)
+    for (childId in folder.childFolderIds) {
+        result.addAll(buildFlatFolderList(childId, folderMap, depth + 1))
+    }
+    return result
 }
