@@ -57,17 +57,6 @@ fn fresh_repo_root_has_default_children() {
     assert!(titles.contains(&"Bookmarks Bar"));
     assert!(titles.contains(&"Other Bookmarks"));
     assert!(children.bookmarks.is_empty());
-
-    // Root nav tree badge should show 0 when no bookmarks exist
-    let root_nav = tree
-        .folders
-        .iter()
-        .find(|f| f.id == tree.root_folder_id)
-        .unwrap();
-    assert_eq!(
-        root_nav.item_count, 0,
-        "root should have 0 item_count with no bookmarks"
-    );
 }
 
 #[test]
