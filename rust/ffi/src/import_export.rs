@@ -10,7 +10,7 @@ pub fn import_html(folder_id: String, html: String) -> Result<ImportResultDto, F
     let items = parse_netscape_html(&html);
     let (bc, fc) = import_items(&state.doc_handle, &folder_id, &items)?;
     refresh_cache(state);
-    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id);
+    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id)?;
     Ok(ImportResultDto {
         bookmarks_imported: bc as u32,
         folders_imported: fc as u32,

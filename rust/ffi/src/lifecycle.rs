@@ -15,7 +15,7 @@ pub fn init_repo(data_dir: String, sync_dir: String, client_id: String) -> Resul
     let cid = client_id.clone();
 
     let (repo_handle, doc_handle, _doc_id) =
-        runtime.block_on(async { repo::init_repo(&data_path, &sync_path, &cid).await });
+        runtime.block_on(async { repo::init_repo(&data_path, &sync_path, &cid).await })?;
 
     let store: BookmarkStore = doc_handle.with_doc(|doc| autosurgeon::hydrate(doc).unwrap());
 
@@ -41,7 +41,7 @@ pub fn shutdown() {
     // In practice the app process is killed, so this is a best-effort cleanup.
     if let Some(state) = REPO.get() {
         // Export current doc state before shutdown
-        mybriefcase_bookmarks_core::repo::export_doc_to_shared(
+        let _ = mybriefcase_bookmarks_core::repo::export_doc_to_shared(
             &state.doc_handle,
             &state.sync_root,
             &state.client_id,
@@ -65,8 +65,9 @@ mod tests {
         std::fs::create_dir_all(&sync_dir).unwrap();
 
         let rt = tokio::runtime::Runtime::new().unwrap();
-        let (_repo_handle, doc_handle, _) =
-            rt.block_on(async { repo::init_repo(&data_dir, &sync_dir, "test-client").await });
+        let (_repo_handle, doc_handle, _) = rt
+            .block_on(async { repo::init_repo(&data_dir, &sync_dir, "test-client").await })
+            .unwrap();
 
         let store: BookmarkStore = doc_handle.with_doc(|doc| autosurgeon::hydrate(doc).unwrap());
         assert!(!store.root_folder_id.is_empty());

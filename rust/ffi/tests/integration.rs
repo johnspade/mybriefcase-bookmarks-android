@@ -848,7 +848,8 @@ fn trigger_full_merge_picks_up_peer_bookmark_and_returns_true() {
     .unwrap();
 
     // Export the peer doc to the sync directory
-    mybriefcase_bookmarks_core::repo::export_doc_to_shared(&peer_doc, sync_path, "peer-device");
+    mybriefcase_bookmarks_core::repo::export_doc_to_shared(&peer_doc, sync_path, "peer-device")
+        .unwrap();
 
     // Now trigger_full_merge should find the peer's data and return true
     let changed = trigger_full_merge().unwrap();
