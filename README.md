@@ -26,10 +26,18 @@ The Gradle build invokes `cargo-ndk` to cross-compile the Rust FFI library for A
 
 ## Validation
 
-All CI checks can be run locally with a single command:
+Two validation tiers are available, matching CI:
+
+| Command | What it runs |
+|---------|-------------|
+| `validate` | `nix flake check` + `gradle-lint` + `gradle-test` (fast, pre-commit) |
+| `validate-all` | `validate` + `miri` (full CI equivalent) |
+
+Both commands are available in the dev shell (via `direnv allow`) or without it:
 
 ```bash
-validate
+nix run .#validate       # fast
+nix run .#validate-all   # full
 ```
 
 Individual steps:
