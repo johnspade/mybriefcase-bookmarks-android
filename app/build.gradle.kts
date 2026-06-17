@@ -1,6 +1,30 @@
+import com.palantir.gradle.gitversion.VersionDetails
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+}
+
+val versionDetails: groovy.lang.Closure<VersionDetails> by rootProject.extra
+
+val versionTagRegex = Regex("""^v?\d+\.\d+\.\d+$""")
+
+fun computeVersionCode(): Int {
+    val details = versionDetails()
+    val tag = details.lastTag
+    if (tag == null || !tag.matches(versionTagRegex)) return 1
+    val parts = tag.removePrefix("v").split(".")
+    val major = parts[0].toInt()
+    val minor = parts[1].toInt()
+    val patch = parts[2].toInt()
+    return major * 10000 + minor * 100 + patch
+}
+
+fun computeVersionName(): String {
+    val details = versionDetails()
+    val tag = details.lastTag
+    if (tag == null || !tag.matches(versionTagRegex)) return "0.0.0"
+    return tag.removePrefix("v")
 }
 
 android {
@@ -15,8 +39,8 @@ android {
         applicationId = "dev.jspade.mybriefcase.bookmarks"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = computeVersionCode()
+        versionName = computeVersionName()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
