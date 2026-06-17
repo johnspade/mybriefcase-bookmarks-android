@@ -136,6 +136,7 @@ fun FolderScreen(
             MoveItemDialog(
                 navTree = tree,
                 currentFolderId = uiState.currentFolderId,
+                movedFolderId = if (target.isFolder) target.itemId else null,
                 onConfirm = { destinationId ->
                     viewModel.moveItem(target.itemId, uiState.currentFolderId, destinationId)
                     moveItemTarget = null
@@ -290,8 +291,8 @@ fun FolderScreen(
                         onBreadcrumbClick = { viewModel.navigateToFolder(it) },
                         onFolderRename = { renameFolderTarget = it },
                         onFolderDelete = { deleteFolderTarget = it },
-                        onFolderMove = { moveItemTarget = MoveTarget(it.id) },
-                        onBookmarkMove = { moveItemTarget = MoveTarget(it.id) },
+                        onFolderMove = { moveItemTarget = MoveTarget(it.id, isFolder = true) },
+                        onBookmarkMove = { moveItemTarget = MoveTarget(it.id, isFolder = false) },
                         contextMenuBookmarkId = contextMenuBookmarkId,
                         onDismissContextMenu = { contextMenuBookmarkId = null },
                         onEditBookmark = { bookmarkId ->
@@ -366,7 +367,7 @@ fun FolderScreen(
 }
 
 /** Identifies an item to be moved. */
-data class MoveTarget(val itemId: String)
+data class MoveTarget(val itemId: String, val isFolder: Boolean)
 
 @Composable
 private fun DeleteConfirmationDialog(
