@@ -23,8 +23,10 @@ fun computeVersionCode(): Int {
 fun computeVersionName(): String {
     val details = versionDetails()
     val tag = details.lastTag
-    if (tag == null || !tag.matches(versionTagRegex)) return "0.0.0"
-    return tag.removePrefix("v")
+    if (tag == null || !tag.matches(versionTagRegex)) return "0.0.0-${details.gitHash}"
+    val base = tag.removePrefix("v")
+    if (details.commitDistance > 0) return "$base-${details.commitDistance}-${details.gitHash}"
+    return base
 }
 
 android {
