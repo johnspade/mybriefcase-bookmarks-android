@@ -320,8 +320,8 @@ class BookmarkUiTest {
         composeTestRule.onNodeWithTag("edit_bookmark_folder_picker").performScrollTo().performClick()
         composeTestRule.waitForIdle()
 
-        // Select "Personal" folder
-        composeTestRule.onNodeWithText("Personal").performClick()
+        // Select "Personal" folder (indented in hierarchical tree)
+        composeTestRule.onNodeWithText("Personal", substring = true).performClick()
         composeTestRule.waitForIdle()
 
         // Save
