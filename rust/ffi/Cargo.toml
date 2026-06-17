@@ -26,6 +26,9 @@ tempfile = "3"
 automerge = "0.7"
 automerge_repo = { version = "0.3", features = ["tokio"] }
 mybriefcase-bookmarks-core = { git = "https://github.com/johnspade/mybriefcase-bookmarks", rev = "52684ad" } # v1.11.0
+proptest = "1"
+uuid = { version = "1", features = ["v4"] }
+chrono = "0.4"
 
 [build-dependencies]
 uniffi = { version = "0.28", features = ["build"] }
