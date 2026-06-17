@@ -35,9 +35,7 @@ fn new_doc_with_root(client_id: &str) -> (DocHandle, String) {
         tx.put(&meta, "schema_version", 1_u64).unwrap();
         tx.put(&meta, "collection_name", "bookmarks").unwrap();
 
-        let root = tx
-            .put_object(&folders, rid.as_str(), ObjType::Map)
-            .unwrap();
+        let root = tx.put_object(&folders, rid.as_str(), ObjType::Map).unwrap();
         tx.put(&root, "title", "Bookmarks").unwrap();
         tx.put_object(&root, "children", ObjType::List).unwrap();
         tx.put(&root, "created_at", now.as_str()).unwrap();
