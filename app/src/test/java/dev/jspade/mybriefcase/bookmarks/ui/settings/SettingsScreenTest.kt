@@ -74,4 +74,21 @@ class SettingsScreenTest {
         composeTestRule.onNodeWithText("my-device-client").assertIsDisplayed()
         composeTestRule.onNodeWithTag("settings_version").performScrollTo().assertIsDisplayed()
     }
+
+    @Test
+    fun `displays client id matching spec format`() {
+        val clientId = "Pixel-7-MyBriefcaseBookmarks-a3f2"
+        composeTestRule.setContent {
+            SettingsScreen(
+                syncDir = "/storage/emulated/0/Syncthing/mybriefcase_bookmarks",
+                clientId = clientId,
+                appVersion = "1.0",
+                onBack = {},
+                onImport = {},
+                onExport = {},
+            )
+        }
+
+        composeTestRule.onNodeWithText(clientId).assertIsDisplayed()
+    }
 }
