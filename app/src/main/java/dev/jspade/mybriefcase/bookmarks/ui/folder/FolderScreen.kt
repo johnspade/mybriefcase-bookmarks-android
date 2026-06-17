@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -505,10 +507,15 @@ private fun BreadcrumbBar(
     breadcrumbs: List<BreadcrumbDto>,
     onClick: (String) -> Unit,
 ) {
+    val scrollState = rememberScrollState()
+    LaunchedEffect(breadcrumbs) {
+        scrollState.animateScrollTo(scrollState.maxValue)
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .horizontalScroll(scrollState),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         breadcrumbs.forEachIndexed { index, crumb ->
