@@ -57,10 +57,10 @@ pub enum FfiError {
     General { message: String },
 }
 
-impl From<anyhow::Error> for FfiError {
-    fn from(e: anyhow::Error) -> Self {
+impl From<mybriefcase_bookmarks_core::error::CoreError> for FfiError {
+    fn from(e: mybriefcase_bookmarks_core::error::CoreError) -> Self {
         FfiError::General {
-            message: format!("{e:#}"),
+            message: format!("{e}"),
         }
     }
 }

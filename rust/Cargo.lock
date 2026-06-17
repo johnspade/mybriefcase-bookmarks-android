@@ -1159,9 +1159,8 @@ checksum = "bc0287524726960e07b119cebd01678f852f147742ae0d925e6a520dca956126"
 [[package]]
 name = "mybriefcase-bookmarks-core"
 version = "0.0.1"
-source = "git+https://github.com/johnspade/mybriefcase-bookmarks?rev=4f69365#4f69365967158f01158d884cbf9ddc921c05056d"
+source = "git+https://github.com/johnspade/mybriefcase-bookmarks?rev=52684ad#52684ad92f718e7b4301b09efa89865f0f916068"
 dependencies = [
- "anyhow",
  "automerge",
  "automerge_repo",
  "autosurgeon",
@@ -1176,6 +1175,7 @@ dependencies = [
  "serde_json",
  "strum",
  "strum_macros",
+ "thiserror 2.0.18",
  "tokio",
  "uuid",
 ]
@@ -1184,7 +1184,6 @@ dependencies = [
 name = "mybriefcase-bookmarks-ffi"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "automerge",
  "automerge_repo",
  "autosurgeon",
