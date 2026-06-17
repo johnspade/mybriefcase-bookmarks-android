@@ -45,6 +45,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -543,7 +544,7 @@ private fun FolderListItem(
     Box {
         ListItem(
             headlineContent = { Text(folder.title) },
-            supportingContent = { Text("${folder.itemCount} items") },
+            supportingContent = { Text("${folder.itemCount} " + if (folder.itemCount == 1u) "item" else "items") },
             leadingContent = {
                 Icon(Icons.Default.Folder, contentDescription = null)
             },
@@ -699,12 +700,20 @@ private fun FolderNavNode(
         icon = { Icon(Icons.Default.Folder, contentDescription = null) },
         badge = {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = folder.itemCount.toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.testTag("nav_folder_count_${folder.id}"),
-                )
+                if (depth > 0 && folder.itemCount > 0u) {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.testTag("nav_folder_count_${folder.id}"),
+                    ) {
+                        Text(
+                            text = folder.itemCount.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        )
+                    }
+                }
                 if (hasChildren) {
                     IconButton(onClick = { expanded = !expanded }) {
                         Icon(
