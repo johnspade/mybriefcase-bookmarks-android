@@ -48,6 +48,8 @@ uv run --with <packages> script.py
 
 ## Pull Requests
 
+When creating a PR from a git worktree, the auto-generated branch name (e.g. `worktree-buzzing-sprouting-lighthouse`) is not suitable. Create a descriptive branch before pushing: `git checkout -b feat/my-feature` or `fix/the-bug`.
+
 PR descriptions must follow the template in `.github/pull_request_template.md`.
 
 When a PR touches the UI (Compose), attach before and after screenshots.
