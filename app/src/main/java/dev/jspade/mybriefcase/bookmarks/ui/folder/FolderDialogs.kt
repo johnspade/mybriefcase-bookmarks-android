@@ -125,12 +125,17 @@ fun DeleteFolderDialog(
 fun MoveItemDialog(
     navTree: FolderNavTreeDto,
     currentFolderId: String,
+    movedFolderId: String? = null,
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val folderMap = remember(navTree) { navTree.folders.associateBy { it.id } }
-    val disabledIds = remember(navTree, currentFolderId) {
-        collectDescendantIds(currentFolderId, folderMap) + currentFolderId
+    val disabledIds = remember(navTree, currentFolderId, movedFolderId) {
+        if (movedFolderId != null) {
+            collectDescendantIds(movedFolderId, folderMap) + movedFolderId
+        } else {
+            setOf(currentFolderId)
+        }
     }
     var selectedFolderId by remember { mutableStateOf<String?>(null) }
 

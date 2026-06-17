@@ -29,6 +29,29 @@ fun computeVersionName(): String {
     return base
 }
 
+val rustDir = rootProject.layout.projectDirectory.dir("rust")
+val jniLibsDir = layout.projectDirectory.dir("src/main/jniLibs")
+
+val cargoNdkAvailable = providers.exec {
+    commandLine("which", "cargo-ndk")
+    isIgnoreExitValue = true
+}.result.map { it.exitValue == 0 }.get()
+
+if (cargoNdkAvailable) {
+    val buildRustNativeLibs by tasks.registering(Exec::class) {
+        description = "Build Rust FFI native libraries with cargo-ndk"
+
+        outputs.upToDateWhen { false }
+
+        workingDir = rustDir.asFile
+        commandLine("cargo", "ndk", "-t", "arm64-v8a", "-t", "x86_64", "-o", jniLibsDir.asFile.absolutePath, "build", "--release")
+    }
+
+    tasks.named("preBuild") {
+        dependsOn(buildRustNativeLibs)
+    }
+}
+
 android {
     namespace = "dev.jspade.mybriefcase.bookmarks"
     compileSdk {
