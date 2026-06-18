@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "MyBriefcase Bookmarks"
 include(":app")
+include(":baselineprofile")
