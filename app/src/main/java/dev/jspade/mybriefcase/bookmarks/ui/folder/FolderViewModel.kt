@@ -60,6 +60,15 @@ class FolderViewModel(
         loadFolderContents(folderId)
     }
 
+    fun navigateUp(): Boolean {
+        val breadcrumbs = _uiState.value.breadcrumbs
+        if (breadcrumbs.size <= 1) return false
+        val parentId = breadcrumbs[breadcrumbs.size - 2].id
+        navigateToFolder(parentId)
+        return true
+    }
+
+
     fun toggleFolderExpanded(folderId: String) {
         val current = _uiState.value.expandedFolderIds
         val updated = if (folderId in current) current - folderId else current + folderId

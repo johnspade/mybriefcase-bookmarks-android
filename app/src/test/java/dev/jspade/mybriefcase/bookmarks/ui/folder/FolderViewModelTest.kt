@@ -103,6 +103,40 @@ class FolderViewModelTest {
     }
 
     @Test
+    fun `navigateUp goes to parent folder`() = runTest {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
+
+        // Navigate into a subfolder first
+        viewModel.navigateToFolder("folder-1")
+        advanceUntilIdle()
+
+        val result = viewModel.navigateUp()
+        advanceUntilIdle()
+
+        assertTrue(result)
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertEquals("root-id", state.currentFolderId)
+            assertEquals("Bookmarks", state.folderTitle)
+        }
+    }
+
+    @Test
+    fun `navigateUp returns false at root`() = runTest {
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        advanceUntilIdle()
+
+        val result = viewModel.navigateUp()
+
+        assertFalse(result)
+        viewModel.uiState.test {
+            val state = expectMostRecentItem()
+            assertEquals("root-id", state.currentFolderId)
+        }
+    }
+
+    @Test
     fun `empty folder shows no items`() = runTest {
         val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
         advanceUntilIdle()

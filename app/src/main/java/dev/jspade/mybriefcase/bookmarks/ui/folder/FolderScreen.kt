@@ -1,5 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -87,6 +88,10 @@ fun FolderScreen(
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+
+    BackHandler(enabled = uiState.breadcrumbs.size > 1) {
+        viewModel.navigateUp()
+    }
 
     // Dialog state (folder CRUD from PR #9)
     var showCreateFolderDialog by remember { mutableStateOf(false) }
