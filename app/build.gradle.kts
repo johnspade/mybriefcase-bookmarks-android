@@ -98,6 +98,8 @@ kover {
         filters {
             excludes {
                 androidGeneratedClasses()
+                packages("uniffi.*")
+                classes("*.ui.theme.*")
             }
         }
         verify {
