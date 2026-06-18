@@ -463,7 +463,7 @@ private fun FolderContent(
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(folders, key = { it.id }) { folder ->
+                items(folders, key = { it.id }, contentType = { "folder" }) { folder ->
                     FolderListItem(
                         folder = folder,
                         onClick = { onFolderClick(folder.id) },
@@ -473,35 +473,37 @@ private fun FolderContent(
                     )
                     HorizontalDivider()
                 }
-                items(bookmarks, key = { it.id }) { bookmark ->
+                items(bookmarks, key = { it.id }, contentType = { "bookmark" }) { bookmark ->
                     Box {
                         BookmarkListItem(
                             bookmark = bookmark,
                             onClick = { onBookmarkClick(bookmark.id) },
                             onLongClick = { onBookmarkLongClick(bookmark.id) },
                         )
-                        DropdownMenu(
-                            expanded = contextMenuBookmarkId == bookmark.id,
-                            onDismissRequest = onDismissContextMenu,
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Edit") },
-                                onClick = { onEditBookmark(bookmark.id) },
-                                modifier = Modifier.testTag("context_edit"),
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Move") },
-                                onClick = {
-                                    onDismissContextMenu()
-                                    onBookmarkMove(bookmark)
-                                },
-                                modifier = Modifier.testTag("context_move"),
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Delete") },
-                                onClick = { onDeleteBookmark(bookmark.id) },
-                                modifier = Modifier.testTag("context_delete"),
-                            )
+                        if (contextMenuBookmarkId == bookmark.id) {
+                            DropdownMenu(
+                                expanded = true,
+                                onDismissRequest = onDismissContextMenu,
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Edit") },
+                                    onClick = { onEditBookmark(bookmark.id) },
+                                    modifier = Modifier.testTag("context_edit"),
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Move") },
+                                    onClick = {
+                                        onDismissContextMenu()
+                                        onBookmarkMove(bookmark)
+                                    },
+                                    modifier = Modifier.testTag("context_move"),
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Delete") },
+                                    onClick = { onDeleteBookmark(bookmark.id) },
+                                    modifier = Modifier.testTag("context_delete"),
+                                )
+                            }
                         }
                     }
                     HorizontalDivider()
