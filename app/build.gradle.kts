@@ -129,6 +129,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.profileinstaller)
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     testImplementation(libs.junit)
     testImplementation("androidx.work:work-testing:2.9.1")

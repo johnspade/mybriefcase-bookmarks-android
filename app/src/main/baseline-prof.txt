@@ -1,0 +1,5 @@
+HSPLdev/jspade/mybriefcase/bookmarks/MainActivity;->onCreate(Landroid/os/Bundle;)V
+HSPLdev/jspade/mybriefcase/bookmarks/MyBriefcaseApp;->onCreate()V
+HSPLdev/jspade/mybriefcase/bookmarks/ui/**->**(**)**
+HSPLdev/jspade/mybriefcase/bookmarks/data/**->**(**)**
+HSPLuniffi/mybriefcase_bookmarks_ffi/**->**(**)**
