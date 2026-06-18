@@ -164,9 +164,13 @@ fun FolderScreen(
                     FolderNavTree(
                         tree = tree,
                         currentFolderId = uiState.currentFolderId,
+                        expandedFolderIds = uiState.expandedFolderIds,
                         onFolderClick = { folderId ->
                             viewModel.navigateToFolder(folderId)
                             scope.launch { drawerState.close() }
+                        },
+                        onToggleExpanded = { folderId ->
+                            viewModel.toggleFolderExpanded(folderId)
                         },
                     )
                 }
@@ -691,7 +695,9 @@ private fun FolderSortChip(
 private fun FolderNavTree(
     tree: FolderNavTreeDto,
     currentFolderId: String,
+    expandedFolderIds: Set<String>,
     onFolderClick: (String) -> Unit,
+    onToggleExpanded: (String) -> Unit,
 ) {
     val folderMap = remember(tree) { tree.folders.associateBy { it.id } }
 
@@ -701,8 +707,10 @@ private fun FolderNavTree(
                 folder = root,
                 folderMap = folderMap,
                 currentFolderId = currentFolderId,
+                expandedFolderIds = expandedFolderIds,
                 depth = 0,
                 onFolderClick = onFolderClick,
+                onToggleExpanded = onToggleExpanded,
             )
         }
     }
@@ -713,11 +721,13 @@ private fun FolderNavNode(
     folder: FolderNavDto,
     folderMap: Map<String, FolderNavDto>,
     currentFolderId: String,
+    expandedFolderIds: Set<String>,
     depth: Int,
     onFolderClick: (String) -> Unit,
+    onToggleExpanded: (String) -> Unit,
 ) {
     val hasChildren = folder.childFolderIds.isNotEmpty()
-    var expanded by remember { mutableStateOf(true) }
+    val expanded = depth == 0 || folder.id in expandedFolderIds
 
     NavigationDrawerItem(
         label = { Text(folder.title) },
@@ -740,8 +750,8 @@ private fun FolderNavNode(
                         )
                     }
                 }
-                if (hasChildren) {
-                    IconButton(onClick = { expanded = !expanded }) {
+                if (hasChildren && depth > 0) {
+                    IconButton(onClick = { onToggleExpanded(folder.id) }) {
                         Icon(
                             if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = if (expanded) "Collapse" else "Expand",
@@ -762,8 +772,10 @@ private fun FolderNavNode(
                             folder = child,
                             folderMap = folderMap,
                             currentFolderId = currentFolderId,
+                            expandedFolderIds = expandedFolderIds,
                             depth = depth + 1,
                             onFolderClick = onFolderClick,
+                            onToggleExpanded = onToggleExpanded,
                         )
                     }
                 }
