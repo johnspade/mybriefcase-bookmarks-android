@@ -2,6 +2,7 @@ import com.palantir.gradle.gitversion.VersionDetails
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.detekt)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kover)
     alias(libs.plugins.roborazzi)
@@ -104,6 +105,12 @@ android {
     buildFeatures {
         compose = true
     }
+    lint {
+        warningsAsErrors = true
+        abortOnError = true
+        checkDependencies = true
+        disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable", "OldTargetApi")
+    }
     composeCompiler {
         stabilityConfigurationFile = project.layout.projectDirectory.file("compose-stability.conf")
     }
@@ -111,6 +118,12 @@ android {
         unitTests {
             isIncludeAndroidResources = true
         }
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        allWarningsAsErrors.set(true)
     }
 }
 
@@ -131,6 +144,17 @@ kover {
     }
 }
 
+detekt {
+    buildUponDefaultConfig = true
+    allRules = true
+    config.setFrom(rootProject.files("config/detekt/detekt.yml"))
+    source.setFrom(
+        "src/main/java/dev/jspade",
+        "src/test/java",
+        "src/androidTest/java",
+    )
+}
+
 spotless {
     kotlin {
         target("src/**/*.kt")
@@ -143,8 +167,8 @@ spotless {
 }
 
 dependencies {
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
-    implementation("net.java.dev.jna:jna:5.13.0@aar")
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+    implementation(libs.jna) { artifact { type = "aar" } }
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
@@ -157,9 +181,10 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
-    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation(libs.androidx.work.runtime)
+    testImplementation(libs.konsist)
     testImplementation(libs.junit)
-    testImplementation("androidx.work:work-testing:2.9.1")
+    testImplementation(libs.androidx.work.testing)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.robolectric)
@@ -169,7 +194,7 @@ dependencies {
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation(libs.androidx.compose.ui.test.manifest)
-    testImplementation("net.java.dev.jna:jna:5.13.0")
+    testImplementation(libs.jna)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

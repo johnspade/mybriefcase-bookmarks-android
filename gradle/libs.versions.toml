@@ -1,9 +1,13 @@
 [versions]
 agp = "9.2.1"
 coreKtx = "1.10.1"
+desugar = "2.1.4"
+detekt = "1.23.7"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
+jna = "5.16.0"
+konsist = "0.17.3"
 lifecycleRuntimeKtx = "2.6.1"
 splashscreen = "1.0.1"
 activityCompose = "1.8.0"
@@ -13,6 +17,7 @@ coroutines = "1.8.1"
 spotless = "7.0.2"
 turbine = "1.2.0"
 robolectric = "4.14.1"
+work = "2.9.1"
 kover = "0.9.8"
 roborazzi = "1.64.0"
 
@@ -41,9 +46,15 @@ robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "
 roborazzi = { group = "io.github.takahirom.roborazzi", name = "roborazzi", version.ref = "roborazzi" }
 roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi-compose", version.ref = "roborazzi" }
 roborazzi-junit-rule = { group = "io.github.takahirom.roborazzi", name = "roborazzi-junit-rule", version.ref = "roborazzi" }
+desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar" }
+jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
+androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "work" }
+konsist = { group = "com.lemonappdev", name = "konsist", version.ref = "konsist" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 git-version = { id = "com.palantir.git-version", version = "5.0.0" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
