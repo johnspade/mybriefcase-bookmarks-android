@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +43,7 @@ fun BookmarkDetailSheet(
     bookmark: BookmarkDto,
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
+    onHistory: () -> Unit,
     onOpenInBrowser: (String) -> Unit,
     onShare: (String) -> Unit,
     onCopyUrl: (String) -> Unit,
@@ -116,6 +118,12 @@ fun BookmarkDetailSheet(
                     Icon(Icons.Default.ContentCopy, contentDescription = "Copy URL")
                 }
                 IconButton(
+                    onClick = onHistory,
+                    modifier = Modifier.testTag("action_history"),
+                ) {
+                    Icon(Icons.Default.History, contentDescription = "History")
+                }
+                IconButton(
                     onClick = onEdit,
                     modifier = Modifier.testTag("action_edit"),
                 ) {
@@ -146,12 +154,14 @@ fun BookmarkDetailSheetWithActions(
     bookmark: BookmarkDto,
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
+    onHistory: () -> Unit,
 ) {
     val context = LocalContext.current
     BookmarkDetailSheet(
         bookmark = bookmark,
         onDismiss = onDismiss,
         onEdit = onEdit,
+        onHistory = onHistory,
         onOpenInBrowser = { url ->
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             context.startActivity(intent)

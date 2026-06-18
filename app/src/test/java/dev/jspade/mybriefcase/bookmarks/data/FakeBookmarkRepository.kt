@@ -1,6 +1,7 @@
 package dev.jspade.mybriefcase.bookmarks.data
 
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import uniffi.mybriefcase_bookmarks_ffi.BookmarkHistoryEntryDto
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
 import uniffi.mybriefcase_bookmarks_ffi.BreadcrumbDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderChildrenDto
@@ -116,6 +117,10 @@ class FakeBookmarkRepository : BookmarkRepository {
     var moveItemCalls = mutableListOf<Triple<String, String, String>>() // (itemId, from, to)
     var getFolderChildrenCallCount = 0
     var getNavTreeCallCount = 0
+
+    // History
+    var historyEntries: List<BookmarkHistoryEntryDto> = emptyList()
+    var revertBookmarkCalls = mutableListOf<Pair<String, String>>()
 
     // Search/sync callbacks (from PR #11)
     var searchResults: List<BookmarkDto> = emptyList()
@@ -289,6 +294,19 @@ class FakeBookmarkRepository : BookmarkRepository {
     override suspend fun exportHtml(): String {
         shouldThrow?.let { throw it }
         return exportResult
+    }
+
+    override suspend fun getBookmarkHistory(bookmarkId: String): List<BookmarkHistoryEntryDto> {
+        shouldThrow?.let { throw it }
+        return historyEntries
+    }
+
+    override suspend fun revertBookmark(
+        bookmarkId: String,
+        changeHash: String,
+    ) {
+        shouldThrow?.let { throw it }
+        revertBookmarkCalls.add(bookmarkId to changeHash)
     }
 
     var mergeThrow: Exception? = null

@@ -1199,13 +1199,32 @@ public object FfiConverterTypeBookmarkDto: FfiConverterRustBuffer<BookmarkDto> {
 
 
 
+data class BookmarkHistoryEntryDto (
+    var `changeHash`: kotlin.String,
+    var `timestamp`: kotlin.Long,
+    var `actor`: kotlin.String,
+    var `changedFields`: List<FieldChangeDto>
+) {
+
+    companion object
+}
+
+data class FieldChangeDto (
+    var `field`: kotlin.String,
+    var `oldValue`: kotlin.String?,
+    var `newValue`: kotlin.String?
+) {
+
+    companion object
+}
+
 data class BookmarkItemDto (
-    var `id`: kotlin.String, 
-    var `title`: kotlin.String, 
-    var `url`: kotlin.String, 
+    var `id`: kotlin.String,
+    var `title`: kotlin.String,
+    var `url`: kotlin.String,
     var `createdAt`: kotlin.String
 ) {
-    
+
     companion object
 }
 
@@ -2043,8 +2062,16 @@ public object FfiConverterSequenceTypeFolderNavDto: FfiConverterRustBuffer<List<
     }
     
 
+    @Throws(FfiException::class) fun `getBookmarkHistory`(`bookmarkId`: kotlin.String): List<BookmarkHistoryEntryDto> {
+            return emptyList()
+    }
+
+    @Throws(FfiException::class) fun `revertBookmark`(`bookmarkId`: kotlin.String, `changeHash`: kotlin.String)
+        =
+    Unit
+
     @Throws(FfiException::class) fun `updateBookmark`(`bookmarkId`: kotlin.String, `url`: kotlin.String?, `title`: kotlin.String?, `notes`: kotlin.String?)
-        = 
+        =
     uniffiRustCallWithError(FfiException) { _status ->
     UniffiLib.INSTANCE.uniffi_mybriefcase_bookmarks_ffi_fn_func_update_bookmark(
         FfiConverterString.lower(`bookmarkId`),FfiConverterOptionalString.lower(`url`),FfiConverterOptionalString.lower(`title`),FfiConverterOptionalString.lower(`notes`),_status)

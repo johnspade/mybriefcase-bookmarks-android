@@ -11,6 +11,7 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import uniffi.mybriefcase_bookmarks_ffi.BookmarkHistoryEntryDto
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
 import uniffi.mybriefcase_bookmarks_ffi.BreadcrumbDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderChildrenDto
@@ -307,6 +308,18 @@ private class RecordingFfi : BookmarkFfi {
     override fun exportHtml(): String {
         shouldThrow?.let { throw it }
         return exportResult
+    }
+
+    override fun getBookmarkHistory(bookmarkId: String): List<BookmarkHistoryEntryDto> {
+        shouldThrow?.let { throw it }
+        return emptyList()
+    }
+
+    override fun revertBookmark(
+        bookmarkId: String,
+        changeHash: String,
+    ) {
+        shouldThrow?.let { throw it }
     }
 
     override fun triggerFullMerge(): Boolean {
