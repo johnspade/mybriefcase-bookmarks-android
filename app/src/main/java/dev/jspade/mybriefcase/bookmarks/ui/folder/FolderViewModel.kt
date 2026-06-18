@@ -35,6 +35,7 @@ data class FolderUiState(
     val importResult: ImportResultDto? = null,
     val exportedHtml: String? = null,
     val showSyncBanner: Boolean = false,
+    val expandedFolderIds: Set<String> = emptySet(),
 )
 
 class FolderViewModel(
@@ -57,6 +58,12 @@ class FolderViewModel(
     fun navigateToFolder(folderId: String) {
         _uiState.value = _uiState.value.copy(currentFolderId = folderId, isLoading = true)
         loadFolderContents(folderId)
+    }
+
+    fun toggleFolderExpanded(folderId: String) {
+        val current = _uiState.value.expandedFolderIds
+        val updated = if (folderId in current) current - folderId else current + folderId
+        _uiState.value = _uiState.value.copy(expandedFolderIds = updated)
     }
 
     fun setSortOrder(sortOrder: SortOrder) {
@@ -272,7 +279,15 @@ class FolderViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 val tree = repository.getFolderNavTree()
-                _uiState.value = _uiState.value.copy(navTree = tree)
+                val expanded = _uiState.value.expandedFolderIds
+                _uiState.value = _uiState.value.copy(
+                    navTree = tree,
+                    expandedFolderIds = if (tree.rootFolderId !in expanded) {
+                        expanded + tree.rootFolderId
+                    } else {
+                        expanded
+                    },
+                )
                 // If no folder is selected yet, navigate to root
                 if (_uiState.value.currentFolderId.isEmpty()) {
                     navigateToFolder(tree.rootFolderId)
