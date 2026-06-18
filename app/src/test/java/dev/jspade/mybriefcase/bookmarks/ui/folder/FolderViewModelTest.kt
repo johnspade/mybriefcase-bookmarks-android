@@ -207,19 +207,69 @@ class FolderViewModelTest {
         }
 
     @Test
-    fun `InvalidInput error produces BookmarkError InvalidInput`() =
+    fun `InvalidInput error produces validationError`() =
         runTest {
             val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
             advanceUntilIdle()
 
-            fakeRepo.shouldThrow = FfiException.InvalidInput("title cannot be empty")
+            fakeRepo.createFolderThrow = FfiException.InvalidInput("title cannot be empty")
             viewModel.createFolder("")
             advanceUntilIdle()
 
             viewModel.uiState.test {
                 val state = expectMostRecentItem()
-                assertTrue(state.error is BookmarkError.InvalidInput)
-                assertEquals("title cannot be empty", state.error?.message)
+                assertEquals("title cannot be empty", state.validationError)
+                assertNull(state.error)
+            }
+        }
+
+    @Test
+    fun `clearValidationError clears validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.createFolderThrow = FfiException.InvalidInput("title cannot be empty")
+            viewModel.createFolder("")
+            advanceUntilIdle()
+
+            viewModel.clearValidationError()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.validationError)
+            }
+        }
+
+    @Test
+    fun `renameFolder InvalidInput sets validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.renameFolderThrow = FfiException.InvalidInput("name too long")
+            viewModel.renameFolder("folder-1", "x".repeat(300))
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertEquals("name too long", state.validationError)
+                assertNull(state.error)
+            }
+        }
+
+    @Test
+    fun `clearError clears error`() =
+        runTest {
+            fakeRepo.shouldThrow = FfiException.IoException("disk full")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.clearError()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.error)
             }
         }
 
@@ -373,7 +423,7 @@ class FolderViewModelTest {
         }
 
     @Test
-    fun `moveItem error sets error state`() =
+    fun `moveItem InvalidInput sets validationError`() =
         runTest {
             fakeRepo.moveItemThrow = FfiException.InvalidInput("cannot move into descendant")
             val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
@@ -384,10 +434,8 @@ class FolderViewModelTest {
 
             viewModel.uiState.test {
                 val state = expectMostRecentItem()
-                assertEquals(
-                    BookmarkError.InvalidInput("cannot move into descendant"),
-                    state.error,
-                )
+                assertEquals("cannot move into descendant", state.validationError)
+                assertNull(state.error)
             }
         }
 

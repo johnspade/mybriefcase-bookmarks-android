@@ -20,6 +20,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
@@ -36,6 +40,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 
@@ -50,13 +55,39 @@ fun SearchScreen(
     val query by viewModel.query.collectAsState()
     val results by viewModel.searchResults.collectAsState()
     val sortOrder by viewModel.sortOrder.collectAsState()
+    val error by viewModel.error.collectAsState()
     val focusRequester = remember { FocusRequester() }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
+    LaunchedEffect(error) {
+        val err = error ?: return@LaunchedEffect
+        when (err) {
+            is BookmarkError.IoError -> {
+                val result =
+                    snackbarHostState.showSnackbar(
+                        message = err.message,
+                        actionLabel = "Retry",
+                        duration = SnackbarDuration.Long,
+                    )
+                if (result == SnackbarResult.ActionPerformed) {
+                    viewModel.setQuery(viewModel.query.value)
+                }
+            }
+            else -> {
+                snackbarHostState.showSnackbar(
+                    message = err.message,
+                    duration = SnackbarDuration.Long,
+                )
+            }
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {

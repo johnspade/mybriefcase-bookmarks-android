@@ -223,10 +223,15 @@ class FakeBookmarkRepository : BookmarkRepository {
         }
     }
 
+    var createFolderThrow: Exception? = null
+    var renameFolderThrow: Exception? = null
+
     override suspend fun createFolder(
         parentFolderId: String,
         title: String,
     ): String {
+        createFolderThrow?.let { throw it }
+        shouldThrow?.let { throw it }
         createFolderCalls.add(parentFolderId to title)
         return "new-folder-id"
     }
@@ -235,10 +240,13 @@ class FakeBookmarkRepository : BookmarkRepository {
         folderId: String,
         title: String,
     ) {
+        renameFolderThrow?.let { throw it }
+        shouldThrow?.let { throw it }
         renameFolderCalls.add(folderId to title)
     }
 
     override suspend fun deleteFolder(folderId: String) {
+        shouldThrow?.let { throw it }
         deleteFolderCalls.add(folderId)
     }
 
