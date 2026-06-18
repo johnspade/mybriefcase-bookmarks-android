@@ -3,6 +3,7 @@ import com.palantir.gradle.gitversion.VersionDetails
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kover)
 }
 
 val versionDetails: groovy.lang.Closure<VersionDetails> by rootProject.extra
@@ -88,6 +89,21 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+        }
+    }
+}
+
+kover {
+    reports {
+        filters {
+            excludes {
+                androidGeneratedClasses()
+            }
+        }
+        verify {
+            rule {
+                minBound(50)
+            }
         }
     }
 }

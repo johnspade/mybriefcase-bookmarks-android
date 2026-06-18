@@ -114,6 +114,14 @@
           '');
         };
 
+        gradle-coverage = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "gradle-coverage" ''
+            set -euo pipefail
+            ./gradlew koverVerify
+          '');
+        };
+
         validate = {
           type = "app";
           program = toString (pkgs.writeShellScript "validate" ''
@@ -147,6 +155,11 @@
             ./gradlew testDebugUnitTest
           '';
 
+          gradle-coverage = pkgs.writeShellScriptBin "gradle-coverage" ''
+            set -euo pipefail
+            ./gradlew koverVerify
+          '';
+
           miri = pkgs.writeShellScriptBin "miri" ''
             set -euo pipefail
             export PATH="${nightlyToolchain}/bin:$PATH"
@@ -161,6 +174,8 @@
             gradle-lint
             echo "==> Android unit tests..."
             gradle-test
+            echo "==> Coverage verification..."
+            gradle-coverage
             echo "==> All validations passed!"
           '';
 
@@ -179,6 +194,7 @@
             rust-analyzer
             gradle-lint
             gradle-test
+            gradle-coverage
             miri
             validate
             validate-all
