@@ -5,7 +5,6 @@ import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepositoryImpl
 
 class MyBriefcaseApp : Application() {
-
     lateinit var repository: BookmarkRepository
         private set
 
@@ -57,8 +56,10 @@ class MyBriefcaseApp : Application() {
         if (file.exists()) {
             return file.readText().trim()
         }
-        val model = android.os.Build.MODEL.replace(" ", "-")
-        val suffix = (0 until 4).map { "0123456789abcdef".random() }.joinToString("")
+        val model =
+            android.os.Build.MODEL
+                .replace(" ", "-")
+        val suffix = (0 until CLIENT_ID_SUFFIX_LENGTH).map { "0123456789abcdef".random() }.joinToString("")
         val clientId = "$model-MyBriefcaseBookmarks-$suffix"
         file.writeText(clientId)
         return clientId
@@ -66,6 +67,7 @@ class MyBriefcaseApp : Application() {
 
     companion object {
         const val SYNC_ROOT = "/storage/emulated/0/Syncthing/mybriefcase_bookmarks"
+        private const val CLIENT_ID_SUFFIX_LENGTH = 4
 
         lateinit var instance: MyBriefcaseApp
             private set

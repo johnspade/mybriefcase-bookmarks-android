@@ -22,7 +22,6 @@ import org.junit.Rule
 import org.junit.Test
 
 class EndToEndTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -118,7 +117,8 @@ class EndToEndTest {
 
     @Test
     fun importHtml_verifyCountsAndContent() {
-        val html = """
+        val html =
+            """
             <!DOCTYPE NETSCAPE-Bookmark-file-1>
             <DL><p>
                 <DT><H3>Imported E2E Folder</H3>
@@ -128,12 +128,13 @@ class EndToEndTest {
                 </DL><p>
                 <DT><A HREF="https://three.com">Bookmark Three E2E</A>
             </DL><p>
-        """.trimIndent()
+            """.trimIndent()
 
-        val result = runBlocking {
-            val rootFolderId = repository.getFolderNavTree().rootFolderId
-            repository.importHtml(rootFolderId, html)
-        }
+        val result =
+            runBlocking {
+                val rootFolderId = repository.getFolderNavTree().rootFolderId
+                repository.importHtml(rootFolderId, html)
+            }
 
         // Verify import counts
         assert(result.bookmarksImported == 3u) {

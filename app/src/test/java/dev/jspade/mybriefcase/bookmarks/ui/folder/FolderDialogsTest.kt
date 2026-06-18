@@ -8,7 +8,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -28,7 +27,6 @@ import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = dev.jspade.mybriefcase.bookmarks.TestApp::class)
 class FolderDialogsTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -110,7 +108,8 @@ class FolderDialogsTest {
         }
 
         composeTestRule.onNodeWithText("Delete \"Work\"?").assertIsDisplayed()
-        composeTestRule.onNodeWithText("This folder and all its contents will be deleted.")
+        composeTestRule
+            .onNodeWithText("This folder and all its contents will be deleted.")
             .assertIsDisplayed()
         composeTestRule.onNodeWithText("Delete").assertIsDisplayed()
         composeTestRule.onNodeWithText("Cancel").assertIsDisplayed()
@@ -118,29 +117,31 @@ class FolderDialogsTest {
 
     @Test
     fun `move picker renders tree with current location disabled`() {
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(
-                    id = "root-id",
-                    title = "Bookmarks",
-                    itemCount = 2u,
-                    childFolderIds = listOf("folder-1", "folder-2"),
-                ),
-                FolderNavDto(
-                    id = "folder-1",
-                    title = "Work",
-                    itemCount = 1u,
-                    childFolderIds = emptyList(),
-                ),
-                FolderNavDto(
-                    id = "folder-2",
-                    title = "Personal",
-                    itemCount = 0u,
-                    childFolderIds = emptyList(),
-                ),
-            ),
-        )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 2u,
+                            childFolderIds = listOf("folder-1", "folder-2"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1",
+                            title = "Work",
+                            itemCount = 1u,
+                            childFolderIds = emptyList(),
+                        ),
+                        FolderNavDto(
+                            id = "folder-2",
+                            title = "Personal",
+                            itemCount = 0u,
+                            childFolderIds = emptyList(),
+                        ),
+                    ),
+            )
 
         composeTestRule.setContent {
             MoveItemDialog(
@@ -160,29 +161,31 @@ class FolderDialogsTest {
 
     @Test
     fun `move picker completes move when destination selected`() {
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(
-                    id = "root-id",
-                    title = "Bookmarks",
-                    itemCount = 2u,
-                    childFolderIds = listOf("folder-1", "folder-2"),
-                ),
-                FolderNavDto(
-                    id = "folder-1",
-                    title = "Work",
-                    itemCount = 1u,
-                    childFolderIds = emptyList(),
-                ),
-                FolderNavDto(
-                    id = "folder-2",
-                    title = "Personal",
-                    itemCount = 0u,
-                    childFolderIds = emptyList(),
-                ),
-            ),
-        )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 2u,
+                            childFolderIds = listOf("folder-1", "folder-2"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1",
+                            title = "Work",
+                            itemCount = 1u,
+                            childFolderIds = emptyList(),
+                        ),
+                        FolderNavDto(
+                            id = "folder-2",
+                            title = "Personal",
+                            itemCount = 0u,
+                            childFolderIds = emptyList(),
+                        ),
+                    ),
+            )
 
         var selectedFolderId: String? = null
 
@@ -207,29 +210,31 @@ class FolderDialogsTest {
 
     @Test
     fun `bookmark move from folder with children keeps subfolders clickable`() {
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(
-                    id = "root-id",
-                    title = "Bookmarks",
-                    itemCount = 3u,
-                    childFolderIds = listOf("folder-1"),
-                ),
-                FolderNavDto(
-                    id = "folder-1",
-                    title = "Work",
-                    itemCount = 1u,
-                    childFolderIds = listOf("folder-1-1"),
-                ),
-                FolderNavDto(
-                    id = "folder-1-1",
-                    title = "Projects",
-                    itemCount = 0u,
-                    childFolderIds = emptyList(),
-                ),
-            ),
-        )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 3u,
+                            childFolderIds = listOf("folder-1"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1",
+                            title = "Work",
+                            itemCount = 1u,
+                            childFolderIds = listOf("folder-1-1"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1-1",
+                            title = "Projects",
+                            itemCount = 0u,
+                            childFolderIds = emptyList(),
+                        ),
+                    ),
+            )
 
         var selectedFolderId: String? = null
 
@@ -253,35 +258,37 @@ class FolderDialogsTest {
 
     @Test
     fun `bookmark move from root keeps all child folders clickable`() {
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(
-                    id = "root-id",
-                    title = "Bookmarks",
-                    itemCount = 5u,
-                    childFolderIds = listOf("folder-1", "folder-2"),
-                ),
-                FolderNavDto(
-                    id = "folder-1",
-                    title = "Work",
-                    itemCount = 1u,
-                    childFolderIds = listOf("folder-1-1"),
-                ),
-                FolderNavDto(
-                    id = "folder-1-1",
-                    title = "Projects",
-                    itemCount = 0u,
-                    childFolderIds = emptyList(),
-                ),
-                FolderNavDto(
-                    id = "folder-2",
-                    title = "Personal",
-                    itemCount = 0u,
-                    childFolderIds = emptyList(),
-                ),
-            ),
-        )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 5u,
+                            childFolderIds = listOf("folder-1", "folder-2"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1",
+                            title = "Work",
+                            itemCount = 1u,
+                            childFolderIds = listOf("folder-1-1"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1-1",
+                            title = "Projects",
+                            itemCount = 0u,
+                            childFolderIds = emptyList(),
+                        ),
+                        FolderNavDto(
+                            id = "folder-2",
+                            title = "Personal",
+                            itemCount = 0u,
+                            childFolderIds = emptyList(),
+                        ),
+                    ),
+            )
 
         var selectedFolderId: String? = null
 
@@ -311,35 +318,37 @@ class FolderDialogsTest {
 
     @Test
     fun `folder move disables self and descendants`() {
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(
-                    id = "root-id",
-                    title = "Bookmarks",
-                    itemCount = 3u,
-                    childFolderIds = listOf("folder-1", "folder-2"),
-                ),
-                FolderNavDto(
-                    id = "folder-1",
-                    title = "Work",
-                    itemCount = 1u,
-                    childFolderIds = listOf("folder-1-1"),
-                ),
-                FolderNavDto(
-                    id = "folder-1-1",
-                    title = "Projects",
-                    itemCount = 0u,
-                    childFolderIds = emptyList(),
-                ),
-                FolderNavDto(
-                    id = "folder-2",
-                    title = "Personal",
-                    itemCount = 0u,
-                    childFolderIds = emptyList(),
-                ),
-            ),
-        )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 3u,
+                            childFolderIds = listOf("folder-1", "folder-2"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1",
+                            title = "Work",
+                            itemCount = 1u,
+                            childFolderIds = listOf("folder-1-1"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1-1",
+                            title = "Projects",
+                            itemCount = 0u,
+                            childFolderIds = emptyList(),
+                        ),
+                        FolderNavDto(
+                            id = "folder-2",
+                            title = "Personal",
+                            itemCount = 0u,
+                            childFolderIds = emptyList(),
+                        ),
+                    ),
+            )
 
         var selectedFolderId: String? = null
 
@@ -371,42 +380,45 @@ class FolderDialogsTest {
     }
 
     @Test
+    @Suppress("LongMethod")
     fun `folder move leaves unrelated branches enabled`() {
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(
-                    id = "root-id",
-                    title = "Bookmarks",
-                    itemCount = 4u,
-                    childFolderIds = listOf("branch-a", "branch-b"),
-                ),
-                FolderNavDto(
-                    id = "branch-a",
-                    title = "Branch A",
-                    itemCount = 1u,
-                    childFolderIds = listOf("branch-a-child"),
-                ),
-                FolderNavDto(
-                    id = "branch-a-child",
-                    title = "A Child",
-                    itemCount = 0u,
-                    childFolderIds = emptyList(),
-                ),
-                FolderNavDto(
-                    id = "branch-b",
-                    title = "Branch B",
-                    itemCount = 1u,
-                    childFolderIds = listOf("branch-b-child"),
-                ),
-                FolderNavDto(
-                    id = "branch-b-child",
-                    title = "B Child",
-                    itemCount = 0u,
-                    childFolderIds = emptyList(),
-                ),
-            ),
-        )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 4u,
+                            childFolderIds = listOf("branch-a", "branch-b"),
+                        ),
+                        FolderNavDto(
+                            id = "branch-a",
+                            title = "Branch A",
+                            itemCount = 1u,
+                            childFolderIds = listOf("branch-a-child"),
+                        ),
+                        FolderNavDto(
+                            id = "branch-a-child",
+                            title = "A Child",
+                            itemCount = 0u,
+                            childFolderIds = emptyList(),
+                        ),
+                        FolderNavDto(
+                            id = "branch-b",
+                            title = "Branch B",
+                            itemCount = 1u,
+                            childFolderIds = listOf("branch-b-child"),
+                        ),
+                        FolderNavDto(
+                            id = "branch-b-child",
+                            title = "B Child",
+                            itemCount = 0u,
+                            childFolderIds = emptyList(),
+                        ),
+                    ),
+            )
 
         var selectedFolderId: String? = null
 
@@ -444,29 +456,31 @@ class FolderDialogsTest {
 
     @Test
     fun `bookmark move allows selecting parent folder`() {
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(
-                    id = "root-id",
-                    title = "Bookmarks",
-                    itemCount = 2u,
-                    childFolderIds = listOf("folder-1"),
-                ),
-                FolderNavDto(
-                    id = "folder-1",
-                    title = "Work",
-                    itemCount = 1u,
-                    childFolderIds = listOf("folder-1-1"),
-                ),
-                FolderNavDto(
-                    id = "folder-1-1",
-                    title = "Projects",
-                    itemCount = 1u,
-                    childFolderIds = emptyList(),
-                ),
-            ),
-        )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 2u,
+                            childFolderIds = listOf("folder-1"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1",
+                            title = "Work",
+                            itemCount = 1u,
+                            childFolderIds = listOf("folder-1-1"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1-1",
+                            title = "Projects",
+                            itemCount = 1u,
+                            childFolderIds = emptyList(),
+                        ),
+                    ),
+            )
 
         var selectedFolderId: String? = null
 

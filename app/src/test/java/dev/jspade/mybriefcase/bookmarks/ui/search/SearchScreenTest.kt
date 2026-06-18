@@ -26,7 +26,6 @@ import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = dev.jspade.mybriefcase.bookmarks.TestApp::class)
 class SearchScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -57,16 +56,17 @@ class SearchScreenTest {
 
     @Test
     fun `typing shows results`() {
-        fakeRepo.searchResults = listOf(
-            BookmarkDto(
-                id = "bm-1",
-                url = "https://example.com",
-                title = "Example Site",
-                notes = "",
-                createdAt = "2024-01-01T00:00:00Z",
-                updatedAt = "2024-01-01T00:00:00Z",
+        fakeRepo.searchResults =
+            listOf(
+                BookmarkDto(
+                    id = "bm-1",
+                    url = "https://example.com",
+                    title = "Example Site",
+                    notes = "",
+                    createdAt = "2024-01-01T00:00:00Z",
+                    updatedAt = "2024-01-01T00:00:00Z",
+                ),
             )
-        )
         val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
 
         composeTestRule.setContent {
@@ -98,16 +98,17 @@ class SearchScreenTest {
 
     @Test
     fun `sort chip is displayed and changes`() {
-        fakeRepo.searchResults = listOf(
-            BookmarkDto(
-                id = "bm-1",
-                url = "https://a.com",
-                title = "A",
-                notes = "",
-                createdAt = "2024-01-01T00:00:00Z",
-                updatedAt = "2024-01-01T00:00:00Z",
+        fakeRepo.searchResults =
+            listOf(
+                BookmarkDto(
+                    id = "bm-1",
+                    url = "https://a.com",
+                    title = "A",
+                    notes = "",
+                    createdAt = "2024-01-01T00:00:00Z",
+                    updatedAt = "2024-01-01T00:00:00Z",
+                ),
             )
-        )
         val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
 
         composeTestRule.setContent {
@@ -131,16 +132,17 @@ class SearchScreenTest {
 
     @Test
     fun `clear button clears search`() {
-        fakeRepo.searchResults = listOf(
-            BookmarkDto(
-                id = "bm-1",
-                url = "https://example.com",
-                title = "Example",
-                notes = "",
-                createdAt = "2024-01-01T00:00:00Z",
-                updatedAt = "2024-01-01T00:00:00Z",
+        fakeRepo.searchResults =
+            listOf(
+                BookmarkDto(
+                    id = "bm-1",
+                    url = "https://example.com",
+                    title = "Example",
+                    notes = "",
+                    createdAt = "2024-01-01T00:00:00Z",
+                    updatedAt = "2024-01-01T00:00:00Z",
+                ),
             )
-        )
         val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
 
         composeTestRule.setContent {

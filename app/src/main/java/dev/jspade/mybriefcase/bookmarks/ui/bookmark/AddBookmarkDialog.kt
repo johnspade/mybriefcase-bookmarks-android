@@ -39,15 +39,17 @@ fun AddBookmarkDialog(
                     },
                     label = { Text("URL") },
                     isError = urlError,
-                    supportingText = if (urlError) {
-                        { Text("URL is required") }
-                    } else {
-                        null
-                    },
+                    supportingText =
+                        if (urlError) {
+                            { Text("URL is required") }
+                        } else {
+                            null
+                        },
                     singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("add_bookmark_url"),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .testTag("add_bookmark_url"),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
@@ -55,9 +57,10 @@ fun AddBookmarkDialog(
                     onValueChange = { title = it },
                     label = { Text("Title (optional)") },
                     singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("add_bookmark_title"),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .testTag("add_bookmark_title"),
                 )
             }
         },

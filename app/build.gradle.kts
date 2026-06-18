@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kover)
     alias(libs.plugins.roborazzi)
+    alias(libs.plugins.spotless)
 }
 
 val versionDetails: groovy.lang.Closure<VersionDetails> by rootProject.extra
@@ -34,10 +35,14 @@ fun computeVersionName(): String {
 val rustDir = rootProject.layout.projectDirectory.dir("rust")
 val jniLibsDir = layout.projectDirectory.dir("src/main/jniLibs")
 
-val cargoNdkAvailable = providers.exec {
-    commandLine("which", "cargo-ndk")
-    isIgnoreExitValue = true
-}.result.map { it.exitValue == 0 }.get()
+val cargoNdkAvailable =
+    providers
+        .exec {
+            commandLine("which", "cargo-ndk")
+            isIgnoreExitValue = true
+        }.result
+        .map { it.exitValue == 0 }
+        .get()
 
 if (cargoNdkAvailable) {
     val buildRustNativeLibs by tasks.registering(Exec::class) {
@@ -46,7 +51,18 @@ if (cargoNdkAvailable) {
         outputs.upToDateWhen { false }
 
         workingDir = rustDir.asFile
-        commandLine("cargo", "ndk", "-t", "arm64-v8a", "-t", "x86_64", "-o", jniLibsDir.asFile.absolutePath, "build", "--release")
+        commandLine(
+            "cargo",
+            "ndk",
+            "-t",
+            "arm64-v8a",
+            "-t",
+            "x86_64",
+            "-o",
+            jniLibsDir.asFile.absolutePath,
+            "build",
+            "--release",
+        )
     }
 
     tasks.named("preBuild") {
@@ -57,9 +73,10 @@ if (cargoNdkAvailable) {
 android {
     namespace = "dev.jspade.mybriefcase.bookmarks"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version =
+            release(36) {
+                minorApiLevel = 1
+            }
     }
 
     defaultConfig {
@@ -111,6 +128,17 @@ kover {
                 minBound(75)
             }
         }
+    }
+}
+
+spotless {
+    kotlin {
+        target("src/**/*.kt")
+        targetExclude("src/main/java/uniffi/**")
+        ktlint()
+    }
+    kotlinGradle {
+        ktlint()
     }
 }
 

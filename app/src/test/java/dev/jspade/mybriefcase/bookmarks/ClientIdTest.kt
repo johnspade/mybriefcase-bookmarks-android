@@ -7,7 +7,6 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
 class ClientIdTest {
-
     @get:Rule
     val tempFolder = TemporaryFolder()
 
@@ -15,7 +14,10 @@ class ClientIdTest {
      * Exercises the same logic as MyBriefcaseApp.getOrCreateClientId()
      * using a temp directory instead of filesDir.
      */
-    private fun getOrCreateClientId(filesDir: java.io.File, model: String): String {
+    private fun getOrCreateClientId(
+        filesDir: java.io.File,
+        model: String,
+    ): String {
         val file = java.io.File(filesDir, "client_id")
         if (file.exists()) {
             return file.readText().trim()

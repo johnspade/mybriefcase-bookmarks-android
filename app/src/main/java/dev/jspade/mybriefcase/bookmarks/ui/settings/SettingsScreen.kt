@@ -47,11 +47,12 @@ fun SettingsScreen(
         },
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp)
+                    .verticalScroll(rememberScrollState()),
         ) {
             // Sync section
             Text(
@@ -95,18 +96,20 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = onImport,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("settings_import_button"),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("settings_import_button"),
             ) {
                 Text("Import bookmarks")
             }
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = onExport,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("settings_export_button"),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("settings_export_button"),
             ) {
                 Text("Export bookmarks")
             }
