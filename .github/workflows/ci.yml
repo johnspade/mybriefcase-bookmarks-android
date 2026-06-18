@@ -55,11 +55,59 @@ jobs:
       - run: nix run .#gradle-lint
       - run: nix run .#gradle-test
 
+  instrumented-tests:
+    name: Instrumented tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - uses: DeterminateSystems/magic-nix-cache-action@908b263ff629f4cc17666315b7fd3ec127c6244d # v14
+        with:
+          use-flakehub: false
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+      - name: Cache Rust .so
+        id: cache-rust-so
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: app/src/main/jniLibs
+          key: rust-so-x86_64-${{ hashFiles('rust/**') }}
+      - name: Build Rust .so for x86_64 emulator
+        if: steps.cache-rust-so.outputs.cache-hit != 'true'
+        run: |
+          nix develop --command bash -c '
+            cd rust
+            cargo ndk -t x86_64 -o ../app/src/main/jniLibs build --release
+          '
+      - name: Cache Gradle
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-instrumented-${{ hashFiles('**/*.gradle.kts', 'gradle/libs.versions.toml') }}
+          restore-keys: gradle-instrumented-
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run instrumented tests
+        uses: reactivecircus/android-emulator-runner@e89f39f1abbbd05b1113a29cf4db69e7540cae5a # v2.37.0
+        with:
+          api-level: 31
+          arch: x86_64
+          disk-size: 4G
+          script: ./gradlew connectedDebugAndroidTest
+
   release:
     name: Release
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [nix-checks, miri, android-checks]
+    needs: [nix-checks, miri, android-checks, instrumented-tests]
     permissions:
       contents: write
       issues: write
