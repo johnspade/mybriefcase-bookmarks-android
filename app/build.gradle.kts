@@ -87,6 +87,9 @@ android {
     buildFeatures {
         compose = true
     }
+    composeCompiler {
+        stabilityConfigurationFile = project.layout.projectDirectory.file("compose-stability.conf")
+    }
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
