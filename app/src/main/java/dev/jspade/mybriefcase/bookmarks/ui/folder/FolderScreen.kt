@@ -32,6 +32,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -62,6 +64,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
@@ -464,6 +467,7 @@ private fun FolderContent(
                         onDelete = { onFolderDelete(folder) },
                         onMove = { onFolderMove(folder) },
                     )
+                    HorizontalDivider()
                 }
                 items(bookmarks, key = { it.id }) { bookmark ->
                     Box {
@@ -496,6 +500,7 @@ private fun FolderContent(
                             )
                         }
                     }
+                    HorizontalDivider()
                 }
             }
         }
@@ -559,6 +564,9 @@ private fun FolderListItem(
             leadingContent = {
                 Icon(Icons.Default.Folder, contentDescription = null)
             },
+            colors = ListItemDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+            ),
             modifier = Modifier.combinedClickable(
                 onClick = onClick,
                 onLongClick = { showContextMenu = true },
@@ -601,8 +609,15 @@ private fun BookmarkListItem(
     onLongClick: () -> Unit,
 ) {
     ListItem(
-        headlineContent = { Text(bookmark.title) },
-        supportingContent = { Text(bookmark.url) },
+        headlineContent = { Text(bookmark.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        supportingContent = {
+            Text(
+                bookmark.url,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.outline,
+            )
+        },
         modifier = Modifier.combinedClickable(
             onClick = onClick,
             onLongClick = onLongClick,
