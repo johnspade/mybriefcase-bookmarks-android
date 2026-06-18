@@ -110,7 +110,7 @@
           type = "app";
           program = toString (pkgs.writeShellScript "gradle-test" ''
             set -euo pipefail
-            ./gradlew testDebugUnitTest
+            ./gradlew testDebugUnitTest verifyRoborazziDebug
           '');
         };
 
@@ -152,7 +152,7 @@
 
           gradle-test = pkgs.writeShellScriptBin "gradle-test" ''
             set -euo pipefail
-            ./gradlew testDebugUnitTest
+            ./gradlew testDebugUnitTest verifyRoborazziDebug
           '';
 
           gradle-coverage = pkgs.writeShellScriptBin "gradle-coverage" ''

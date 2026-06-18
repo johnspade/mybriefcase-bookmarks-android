@@ -27,7 +27,7 @@ Individual steps:
 |---------|-------------|
 | `nix flake check` | Rust fmt, clippy, test, deny, audit, doc |
 | `gradle-lint` | Android Lint |
-| `gradle-test` | Android unit tests (`testDebugUnitTest`) |
+| `gradle-test` | Android unit tests + Roborazzi screenshot verify |
 | `miri` | Miri (nightly toolchain) |
 
 Never force-push to `main`. If a commit needs fixing, create a new commit instead of amending.
