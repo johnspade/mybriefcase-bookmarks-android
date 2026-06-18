@@ -707,7 +707,7 @@ private fun FolderSortChip(
             expanded = expanded,
             onDismissRequest = { expanded = false },
         ) {
-            SortOrder.entries.forEach { sort ->
+            SortOrder.entries.filter { it != SortOrder.RELEVANCE }.forEach { sort ->
                 DropdownMenuItem(
                     text = { Text(sort.displayName()) },
                     onClick = {

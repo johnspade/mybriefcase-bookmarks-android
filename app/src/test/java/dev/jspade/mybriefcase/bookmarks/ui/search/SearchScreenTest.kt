@@ -115,8 +115,8 @@ class SearchScreenTest {
             SearchScreen(viewModel = viewModel)
         }
 
-        // Default sort chip shows "Name A-Z"
-        composeTestRule.onNodeWithText("Name A-Z").assertIsDisplayed()
+        // Default sort chip shows "Relevance"
+        composeTestRule.onNodeWithText("Relevance").assertIsDisplayed()
 
         // Click sort chip to open dropdown
         composeTestRule.onNodeWithTag("sort_chip").performClick()

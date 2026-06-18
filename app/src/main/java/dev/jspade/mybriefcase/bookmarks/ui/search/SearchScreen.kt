@@ -190,4 +190,5 @@ fun SortOrder.displayName(): String =
         SortOrder.NAME_DESC -> "Name Z-A"
         SortOrder.DATE_DESC -> "Date newest"
         SortOrder.DATE_ASC -> "Date oldest"
+        SortOrder.RELEVANCE -> "Relevance"
     }
