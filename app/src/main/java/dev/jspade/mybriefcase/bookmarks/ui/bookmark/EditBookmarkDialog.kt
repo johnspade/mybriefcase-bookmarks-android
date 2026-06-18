@@ -10,9 +10,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,13 +45,18 @@ fun EditBookmarkDialog(
     var selectedFolderId by remember { mutableStateOf(currentFolderId) }
     var folderPickerExpanded by remember { mutableStateOf(false) }
 
-    val folderMap = remember(navTree) {
-        navTree?.folders?.associateBy { it.id } ?: emptyMap()
-    }
-    val flatFolderList = remember(navTree) {
-        if (navTree == null) emptyList()
-        else buildFlatFolderList(navTree.rootFolderId, navTree.folders.associateBy { it.id }, 0)
-    }
+    val folderMap =
+        remember(navTree) {
+            navTree?.folders?.associateBy { it.id } ?: emptyMap()
+        }
+    val flatFolderList =
+        remember(navTree) {
+            if (navTree == null) {
+                emptyList()
+            } else {
+                buildFlatFolderList(navTree.rootFolderId, navTree.folders.associateBy { it.id }, 0)
+            }
+        }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -66,15 +71,17 @@ fun EditBookmarkDialog(
                     },
                     label = { Text("URL") },
                     isError = urlError,
-                    supportingText = if (urlError) {
-                        { Text("URL is required") }
-                    } else {
-                        null
-                    },
+                    supportingText =
+                        if (urlError) {
+                            { Text("URL is required") }
+                        } else {
+                            null
+                        },
                     singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("edit_bookmark_url"),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .testTag("edit_bookmark_url"),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
@@ -82,9 +89,10 @@ fun EditBookmarkDialog(
                     onValueChange = { title = it },
                     label = { Text("Title") },
                     maxLines = 3,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("edit_bookmark_title"),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .testTag("edit_bookmark_title"),
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
@@ -92,9 +100,10 @@ fun EditBookmarkDialog(
                     onValueChange = { notes = it },
                     label = { Text("Notes") },
                     minLines = 3,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("edit_bookmark_notes"),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .testTag("edit_bookmark_notes"),
                 )
                 if (navTree != null && currentFolderId != null) {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -109,10 +118,13 @@ fun EditBookmarkDialog(
                             label = { Text("Folder") },
                             readOnly = true,
                             singleLine = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = folderPickerExpanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = folderPickerExpanded)
+                            },
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
                         )
                         ExposedDropdownMenu(
                             expanded = folderPickerExpanded,
@@ -138,11 +150,12 @@ fun EditBookmarkDialog(
                     if (url.isBlank()) {
                         urlError = true
                     } else {
-                        val newFolderId = if (selectedFolderId != null && selectedFolderId != currentFolderId) {
-                            selectedFolderId
-                        } else {
-                            null
-                        }
+                        val newFolderId =
+                            if (selectedFolderId != null && selectedFolderId != currentFolderId) {
+                                selectedFolderId
+                            } else {
+                                null
+                            }
                         onConfirm(url.trim(), title.trim(), notes.trim(), newFolderId)
                     }
                 },
@@ -157,9 +170,10 @@ fun EditBookmarkDialog(
             }
         },
         properties = DialogProperties(decorFitsSystemWindows = false),
-        modifier = Modifier
-            .imePadding()
-            .testTag("edit_bookmark_dialog"),
+        modifier =
+            Modifier
+                .imePadding()
+                .testTag("edit_bookmark_dialog"),
     )
 }
 

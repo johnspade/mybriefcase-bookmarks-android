@@ -15,12 +15,13 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = TestApp::class)
 class SyncWorkerTest {
-
     @Before
     fun setup() {
-        val config = Configuration.Builder()
-            .setMinimumLoggingLevel(android.util.Log.DEBUG)
-            .build()
+        val config =
+            Configuration
+                .Builder()
+                .setMinimumLoggingLevel(android.util.Log.DEBUG)
+                .build()
         WorkManagerTestInitHelper.initializeTestWorkManager(
             RuntimeEnvironment.getApplication(),
             config,

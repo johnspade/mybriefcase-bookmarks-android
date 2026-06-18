@@ -4,7 +4,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import java.time.Instant
 import java.time.ZoneId
@@ -54,9 +54,10 @@ fun BookmarkDetailSheet(
         modifier = Modifier.testTag("bookmark_detail_sheet"),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Text(
                 text = bookmark.title,
@@ -126,16 +127,18 @@ fun BookmarkDetailSheet(
     }
 }
 
-private fun formatDate(isoString: String): String {
-    return try {
+@Suppress("SwallowedException") // Intentional: return original string if parsing fails
+private fun formatDate(isoString: String): String =
+    try {
         val instant = Instant.parse(isoString)
-        val formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-            .withZone(ZoneId.systemDefault())
+        val formatter =
+            DateTimeFormatter
+                .ofLocalizedDateTime(FormatStyle.MEDIUM)
+                .withZone(ZoneId.systemDefault())
         formatter.format(instant)
     } catch (e: Exception) {
         isoString
     }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,14 +153,15 @@ fun BookmarkDetailSheetWithActions(
         onDismiss = onDismiss,
         onEdit = onEdit,
         onOpenInBrowser = { url ->
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             context.startActivity(intent)
         },
         onShare = { url ->
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, url)
-            }
+            val intent =
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, url)
+                }
             context.startActivity(Intent.createChooser(intent, "Share URL"))
         },
         onCopyUrl = { url ->

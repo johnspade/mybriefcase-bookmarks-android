@@ -14,7 +14,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = dev.jspade.mybriefcase.bookmarks.TestApp::class)
 class SettingsScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 

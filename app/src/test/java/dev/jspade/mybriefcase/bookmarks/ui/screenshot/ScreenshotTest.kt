@@ -18,11 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.Composable
 import com.github.takahirom.roborazzi.captureRoboImage
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
@@ -51,7 +51,6 @@ import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [34], application = dev.jspade.mybriefcase.bookmarks.TestApp::class)
 class ScreenshotTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -125,24 +124,25 @@ class ScreenshotTest {
 
     @Test
     fun searchScreen_withResults_light() {
-        fakeRepo.searchResults = listOf(
-            BookmarkDto(
-                id = "bm-1",
-                url = "https://github.com",
-                title = "GitHub",
-                notes = "",
-                createdAt = "2024-01-01T00:00:00Z",
-                updatedAt = "2024-01-01T00:00:00Z",
-            ),
-            BookmarkDto(
-                id = "bm-2",
-                url = "https://example.com",
-                title = "Example Site",
-                notes = "A sample bookmark",
-                createdAt = "2024-02-15T10:00:00Z",
-                updatedAt = "2024-02-15T10:00:00Z",
-            ),
-        )
+        fakeRepo.searchResults =
+            listOf(
+                BookmarkDto(
+                    id = "bm-1",
+                    url = "https://github.com",
+                    title = "GitHub",
+                    notes = "",
+                    createdAt = "2024-01-01T00:00:00Z",
+                    updatedAt = "2024-01-01T00:00:00Z",
+                ),
+                BookmarkDto(
+                    id = "bm-2",
+                    url = "https://example.com",
+                    title = "Example Site",
+                    notes = "A sample bookmark",
+                    createdAt = "2024-02-15T10:00:00Z",
+                    updatedAt = "2024-02-15T10:00:00Z",
+                ),
+            )
         val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
         viewModel.setQuery("git")
         composeTestRule.setContent {
@@ -156,24 +156,25 @@ class ScreenshotTest {
 
     @Test
     fun searchScreen_withResults_dark() {
-        fakeRepo.searchResults = listOf(
-            BookmarkDto(
-                id = "bm-1",
-                url = "https://github.com",
-                title = "GitHub",
-                notes = "",
-                createdAt = "2024-01-01T00:00:00Z",
-                updatedAt = "2024-01-01T00:00:00Z",
-            ),
-            BookmarkDto(
-                id = "bm-2",
-                url = "https://example.com",
-                title = "Example Site",
-                notes = "A sample bookmark",
-                createdAt = "2024-02-15T10:00:00Z",
-                updatedAt = "2024-02-15T10:00:00Z",
-            ),
-        )
+        fakeRepo.searchResults =
+            listOf(
+                BookmarkDto(
+                    id = "bm-1",
+                    url = "https://github.com",
+                    title = "GitHub",
+                    notes = "",
+                    createdAt = "2024-01-01T00:00:00Z",
+                    updatedAt = "2024-01-01T00:00:00Z",
+                ),
+                BookmarkDto(
+                    id = "bm-2",
+                    url = "https://example.com",
+                    title = "Example Site",
+                    notes = "A sample bookmark",
+                    createdAt = "2024-02-15T10:00:00Z",
+                    updatedAt = "2024-02-15T10:00:00Z",
+                ),
+            )
         val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, debounceMs = 0L)
         viewModel.setQuery("git")
         composeTestRule.setContent {
@@ -189,14 +190,15 @@ class ScreenshotTest {
 
     @Test
     fun bookmarkDetailSheet_light() {
-        val bookmark = BookmarkDto(
-            id = "bm-1",
-            url = "https://github.com",
-            title = "GitHub",
-            notes = "A code hosting platform",
-            createdAt = "2024-01-15T10:30:00Z",
-            updatedAt = "2024-02-20T14:45:00Z",
-        )
+        val bookmark =
+            BookmarkDto(
+                id = "bm-1",
+                url = "https://github.com",
+                title = "GitHub",
+                notes = "A code hosting platform",
+                createdAt = "2024-01-15T10:30:00Z",
+                updatedAt = "2024-02-20T14:45:00Z",
+            )
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
                 Surface {
@@ -210,14 +212,15 @@ class ScreenshotTest {
 
     @Test
     fun bookmarkDetailSheet_dark() {
-        val bookmark = BookmarkDto(
-            id = "bm-1",
-            url = "https://github.com",
-            title = "GitHub",
-            notes = "A code hosting platform",
-            createdAt = "2024-01-15T10:30:00Z",
-            updatedAt = "2024-02-20T14:45:00Z",
-        )
+        val bookmark =
+            BookmarkDto(
+                id = "bm-1",
+                url = "https://github.com",
+                title = "GitHub",
+                notes = "A code hosting platform",
+                createdAt = "2024-01-15T10:30:00Z",
+                updatedAt = "2024-02-20T14:45:00Z",
+            )
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
                 Surface {
@@ -299,9 +302,10 @@ class ScreenshotTest {
 @Composable
 private fun BookmarkDetailContent(bookmark: BookmarkDto) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
         Text(
             text = bookmark.title,
