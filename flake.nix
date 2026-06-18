@@ -102,7 +102,7 @@
           type = "app";
           program = toString (pkgs.writeShellScript "gradle-lint" ''
             set -euo pipefail
-            ./gradlew lint
+            ./gradlew spotlessCheck lint
           '');
         };
 
@@ -147,7 +147,7 @@
 
           gradle-lint = pkgs.writeShellScriptBin "gradle-lint" ''
             set -euo pipefail
-            ./gradlew lint
+            ./gradlew spotlessCheck lint
           '';
 
           gradle-test = pkgs.writeShellScriptBin "gradle-test" ''

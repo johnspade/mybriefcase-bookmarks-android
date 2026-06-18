@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kover)
     alias(libs.plugins.roborazzi)
+    alias(libs.plugins.spotless)
 }
 
 val versionDetails: groovy.lang.Closure<VersionDetails> by rootProject.extra
@@ -111,6 +112,17 @@ kover {
                 minBound(75)
             }
         }
+    }
+}
+
+spotless {
+    kotlin {
+        target("src/**/*.kt")
+        targetExclude("src/main/java/uniffi/**")
+        ktlint()
+    }
+    kotlinGradle {
+        ktlint()
     }
 }
 
