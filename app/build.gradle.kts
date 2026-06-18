@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.detekt)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.baselineprofile)
     alias(libs.plugins.kover)
     alias(libs.plugins.roborazzi)
     alias(libs.plugins.spotless)
@@ -127,6 +128,10 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
     }
 }
 
+baselineProfile {
+    dexLayoutOptimization = true
+}
+
 kover {
     reports {
         filters {
@@ -181,6 +186,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.profileinstaller)
     implementation(libs.androidx.work.runtime)
     testImplementation(libs.konsist)
     testImplementation(libs.junit)
@@ -199,6 +205,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    baselineProfile(project(":baselineprofile"))
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
