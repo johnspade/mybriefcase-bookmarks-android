@@ -27,7 +27,7 @@ Individual steps:
 |---------|-------------|
 | `nix flake check` | Rust fmt, clippy, test, deny, audit, doc |
 | `gradle-lint` | Android Lint |
-| `gradle-test` | Android unit tests (`testDebugUnitTest`) |
+| `gradle-test` | Android unit tests + Roborazzi screenshot verify |
 | `miri` | Miri (nightly toolchain) |
 
 Never force-push to `main`. If a commit needs fixing, create a new commit instead of amending.
@@ -57,6 +57,17 @@ When a PR touches the UI (Compose), attach before and after screenshots.
 ## Screenshots
 
 Use the Android MCP for manual testing, debugging, and taking screenshots. Connect to the running emulator or device via `ConnectDevice`, then use `Snapshot` to capture the current screen.
+
+## Roborazzi Screenshot Tests
+
+Golden-file screenshot regression tests live in `app/src/test/java/.../ui/screenshot/`. They run on JVM via Robolectric (no emulator needed).
+
+| Command | Purpose |
+|---------|---------|
+| `./gradlew recordRoborazziDebug` | Record new golden PNGs to `app/src/test/snapshots/` |
+| `./gradlew verifyRoborazziDebug` | Verify current UI matches golden PNGs (fails on diff) |
+
+When adding or changing UI components, re-record goldens and commit the updated PNGs.
 
 ## Native Rust Libraries
 
