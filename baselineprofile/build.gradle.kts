@@ -12,10 +12,19 @@ android {
         minSdk = 28
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
+    testOptions.managedDevices.localDevices {
+        create("pixel6Api31") {
+            device = "Pixel 6"
+            apiLevel = 31
+            systemImageSource = "aosp"
+        }
+    }
 }
 
 baselineProfile {
-    useConnectedDevices = true
+    managedDevices += "pixel6Api31"
+    useConnectedDevices = false
 }
 
 dependencies {
