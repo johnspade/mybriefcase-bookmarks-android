@@ -475,7 +475,6 @@ drives the timing via polling and lifecycle events.
 | Favicons | Requires network fetch + storage; defer to v1.1 |
 | Bookmark history/revert | Complex UI; defer to v1.1 |
 | Share-to-app (receive) | Nice-to-have; v1.1 |
-| Widget | Nice-to-have; v1.1 |
 | Search relevance scoring | v1.0 uses substring match + sort (parity with web app); v1.1 could rank title matches above URL/notes matches |
 | Typed FFI errors | v1.0 uses `FfiError { message: String }` shown in Snackbar; v1.1 maps from core's typed errors for programmatic handling |
 
