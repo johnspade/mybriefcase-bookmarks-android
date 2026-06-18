@@ -279,15 +279,7 @@ class FolderViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 val tree = repository.getFolderNavTree()
-                val expanded = _uiState.value.expandedFolderIds
-                _uiState.value = _uiState.value.copy(
-                    navTree = tree,
-                    expandedFolderIds = if (tree.rootFolderId !in expanded) {
-                        expanded + tree.rootFolderId
-                    } else {
-                        expanded
-                    },
-                )
+                _uiState.value = _uiState.value.copy(navTree = tree)
                 // If no folder is selected yet, navigate to root
                 if (_uiState.value.currentFolderId.isEmpty()) {
                     navigateToFolder(tree.rootFolderId)

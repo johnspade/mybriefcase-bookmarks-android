@@ -727,7 +727,7 @@ private fun FolderNavNode(
     onToggleExpanded: (String) -> Unit,
 ) {
     val hasChildren = folder.childFolderIds.isNotEmpty()
-    val expanded = folder.id in expandedFolderIds
+    val expanded = depth == 0 || folder.id in expandedFolderIds
 
     NavigationDrawerItem(
         label = { Text(folder.title) },
@@ -750,7 +750,7 @@ private fun FolderNavNode(
                         )
                     }
                 }
-                if (hasChildren) {
+                if (hasChildren && depth > 0) {
                     IconButton(onClick = { onToggleExpanded(folder.id) }) {
                         Icon(
                             if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
