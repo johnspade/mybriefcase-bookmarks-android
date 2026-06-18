@@ -65,10 +65,11 @@ fun SearchScreen(
                         onValueChange = { viewModel.setQuery(it) },
                         placeholder = { Text("Search bookmarks...") },
                         singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester)
-                            .testTag("search_input"),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester)
+                                .testTag("search_input"),
                         trailingIcon = {
                             if (query.isNotEmpty()) {
                                 IconButton(
@@ -94,9 +95,10 @@ fun SearchScreen(
         modifier = modifier,
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
         ) {
             // Sort chip
             SortChip(
@@ -171,7 +173,10 @@ fun SortChip(
 }
 
 @Composable
-private fun SearchResultItem(bookmark: BookmarkDto, onClick: () -> Unit) {
+private fun SearchResultItem(
+    bookmark: BookmarkDto,
+    onClick: () -> Unit,
+) {
     ListItem(
         headlineContent = { Text(bookmark.title) },
         supportingContent = { Text(bookmark.url) },
@@ -179,9 +184,10 @@ private fun SearchResultItem(bookmark: BookmarkDto, onClick: () -> Unit) {
     )
 }
 
-fun SortOrder.displayName(): String = when (this) {
-    SortOrder.NAME_ASC -> "Name A-Z"
-    SortOrder.NAME_DESC -> "Name Z-A"
-    SortOrder.DATE_DESC -> "Date newest"
-    SortOrder.DATE_ASC -> "Date oldest"
-}
+fun SortOrder.displayName(): String =
+    when (this) {
+        SortOrder.NAME_ASC -> "Name A-Z"
+        SortOrder.NAME_DESC -> "Name Z-A"
+        SortOrder.DATE_DESC -> "Date newest"
+        SortOrder.DATE_ASC -> "Date oldest"
+    }

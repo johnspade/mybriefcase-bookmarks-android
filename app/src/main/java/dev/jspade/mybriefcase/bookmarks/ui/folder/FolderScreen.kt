@@ -32,24 +32,24 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
@@ -66,9 +66,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
 import dev.jspade.mybriefcase.bookmarks.ui.search.displayName
+import kotlinx.coroutines.launch
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
 import uniffi.mybriefcase_bookmarks_ffi.BreadcrumbDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderItemDto
@@ -261,9 +261,10 @@ fun FolderScreen(
             when {
                 uiState.isLoading -> {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
                         contentAlignment = Alignment.Center,
                     ) {
                         CircularProgressIndicator()
@@ -271,9 +272,10 @@ fun FolderScreen(
                 }
                 uiState.error != null -> {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(innerPadding),
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(innerPadding),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -344,7 +346,11 @@ fun FolderScreen(
             onConfirm = { url, title, notes, newFolderId ->
                 showEditDialog = false
                 viewModel.updateBookmarkAndMove(
-                    uiState.selectedBookmark!!.id, url, title, notes, newFolderId,
+                    uiState.selectedBookmark!!.id,
+                    url,
+                    title,
+                    notes,
+                    newFolderId,
                 )
             },
         )
@@ -377,8 +383,14 @@ fun FolderScreen(
 
 sealed interface MoveTarget {
     val itemId: String
-    data class Folder(override val itemId: String) : MoveTarget
-    data class Bookmark(override val itemId: String) : MoveTarget
+
+    data class Folder(
+        override val itemId: String,
+    ) : MoveTarget
+
+    data class Bookmark(
+        override val itemId: String,
+    ) : MoveTarget
 }
 
 @Composable
@@ -521,10 +533,11 @@ private fun BreadcrumbBar(
         scrollState.animateScrollTo(scrollState.maxValue)
     }
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .horizontalScroll(scrollState),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .horizontalScroll(scrollState),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         breadcrumbs.forEachIndexed { index, crumb ->
@@ -538,13 +551,16 @@ private fun BreadcrumbBar(
             Text(
                 text = crumb.title,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (index == breadcrumbs.lastIndex)
-                    MaterialTheme.colorScheme.onSurface
-                else
-                    MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable(enabled = index < breadcrumbs.lastIndex) {
-                    onClick(crumb.id)
-                },
+                color =
+                    if (index == breadcrumbs.lastIndex) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    },
+                modifier =
+                    Modifier.clickable(enabled = index < breadcrumbs.lastIndex) {
+                        onClick(crumb.id)
+                    },
             )
         }
     }
@@ -568,13 +584,15 @@ private fun FolderListItem(
             leadingContent = {
                 Icon(Icons.Default.Folder, contentDescription = null)
             },
-            colors = ListItemDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-            ),
-            modifier = Modifier.combinedClickable(
-                onClick = onClick,
-                onLongClick = { showContextMenu = true },
-            ),
+            colors =
+                ListItemDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                ),
+            modifier =
+                Modifier.combinedClickable(
+                    onClick = onClick,
+                    onLongClick = { showContextMenu = true },
+                ),
         )
         DropdownMenu(
             expanded = showContextMenu,
@@ -622,28 +640,32 @@ private fun BookmarkListItem(
                 color = MaterialTheme.colorScheme.outline,
             )
         },
-        modifier = Modifier.combinedClickable(
-            onClick = onClick,
-            onLongClick = onLongClick,
-        ),
+        modifier =
+            Modifier.combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+            ),
     )
 }
 
 @Composable
 private fun SyncBanner(onDismiss: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .testTag("sync_banner"),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-        ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .testTag("sync_banner"),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

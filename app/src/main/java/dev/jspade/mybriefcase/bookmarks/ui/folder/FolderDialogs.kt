@@ -1,8 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -130,19 +128,21 @@ fun MoveItemDialog(
     onDismiss: () -> Unit,
 ) {
     val folderMap = remember(navTree) { navTree.folders.associateBy { it.id } }
-    val disabledIds = remember(navTree, currentFolderId, movedFolderId) {
-        if (movedFolderId != null) {
-            collectDescendantIds(movedFolderId, folderMap) + movedFolderId
-        } else {
-            setOf(currentFolderId)
+    val disabledIds =
+        remember(navTree, currentFolderId, movedFolderId) {
+            if (movedFolderId != null) {
+                collectDescendantIds(movedFolderId, folderMap) + movedFolderId
+            } else {
+                setOf(currentFolderId)
+            }
         }
-    }
     var selectedFolderId by remember { mutableStateOf<String?>(null) }
 
     // Build flat list with depth for indentation
-    val flatList = remember(navTree) {
-        buildFlatFolderList(navTree.rootFolderId, folderMap, depth = 0)
-    }
+    val flatList =
+        remember(navTree) {
+            buildFlatFolderList(navTree.rootFolderId, folderMap, depth = 0)
+        }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -156,30 +156,40 @@ fun MoveItemDialog(
                         headlineContent = {
                             Text(
                                 text = folder.title,
-                                color = if (isDisabled)
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                else
-                                    MaterialTheme.colorScheme.onSurface,
+                                color =
+                                    if (isDisabled) {
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
                             )
                         },
                         leadingContent = {
                             Icon(
                                 Icons.Default.Folder,
                                 contentDescription = null,
-                                tint = if (isDisabled)
-                                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                                else
-                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint =
+                                    if (isDisabled) {
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
                             )
                         },
-                        colors = if (isSelected) ListItemDefaults.colors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        ) else ListItemDefaults.colors(),
-                        modifier = Modifier
-                            .padding(start = (depth * 16).dp)
-                            .clickable(enabled = !isDisabled) {
-                                selectedFolderId = folder.id
+                        colors =
+                            if (isSelected) {
+                                ListItemDefaults.colors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                )
+                            } else {
+                                ListItemDefaults.colors()
                             },
+                        modifier =
+                            Modifier
+                                .padding(start = (depth * 16).dp)
+                                .clickable(enabled = !isDisabled) {
+                                    selectedFolderId = folder.id
+                                },
                     )
                 }
             }

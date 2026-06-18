@@ -19,7 +19,6 @@ import dev.jspade.mybriefcase.bookmarks.ui.navigation.AppNavHost
 import dev.jspade.mybriefcase.bookmarks.ui.theme.MyBriefcaseBookmarksTheme
 
 class MainActivity : ComponentActivity() {
-
     private var showStorageRationale by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,10 +45,11 @@ class MainActivity : ComponentActivity() {
 
     private fun requestStoragePermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
-            val intent = Intent(
-                Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                Uri.parse("package:$packageName"),
-            )
+            val intent =
+                Intent(
+                    Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                    Uri.parse("package:$packageName"),
+                )
             startActivity(intent)
         }
     }

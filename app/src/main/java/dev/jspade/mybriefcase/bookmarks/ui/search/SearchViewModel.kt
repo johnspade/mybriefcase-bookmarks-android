@@ -28,21 +28,23 @@ class SearchViewModel(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     debounceMs: Long = 300L,
 ) : ViewModel() {
-
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
     private val _sortOrder = MutableStateFlow(SortOrder.NAME_ASC)
     val sortOrder: StateFlow<SortOrder> = _sortOrder.asStateFlow()
 
-    val searchResults: StateFlow<List<BookmarkDto>> = combine(_query.debounce(debounceMs), _sortOrder) { q, sort ->
-        q to sort
-    }.flatMapLatest { (query, sort) ->
-        if (query.isBlank()) flowOf(emptyList())
-        else flow { emit(repository.searchBookmarks(query, sort)) }
-    }
-        .flowOn(ioDispatcher)
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    val searchResults: StateFlow<List<BookmarkDto>> =
+        combine(_query.debounce(debounceMs), _sortOrder) { q, sort ->
+            q to sort
+        }.flatMapLatest { (query, sort) ->
+            if (query.isBlank()) {
+                flowOf(emptyList())
+            } else {
+                flow { emit(repository.searchBookmarks(query, sort)) }
+            }
+        }.flowOn(ioDispatcher)
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     fun setQuery(query: String) {
         _query.value = query

@@ -1,0 +1,92 @@
+build:
+  maxIssues: 0
+
+comments:
+  active: true
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false
+  UndocumentedPublicProperty:
+    active: false
+
+complexity:
+  active: true
+  CyclomaticComplexMethod:
+    threshold: 15
+    ignoreAnnotated:
+      - "Composable"
+  LongMethod:
+    threshold: 60
+    ignoreAnnotated:
+      - "Composable"
+  LongParameterList:
+    functionThreshold: 6
+    constructorThreshold: 8
+    ignoreAnnotated:
+      - "Composable"
+  TooManyFunctions:
+    thresholdInFiles: 15
+    thresholdInClasses: 15
+    thresholdInInterfaces: 15
+    thresholdInObjects: 15
+    thresholdInEnums: 15
+
+coroutines:
+  active: true
+
+empty-blocks:
+  active: true
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: true
+    exceptionNames:
+      - "ArrayIndexOutOfBoundsException"
+      - "Error"
+      - "IllegalMonitorStateException"
+      - "IndexOutOfBoundsException"
+      - "NullPointerException"
+      - "RuntimeException"
+
+naming:
+  active: true
+  FunctionNaming:
+    ignoreAnnotated:
+      - "Composable"
+
+performance:
+  active: true
+
+potential-bugs:
+  active: true
+
+style:
+  active: true
+  ForbiddenComment:
+    active: false
+  MagicNumber:
+    ignoreAnnotated:
+      - "Preview"
+      - "Composable"
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreEnums: true
+    ignoreNumbers:
+      - "-1"
+      - "0"
+      - "1"
+      - "2"
+  MaxLineLength:
+    active: false
+  ReturnCount:
+    max: 3
+    ignoreAnnotated:
+      - "Composable"
+  UnusedPrivateMember:
+    allowedNames: "(_|ignored|expected|serialVersionUID)"
+    ignoreAnnotated:
+      - "Preview"
+  WildcardImport:
+    active: true

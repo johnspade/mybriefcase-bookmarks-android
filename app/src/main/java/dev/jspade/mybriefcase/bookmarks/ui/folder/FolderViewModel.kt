@@ -38,13 +38,13 @@ data class FolderUiState(
     val expandedFolderIds: Set<String> = emptySet(),
 )
 
+@Suppress("TooManyFunctions")
 class FolderViewModel(
     private val repository: BookmarkRepository = MyBriefcaseApp.instance.repository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val pollIntervalMs: Long = 30_000L,
     private val syncDirPath: String? = null,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(FolderUiState())
     val uiState: StateFlow<FolderUiState> = _uiState.asStateFlow()
 
@@ -82,7 +82,10 @@ class FolderViewModel(
         }
     }
 
-    fun renameFolder(folderId: String, title: String) {
+    fun renameFolder(
+        folderId: String,
+        title: String,
+    ) {
         viewModelScope.launch(ioDispatcher) {
             try {
                 repository.renameFolder(folderId, title)
@@ -104,7 +107,11 @@ class FolderViewModel(
         }
     }
 
-    fun moveItem(itemId: String, fromFolderId: String, toFolderId: String) {
+    fun moveItem(
+        itemId: String,
+        fromFolderId: String,
+        toFolderId: String,
+    ) {
         viewModelScope.launch(ioDispatcher) {
             try {
                 repository.moveItem(itemId, fromFolderId, toFolderId)
@@ -131,20 +138,21 @@ class FolderViewModel(
 
     fun startPolling() {
         if (pollingJob?.isActive == true) return
-        pollingJob = viewModelScope.launch(ioDispatcher) {
-            while (isActive) {
-                delay(pollIntervalMs)
-                try {
-                    val changed = repository.triggerFullMerge()
-                    if (changed) {
-                        loadFolderContents(_uiState.value.currentFolderId)
-                        loadNavTree()
+        pollingJob =
+            viewModelScope.launch(ioDispatcher) {
+                while (isActive) {
+                    delay(pollIntervalMs)
+                    try {
+                        val changed = repository.triggerFullMerge()
+                        if (changed) {
+                            loadFolderContents(_uiState.value.currentFolderId)
+                            loadNavTree()
+                        }
+                    } catch (_: Exception) {
+                        // Polling errors are non-fatal
                     }
-                } catch (_: Exception) {
-                    // Polling errors are non-fatal
                 }
             }
-        }
     }
 
     fun stopPolling() {
@@ -152,7 +160,10 @@ class FolderViewModel(
         pollingJob = null
     }
 
-    fun addBookmark(url: String, title: String) {
+    fun addBookmark(
+        url: String,
+        title: String,
+    ) {
         val folderId = _uiState.value.currentFolderId
         viewModelScope.launch(ioDispatcher) {
             try {
@@ -183,7 +194,12 @@ class FolderViewModel(
         _uiState.value = _uiState.value.copy(selectedBookmark = null)
     }
 
-    fun updateBookmark(bookmarkId: String, url: String?, title: String?, notes: String?) {
+    fun updateBookmark(
+        bookmarkId: String,
+        url: String?,
+        title: String?,
+        notes: String?,
+    ) {
         viewModelScope.launch(ioDispatcher) {
             try {
                 repository.updateBookmark(bookmarkId, url, title, notes)
@@ -197,7 +213,13 @@ class FolderViewModel(
         }
     }
 
-    fun updateBookmarkAndMove(bookmarkId: String, url: String?, title: String?, notes: String?, newFolderId: String?) {
+    fun updateBookmarkAndMove(
+        bookmarkId: String,
+        url: String?,
+        title: String?,
+        notes: String?,
+        newFolderId: String?,
+    ) {
         viewModelScope.launch(ioDispatcher) {
             try {
                 repository.updateBookmark(bookmarkId, url, title, notes)
@@ -225,9 +247,10 @@ class FolderViewModel(
     }
 
     fun importHtml(html: String) {
-        val folderId = _uiState.value.currentFolderId.ifEmpty {
-            _uiState.value.navTree?.rootFolderId ?: return
-        }
+        val folderId =
+            _uiState.value.currentFolderId.ifEmpty {
+                _uiState.value.navTree?.rootFolderId ?: return
+            }
         viewModelScope.launch(ioDispatcher) {
             try {
                 val result = repository.importHtml(folderId, html)
@@ -294,14 +317,15 @@ class FolderViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 val children = repository.getFolderChildren(folderId, _uiState.value.sortOrder)
-                _uiState.value = _uiState.value.copy(
-                    folderTitle = children.folderTitle,
-                    breadcrumbs = children.breadcrumbs,
-                    folders = children.folders,
-                    bookmarks = children.bookmarks,
-                    isLoading = false,
-                    error = null,
-                )
+                _uiState.value =
+                    _uiState.value.copy(
+                        folderTitle = children.folderTitle,
+                        breadcrumbs = children.breadcrumbs,
+                        folders = children.folders,
+                        bookmarks = children.bookmarks,
+                        isLoading = false,
+                        error = null,
+                    )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
             }

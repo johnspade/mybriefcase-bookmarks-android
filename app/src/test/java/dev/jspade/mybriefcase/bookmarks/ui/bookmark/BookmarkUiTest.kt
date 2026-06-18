@@ -4,12 +4,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
@@ -36,7 +34,6 @@ import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = dev.jspade.mybriefcase.bookmarks.TestApp::class)
 class BookmarkUiTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -110,14 +107,15 @@ class BookmarkUiTest {
 
     @Test
     fun `detail sheet shows all fields`() {
-        val bookmark = BookmarkDto(
-            id = "test-id",
-            url = "https://example.com",
-            title = "Example",
-            notes = "Some notes here",
-            createdAt = "2024-01-15T10:30:00Z",
-            updatedAt = "2024-02-20T14:45:00Z",
-        )
+        val bookmark =
+            BookmarkDto(
+                id = "test-id",
+                url = "https://example.com",
+                title = "Example",
+                notes = "Some notes here",
+                createdAt = "2024-01-15T10:30:00Z",
+                updatedAt = "2024-02-20T14:45:00Z",
+            )
 
         composeTestRule.setContent {
             BookmarkDetailSheet(
@@ -139,14 +137,15 @@ class BookmarkUiTest {
 
     @Test
     fun `detail sheet shows intent action buttons`() {
-        val bookmark = BookmarkDto(
-            id = "test-id",
-            url = "https://example.com",
-            title = "Example",
-            notes = "",
-            createdAt = "2024-01-15T10:30:00Z",
-            updatedAt = "2024-02-20T14:45:00Z",
-        )
+        val bookmark =
+            BookmarkDto(
+                id = "test-id",
+                url = "https://example.com",
+                title = "Example",
+                notes = "",
+                createdAt = "2024-01-15T10:30:00Z",
+                updatedAt = "2024-02-20T14:45:00Z",
+            )
 
         composeTestRule.setContent {
             BookmarkDetailSheet(
@@ -167,14 +166,15 @@ class BookmarkUiTest {
 
     @Test
     fun `edit dialog pre-fills bookmark fields`() {
-        val bookmark = BookmarkDto(
-            id = "test-id",
-            url = "https://prefilled.com",
-            title = "Prefilled Title",
-            notes = "Prefilled notes",
-            createdAt = "2024-01-01T00:00:00Z",
-            updatedAt = "2024-01-01T00:00:00Z",
-        )
+        val bookmark =
+            BookmarkDto(
+                id = "test-id",
+                url = "https://prefilled.com",
+                title = "Prefilled Title",
+                notes = "Prefilled notes",
+                createdAt = "2024-01-01T00:00:00Z",
+                updatedAt = "2024-01-01T00:00:00Z",
+            )
 
         composeTestRule.setContent {
             EditBookmarkDialog(
@@ -254,22 +254,30 @@ class BookmarkUiTest {
 
     @Test
     fun `edit dialog shows folder picker with current folder`() {
-        val bookmark = BookmarkDto(
-            id = "test-id",
-            url = "https://example.com",
-            title = "Example",
-            notes = "",
-            createdAt = "2024-01-01T00:00:00Z",
-            updatedAt = "2024-01-01T00:00:00Z",
-        )
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(id = "root-id", title = "Bookmarks", itemCount = 2u, childFolderIds = listOf("folder-1", "folder-2")),
-                FolderNavDto(id = "folder-1", title = "Work", itemCount = 1u, childFolderIds = emptyList()),
-                FolderNavDto(id = "folder-2", title = "Personal", itemCount = 0u, childFolderIds = emptyList()),
-            ),
-        )
+        val bookmark =
+            BookmarkDto(
+                id = "test-id",
+                url = "https://example.com",
+                title = "Example",
+                notes = "",
+                createdAt = "2024-01-01T00:00:00Z",
+                updatedAt = "2024-01-01T00:00:00Z",
+            )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 2u,
+                            childFolderIds = listOf("folder-1", "folder-2"),
+                        ),
+                        FolderNavDto(id = "folder-1", title = "Work", itemCount = 1u, childFolderIds = emptyList()),
+                        FolderNavDto(id = "folder-2", title = "Personal", itemCount = 0u, childFolderIds = emptyList()),
+                    ),
+            )
 
         composeTestRule.setContent {
             EditBookmarkDialog(
@@ -288,22 +296,30 @@ class BookmarkUiTest {
 
     @Test
     fun `edit dialog folder picker allows selecting different folder`() {
-        val bookmark = BookmarkDto(
-            id = "test-id",
-            url = "https://example.com",
-            title = "Example",
-            notes = "",
-            createdAt = "2024-01-01T00:00:00Z",
-            updatedAt = "2024-01-01T00:00:00Z",
-        )
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(id = "root-id", title = "Bookmarks", itemCount = 2u, childFolderIds = listOf("folder-1", "folder-2")),
-                FolderNavDto(id = "folder-1", title = "Work", itemCount = 1u, childFolderIds = emptyList()),
-                FolderNavDto(id = "folder-2", title = "Personal", itemCount = 0u, childFolderIds = emptyList()),
-            ),
-        )
+        val bookmark =
+            BookmarkDto(
+                id = "test-id",
+                url = "https://example.com",
+                title = "Example",
+                notes = "",
+                createdAt = "2024-01-01T00:00:00Z",
+                updatedAt = "2024-01-01T00:00:00Z",
+            )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 2u,
+                            childFolderIds = listOf("folder-1", "folder-2"),
+                        ),
+                        FolderNavDto(id = "folder-1", title = "Work", itemCount = 1u, childFolderIds = emptyList()),
+                        FolderNavDto(id = "folder-2", title = "Personal", itemCount = 0u, childFolderIds = emptyList()),
+                    ),
+            )
         var confirmedFolderId: String? = null
 
         composeTestRule.setContent {
@@ -333,21 +349,34 @@ class BookmarkUiTest {
 
     @Test
     fun `edit dialog confirm passes null folderId when folder not changed`() {
-        val bookmark = BookmarkDto(
-            id = "test-id",
-            url = "https://example.com",
-            title = "Example",
-            notes = "",
-            createdAt = "2024-01-01T00:00:00Z",
-            updatedAt = "2024-01-01T00:00:00Z",
-        )
-        val navTree = FolderNavTreeDto(
-            rootFolderId = "root-id",
-            folders = listOf(
-                FolderNavDto(id = "root-id", title = "Bookmarks", itemCount = 2u, childFolderIds = listOf("folder-1")),
-                FolderNavDto(id = "folder-1", title = "Work", itemCount = 1u, childFolderIds = emptyList()),
-            ),
-        )
+        val bookmark =
+            BookmarkDto(
+                id = "test-id",
+                url = "https://example.com",
+                title = "Example",
+                notes = "",
+                createdAt = "2024-01-01T00:00:00Z",
+                updatedAt = "2024-01-01T00:00:00Z",
+            )
+        val navTree =
+            FolderNavTreeDto(
+                rootFolderId = "root-id",
+                folders =
+                    listOf(
+                        FolderNavDto(
+                            id = "root-id",
+                            title = "Bookmarks",
+                            itemCount = 2u,
+                            childFolderIds = listOf("folder-1"),
+                        ),
+                        FolderNavDto(
+                            id = "folder-1",
+                            title = "Work",
+                            itemCount = 1u,
+                            childFolderIds = emptyList(),
+                        ),
+                    ),
+            )
         var confirmedFolderId: String? = "sentinel"
 
         composeTestRule.setContent {

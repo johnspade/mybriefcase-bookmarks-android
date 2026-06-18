@@ -26,7 +26,6 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = dev.jspade.mybriefcase.bookmarks.TestApp::class)
 class FolderScreenTest {
-
     @get:Rule
     val composeTestRule = createComposeRule()
 
@@ -143,29 +142,32 @@ class FolderScreenTest {
     @Test
     fun `sync banner shown when sync dir has no marker`() {
         val syncDir = tempFolder.newFolder("sync")
-        val viewModel = FolderViewModel(
-            repository = fakeRepo,
-            ioDispatcher = testDispatcher,
-            syncDirPath = syncDir.absolutePath,
-        )
+        val viewModel =
+            FolderViewModel(
+                repository = fakeRepo,
+                ioDispatcher = testDispatcher,
+                syncDirPath = syncDir.absolutePath,
+            )
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
         }
 
         composeTestRule.onNodeWithTag("sync_banner").assertIsDisplayed()
-        composeTestRule.onNodeWithText("To sync with other devices, add this folder to Syncthing-Fork")
+        composeTestRule
+            .onNodeWithText("To sync with other devices, add this folder to Syncthing-Fork")
             .assertIsDisplayed()
     }
 
     @Test
     fun `sync banner dismissible`() {
         val syncDir = tempFolder.newFolder("sync")
-        val viewModel = FolderViewModel(
-            repository = fakeRepo,
-            ioDispatcher = testDispatcher,
-            syncDirPath = syncDir.absolutePath,
-        )
+        val viewModel =
+            FolderViewModel(
+                repository = fakeRepo,
+                ioDispatcher = testDispatcher,
+                syncDirPath = syncDir.absolutePath,
+            )
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -184,11 +186,12 @@ class FolderScreenTest {
     fun `sync banner not shown when marker file exists`() {
         val syncDir = tempFolder.newFolder("sync")
         java.io.File(syncDir, ".bookmarks-sync").writeText("")
-        val viewModel = FolderViewModel(
-            repository = fakeRepo,
-            ioDispatcher = testDispatcher,
-            syncDirPath = syncDir.absolutePath,
-        )
+        val viewModel =
+            FolderViewModel(
+                repository = fakeRepo,
+                ioDispatcher = testDispatcher,
+                syncDirPath = syncDir.absolutePath,
+            )
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
