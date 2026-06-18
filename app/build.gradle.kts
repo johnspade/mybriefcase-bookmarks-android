@@ -111,6 +111,9 @@ android {
         checkDependencies = true
         disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable", "OldTargetApi")
     }
+    composeCompiler {
+        stabilityConfigurationFile = project.layout.projectDirectory.file("compose-stability.conf")
+    }
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
