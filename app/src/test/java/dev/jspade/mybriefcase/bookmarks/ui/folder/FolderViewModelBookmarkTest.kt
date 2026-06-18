@@ -1,6 +1,7 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
 import app.cash.turbine.test
+import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -109,7 +110,7 @@ class FolderViewModelBookmarkTest {
                 advanceUntilIdle()
 
                 val state = expectMostRecentItem()
-                assertEquals("Bookmark not found", state.error)
+                assertEquals(BookmarkError.NotFound("Bookmark not found"), state.error)
             }
         }
 
@@ -196,7 +197,7 @@ class FolderViewModelBookmarkTest {
                 advanceUntilIdle()
 
                 val state = expectMostRecentItem()
-                assertEquals("import failed", state.error)
+                assertEquals(BookmarkError.Internal("import failed"), state.error)
             }
         }
 
@@ -215,7 +216,7 @@ class FolderViewModelBookmarkTest {
                 advanceUntilIdle()
 
                 val state = expectMostRecentItem()
-                assertEquals("export failed", state.error)
+                assertEquals(BookmarkError.Internal("export failed"), state.error)
             }
         }
 

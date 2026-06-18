@@ -6,7 +6,7 @@ use mybriefcase_bookmarks_core::repo::export_doc_to_shared;
 
 #[uniffi::export]
 pub fn import_html(folder_id: String, html: String) -> Result<ImportResultDto, FfiError> {
-    let state = repo();
+    let state = repo()?;
     let items = parse_netscape_html(&html);
     let (bc, fc) = import_items(&state.doc_handle, &folder_id, &items)?;
     refresh_cache(state);
@@ -19,13 +19,13 @@ pub fn import_html(folder_id: String, html: String) -> Result<ImportResultDto, F
 
 #[uniffi::export]
 pub fn export_html() -> Result<String, FfiError> {
-    let state = repo();
+    let state = repo()?;
     let cache = state.cache.read().unwrap();
     let mut buf = Vec::new();
-    export_netscape_html(&cache, &mut buf).map_err(|e| FfiError::General {
-        message: format!("export failed: {e}"),
+    export_netscape_html(&cache, &mut buf).map_err(|e| FfiError::IoError {
+        msg: format!("export failed: {e}"),
     })?;
-    String::from_utf8(buf).map_err(|e| FfiError::General {
-        message: format!("export produced invalid UTF-8: {e}"),
+    String::from_utf8(buf).map_err(|e| FfiError::Internal {
+        msg: format!("export produced invalid UTF-8: {e}"),
     })
 }

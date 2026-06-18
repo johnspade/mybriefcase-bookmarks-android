@@ -251,10 +251,13 @@ class FakeBookmarkRepository : BookmarkRepository {
         moveItemCalls.add(Triple(itemId, fromFolderId, toFolderId))
     }
 
+    var searchThrow: Exception? = null
+
     override suspend fun searchBookmarks(
         query: String,
         sortBy: SortOrder,
     ): List<BookmarkDto> {
+        searchThrow?.let { throw it }
         lastSearchQuery = query
         onSearchCalled?.invoke()
         return searchResults

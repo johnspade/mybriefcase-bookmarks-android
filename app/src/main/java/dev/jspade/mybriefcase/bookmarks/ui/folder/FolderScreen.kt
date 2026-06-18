@@ -284,7 +284,7 @@ fun FolderScreen(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = uiState.error ?: "Unknown error",
+                            text = uiState.error?.message ?: "Unknown error",
                             color = MaterialTheme.colorScheme.error,
                         )
                     }

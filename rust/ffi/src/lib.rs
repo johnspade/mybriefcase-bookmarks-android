@@ -36,10 +36,11 @@ struct RepoState {
 
 static REPO: OnceLock<RepoState> = OnceLock::new();
 
-/// Access the singleton, panicking if not initialized.
-fn repo() -> &'static RepoState {
-    REPO.get()
-        .expect("repo not initialized: call init_repo first")
+/// Access the singleton, returning `NotInitialized` if `init_repo` was not called.
+fn repo() -> Result<&'static RepoState, FfiError> {
+    REPO.get().ok_or_else(|| FfiError::NotInitialized {
+        msg: "repo not initialized: call init_repo first".to_string(),
+    })
 }
 
 /// Re-hydrates the cache from the document. Call after mutations and merges.
@@ -51,16 +52,32 @@ fn refresh_cache(state: &RepoState) {
 // ── FFI Error type ──────────────────────────────────────────────────────────
 
 #[derive(Debug, thiserror::Error, uniffi::Error)]
-#[uniffi(flat_error)]
 pub enum FfiError {
-    #[error("{message}")]
-    General { message: String },
+    #[error("{msg}")]
+    NotFound { msg: String },
+    #[error("{msg}")]
+    InvalidInput { msg: String },
+    #[error("{msg}")]
+    IoError { msg: String },
+    #[error("{msg}")]
+    NotInitialized { msg: String },
+    #[error("{msg}")]
+    Internal { msg: String },
 }
 
 impl From<mybriefcase_bookmarks_core::error::CoreError> for FfiError {
     fn from(e: mybriefcase_bookmarks_core::error::CoreError) -> Self {
-        FfiError::General {
-            message: format!("{e}"),
+        use mybriefcase_bookmarks_core::error::CoreError;
+        match e {
+            CoreError::NotFound(msg) => FfiError::NotFound { msg },
+            CoreError::Validation(msg) => FfiError::InvalidInput { msg },
+            CoreError::Io(err) => FfiError::IoError {
+                msg: err.to_string(),
+            },
+            CoreError::DocumentCorrupted(msg) => FfiError::Internal { msg },
+            CoreError::Automerge(err) => FfiError::Internal {
+                msg: err.to_string(),
+            },
         }
     }
 }

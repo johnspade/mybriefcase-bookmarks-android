@@ -1,6 +1,7 @@
 package dev.jspade.mybriefcase.bookmarks.ui.search
 
 import app.cash.turbine.test
+import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,10 +13,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import uniffi.mybriefcase_bookmarks_ffi.FfiException
 import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -191,6 +194,138 @@ class SearchViewModelTest {
                 // Only the final query should have triggered a search
                 assertEquals(1, callCount)
                 assertEquals("abc", fakeRepo.lastSearchQuery)
+            }
+        }
+
+    @Test
+    fun `NotFound error produces BookmarkError NotFound`() =
+        runTest {
+            fakeRepo.searchThrow = FfiException.NotFound("item not found")
+            val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+            // Subscribe to searchResults to start the lazy flow
+            viewModel.searchResults.test {
+                awaitItem() // initial empty
+
+                viewModel.setQuery("test")
+                advanceTimeBy(350)
+                advanceUntilIdle()
+
+                val err = viewModel.error.value
+                assertTrue(err is BookmarkError.NotFound)
+                assertEquals("item not found", err?.message)
+            }
+        }
+
+    @Test
+    fun `InvalidInput error produces BookmarkError InvalidInput`() =
+        runTest {
+            fakeRepo.searchThrow = FfiException.InvalidInput("query too long")
+            val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+            viewModel.searchResults.test {
+                awaitItem()
+
+                viewModel.setQuery("test")
+                advanceTimeBy(350)
+                advanceUntilIdle()
+
+                val err = viewModel.error.value
+                assertTrue(err is BookmarkError.InvalidInput)
+                assertEquals("query too long", err?.message)
+            }
+        }
+
+    @Test
+    fun `IoError produces BookmarkError IoError`() =
+        runTest {
+            fakeRepo.searchThrow = FfiException.IoException("disk full")
+            val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+            viewModel.searchResults.test {
+                awaitItem()
+
+                viewModel.setQuery("test")
+                advanceTimeBy(350)
+                advanceUntilIdle()
+
+                val err = viewModel.error.value
+                assertTrue(err is BookmarkError.IoError)
+                assertEquals("disk full", err?.message)
+            }
+        }
+
+    @Test
+    fun `NotInitialized error produces BookmarkError NotInitialized`() =
+        runTest {
+            fakeRepo.searchThrow = FfiException.NotInitialized("not initialized")
+            val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+            viewModel.searchResults.test {
+                awaitItem()
+
+                viewModel.setQuery("test")
+                advanceTimeBy(350)
+                advanceUntilIdle()
+
+                val err = viewModel.error.value
+                assertTrue(err is BookmarkError.NotInitialized)
+            }
+        }
+
+    @Test
+    fun `Internal error produces BookmarkError Internal`() =
+        runTest {
+            fakeRepo.searchThrow = FfiException.Internal("automerge corruption")
+            val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+            viewModel.searchResults.test {
+                awaitItem()
+
+                viewModel.setQuery("test")
+                advanceTimeBy(350)
+                advanceUntilIdle()
+
+                val err = viewModel.error.value
+                assertTrue(err is BookmarkError.Internal)
+                assertEquals("automerge corruption", err?.message)
+            }
+        }
+
+    @Test
+    fun `error clears on successful search`() =
+        runTest {
+            fakeRepo.searchThrow = FfiException.IoException("disk full")
+            val viewModel = SearchViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+            viewModel.searchResults.test {
+                awaitItem()
+
+                viewModel.setQuery("test")
+                advanceTimeBy(350)
+                advanceUntilIdle()
+                // Error is now set
+                assertTrue(viewModel.error.value is BookmarkError.IoError)
+
+                // Fix the error and search again
+                fakeRepo.searchThrow = null
+                fakeRepo.searchResults =
+                    listOf(
+                        BookmarkDto(
+                            id = "bm-1",
+                            url = "https://example.com",
+                            title = "Example",
+                            notes = "",
+                            createdAt = "2024-01-01T00:00:00Z",
+                            updatedAt = "2024-01-01T00:00:00Z",
+                        ),
+                    )
+                viewModel.setQuery("test2")
+                advanceTimeBy(350)
+                advanceUntilIdle()
+                awaitItem() // successful results
+
+                assertNull(viewModel.error.value)
             }
         }
 }

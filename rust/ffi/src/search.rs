@@ -2,7 +2,7 @@ use crate::{repo, BookmarkDto, FfiError, SortOrder};
 
 #[uniffi::export]
 pub fn search_bookmarks(query: String, sort_by: SortOrder) -> Result<Vec<BookmarkDto>, FfiError> {
-    let state = repo();
+    let state = repo()?;
     let cache = state.cache.read().unwrap();
     let query_lower = query.to_lowercase();
 

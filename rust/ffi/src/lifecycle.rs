@@ -6,8 +6,8 @@ use std::sync::RwLock;
 
 #[uniffi::export]
 pub fn init_repo(data_dir: String, sync_dir: String, client_id: String) -> Result<(), FfiError> {
-    let runtime = tokio::runtime::Runtime::new().map_err(|e| FfiError::General {
-        message: format!("failed to create tokio runtime: {e}"),
+    let runtime = tokio::runtime::Runtime::new().map_err(|e| FfiError::Internal {
+        msg: format!("failed to create tokio runtime: {e}"),
     })?;
 
     let data_path = Path::new(&data_dir).to_path_buf();
@@ -28,8 +28,8 @@ pub fn init_repo(data_dir: String, sync_dir: String, client_id: String) -> Resul
         cache: RwLock::new(store),
     };
 
-    REPO.set(state).map_err(|_| FfiError::General {
-        message: "init_repo called more than once".to_string(),
+    REPO.set(state).map_err(|_| FfiError::Internal {
+        msg: "init_repo called more than once".to_string(),
     })?;
 
     Ok(())

@@ -3,6 +3,7 @@ package dev.jspade.mybriefcase.bookmarks.ui.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
+import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import uniffi.mybriefcase_bookmarks_ffi.FfiException
 import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
@@ -34,14 +36,27 @@ class SearchViewModel(
     private val _sortOrder = MutableStateFlow(SortOrder.NAME_ASC)
     val sortOrder: StateFlow<SortOrder> = _sortOrder.asStateFlow()
 
+    private val _error = MutableStateFlow<BookmarkError?>(null)
+    val error: StateFlow<BookmarkError?> = _error.asStateFlow()
+
     val searchResults: StateFlow<List<BookmarkDto>> =
         combine(_query.debounce(debounceMs), _sortOrder) { q, sort ->
             q to sort
         }.flatMapLatest { (query, sort) ->
             if (query.isBlank()) {
+                _error.value = null
                 flowOf(emptyList())
             } else {
-                flow { emit(repository.searchBookmarks(query, sort)) }
+                flow {
+                    try {
+                        val results = repository.searchBookmarks(query, sort)
+                        _error.value = null
+                        emit(results)
+                    } catch (e: Exception) {
+                        _error.value = toBookmarkError(e)
+                        emit(emptyList())
+                    }
+                }
             }
         }.flowOn(ioDispatcher)
             .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -57,4 +72,10 @@ class SearchViewModel(
     fun clearSearch() {
         _query.value = ""
     }
+
+    private fun toBookmarkError(e: Throwable): BookmarkError =
+        when (e) {
+            is FfiException -> BookmarkError.from(e)
+            else -> BookmarkError.Internal(e.message ?: "Unknown error")
+        }
 }

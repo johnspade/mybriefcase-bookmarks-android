@@ -3,6 +3,7 @@ package dev.jspade.mybriefcase.bookmarks.ui.folder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
+import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
 import uniffi.mybriefcase_bookmarks_ffi.BreadcrumbDto
+import uniffi.mybriefcase_bookmarks_ffi.FfiException
 import uniffi.mybriefcase_bookmarks_ffi.FolderItemDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 import uniffi.mybriefcase_bookmarks_ffi.ImportResultDto
@@ -30,7 +32,7 @@ data class FolderUiState(
     val currentFolderId: String = "",
     val sortOrder: SortOrder = SortOrder.NAME_ASC,
     val isLoading: Boolean = true,
-    val error: String? = null,
+    val error: BookmarkError? = null,
     val selectedBookmark: BookmarkDto? = null,
     val importResult: ImportResultDto? = null,
     val exportedHtml: String? = null,
@@ -85,7 +87,7 @@ class FolderViewModel(
                 repository.createFolder(_uiState.value.currentFolderId, title)
                 refreshAfterMutation()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -99,7 +101,7 @@ class FolderViewModel(
                 repository.renameFolder(folderId, title)
                 refreshAfterMutation()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -110,7 +112,7 @@ class FolderViewModel(
                 repository.deleteFolder(folderId)
                 refreshAfterMutation()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -125,7 +127,7 @@ class FolderViewModel(
                 repository.moveItem(itemId, fromFolderId, toFolderId)
                 refreshAfterMutation()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -139,7 +141,7 @@ class FolderViewModel(
                     loadNavTree()
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -178,7 +180,7 @@ class FolderViewModel(
                 repository.addBookmark(folderId, url, title)
                 refreshAfterMutation()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -190,10 +192,11 @@ class FolderViewModel(
                 if (bookmark != null) {
                     _uiState.value = _uiState.value.copy(selectedBookmark = bookmark)
                 } else {
-                    _uiState.value = _uiState.value.copy(error = "Bookmark not found")
+                    _uiState.value =
+                        _uiState.value.copy(error = BookmarkError.NotFound("Bookmark not found"))
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -216,7 +219,7 @@ class FolderViewModel(
                 _uiState.value = _uiState.value.copy(selectedBookmark = updated)
                 loadFolderContents(_uiState.value.currentFolderId)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -236,7 +239,7 @@ class FolderViewModel(
                 }
                 refreshAfterMutation()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -249,7 +252,7 @@ class FolderViewModel(
                 _uiState.value = _uiState.value.copy(selectedBookmark = null)
                 loadFolderContents(folderId)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -265,7 +268,7 @@ class FolderViewModel(
                 _uiState.value = _uiState.value.copy(importResult = result)
                 refreshAfterMutation()
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -280,7 +283,7 @@ class FolderViewModel(
                 val html = repository.exportHtml()
                 _uiState.value = _uiState.value.copy(exportedHtml = html)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e))
             }
         }
     }
@@ -292,6 +295,12 @@ class FolderViewModel(
     fun dismissSyncBanner() {
         _uiState.value = _uiState.value.copy(showSyncBanner = false)
     }
+
+    private fun toBookmarkError(e: Exception): BookmarkError =
+        when (e) {
+            is FfiException -> BookmarkError.from(e)
+            else -> BookmarkError.Internal(e.message ?: "Unknown error")
+        }
 
     private fun checkSyncBanner() {
         val path = syncDirPath ?: return
@@ -316,7 +325,7 @@ class FolderViewModel(
                     navigateToFolder(tree.rootFolderId)
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e), isLoading = false)
             }
         }
     }
@@ -335,7 +344,7 @@ class FolderViewModel(
                         error = null,
                     )
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
+                _uiState.value = _uiState.value.copy(error = toBookmarkError(e), isLoading = false)
             }
         }
     }

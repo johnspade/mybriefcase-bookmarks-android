@@ -1,6 +1,7 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
 import app.cash.turbine.test
+import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +21,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import uniffi.mybriefcase_bookmarks_ffi.FfiException
 import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -185,8 +187,81 @@ class FolderViewModelTest {
 
             viewModel.uiState.test {
                 val state = expectMostRecentItem()
-                assertEquals("network error", state.error)
+                assertEquals(BookmarkError.Internal("network error"), state.error)
                 assertEquals(false, state.isLoading)
+            }
+        }
+
+    @Test
+    fun `NotFound error produces BookmarkError NotFound`() =
+        runTest {
+            fakeRepo.shouldThrow = FfiException.NotFound("folder not found: abc")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.NotFound)
+                assertEquals("folder not found: abc", state.error?.message)
+            }
+        }
+
+    @Test
+    fun `InvalidInput error produces BookmarkError InvalidInput`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.shouldThrow = FfiException.InvalidInput("title cannot be empty")
+            viewModel.createFolder("")
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.InvalidInput)
+                assertEquals("title cannot be empty", state.error?.message)
+            }
+        }
+
+    @Test
+    fun `IoError produces BookmarkError IoError`() =
+        runTest {
+            fakeRepo.shouldThrow = FfiException.IoException("permission denied")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.IoError)
+                assertEquals("permission denied", state.error?.message)
+            }
+        }
+
+    @Test
+    fun `NotInitialized error produces BookmarkError NotInitialized`() =
+        runTest {
+            fakeRepo.shouldThrow =
+                FfiException.NotInitialized("repo not initialized: call init_repo first")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.NotInitialized)
+            }
+        }
+
+    @Test
+    fun `Internal error produces BookmarkError Internal`() =
+        runTest {
+            fakeRepo.shouldThrow = FfiException.Internal("document corrupted")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.Internal)
+                assertEquals("document corrupted", state.error?.message)
             }
         }
 
@@ -300,7 +375,7 @@ class FolderViewModelTest {
     @Test
     fun `moveItem error sets error state`() =
         runTest {
-            fakeRepo.moveItemThrow = RuntimeException("cannot move into descendant")
+            fakeRepo.moveItemThrow = FfiException.InvalidInput("cannot move into descendant")
             val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
             advanceUntilIdle()
 
@@ -309,7 +384,10 @@ class FolderViewModelTest {
 
             viewModel.uiState.test {
                 val state = expectMostRecentItem()
-                assertEquals("cannot move into descendant", state.error)
+                assertEquals(
+                    BookmarkError.InvalidInput("cannot move into descendant"),
+                    state.error,
+                )
             }
         }
 
