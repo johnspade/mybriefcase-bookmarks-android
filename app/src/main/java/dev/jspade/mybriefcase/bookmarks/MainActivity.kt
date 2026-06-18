@@ -1,7 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
@@ -14,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import dev.jspade.mybriefcase.bookmarks.ui.navigation.AppNavHost
 import dev.jspade.mybriefcase.bookmarks.ui.theme.MyBriefcaseBookmarksTheme
@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
             val intent =
                 Intent(
                     Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                    Uri.parse("package:$packageName"),
+                    "package:$packageName".toUri(),
                 )
             startActivity(intent)
         }

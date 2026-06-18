@@ -43,9 +43,9 @@ import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 @Composable
 fun SearchScreen(
     viewModel: SearchViewModel,
+    modifier: Modifier = Modifier,
     onBookmarkClick: (String) -> Unit = {},
     onBack: () -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     val query by viewModel.query.collectAsState()
     val results by viewModel.searchResults.collectAsState()

@@ -80,9 +80,9 @@ import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 @Composable
 fun FolderScreen(
     viewModel: FolderViewModel,
+    modifier: Modifier = Modifier,
     onSettingsClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
