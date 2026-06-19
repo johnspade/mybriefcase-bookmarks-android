@@ -1539,11 +1539,12 @@ public object FfiConverterTypeFfiError : FfiConverterRustBuffer<FfiException> {
 
 
 enum class SortOrder {
-    
+
     NAME_ASC,
     NAME_DESC,
     DATE_DESC,
-    DATE_ASC;
+    DATE_ASC,
+    RELEVANCE;
     companion object
 }
 

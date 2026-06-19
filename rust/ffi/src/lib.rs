@@ -141,4 +141,5 @@ pub enum SortOrder {
     NameDesc,
     DateDesc,
     DateAsc,
+    Relevance,
 }

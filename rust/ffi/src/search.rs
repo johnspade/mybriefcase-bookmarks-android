@@ -1,40 +1,35 @@
+use mybriefcase_bookmarks_core::search;
+
 use crate::{repo, BookmarkDto, FfiError, SortOrder};
+
+impl From<SortOrder> for search::SortOrder {
+    fn from(s: SortOrder) -> Self {
+        match s {
+            SortOrder::NameAsc => Self::NameAsc,
+            SortOrder::NameDesc => Self::NameDesc,
+            SortOrder::DateDesc => Self::DateDesc,
+            SortOrder::DateAsc => Self::DateAsc,
+            SortOrder::Relevance => Self::Relevance,
+        }
+    }
+}
 
 #[uniffi::export]
 pub fn search_bookmarks(query: String, sort_by: SortOrder) -> Result<Vec<BookmarkDto>, FfiError> {
     let state = repo();
     let cache = state.cache.read().unwrap();
-    let query_lower = query.to_lowercase();
 
-    let mut results: Vec<BookmarkDto> = cache
-        .bookmarks
-        .iter()
-        .filter(|(_, bm)| {
-            !bm.deleted
-                && (bm.title.to_lowercase().contains(&query_lower)
-                    || bm.url.to_lowercase().contains(&query_lower)
-                    || bm.notes.to_lowercase().contains(&query_lower))
+    let hits = search::search_bookmarks(&cache, &query, sort_by.into());
+
+    Ok(hits
+        .into_iter()
+        .map(|h| BookmarkDto {
+            id: h.id,
+            url: h.url,
+            title: h.title,
+            notes: h.notes,
+            created_at: h.created_at,
+            updated_at: h.updated_at,
         })
-        .map(|(id, bm)| BookmarkDto {
-            id: id.clone(),
-            url: bm.url.clone(),
-            title: bm.title.clone(),
-            notes: bm.notes.clone(),
-            created_at: bm.created_at.clone(),
-            updated_at: bm.updated_at.clone(),
-        })
-        .collect();
-
-    match sort_by {
-        SortOrder::NameAsc => results.sort_by_key(|a| a.title.to_lowercase()),
-        SortOrder::NameDesc => {
-            results.sort_by_key(|a| std::cmp::Reverse(a.title.to_lowercase()));
-        }
-        SortOrder::DateDesc => {
-            results.sort_by_key(|a| std::cmp::Reverse(a.created_at.clone()));
-        }
-        SortOrder::DateAsc => results.sort_by_key(|a| a.created_at.clone()),
-    }
-
-    Ok(results)
+        .collect())
 }

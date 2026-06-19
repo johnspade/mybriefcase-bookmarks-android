@@ -31,7 +31,7 @@ class SearchViewModel(
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
 
-    private val _sortOrder = MutableStateFlow(SortOrder.NAME_ASC)
+    private val _sortOrder = MutableStateFlow(SortOrder.RELEVANCE)
     val sortOrder: StateFlow<SortOrder> = _sortOrder.asStateFlow()
 
     val searchResults: StateFlow<List<BookmarkDto>> =

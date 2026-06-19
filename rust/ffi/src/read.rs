@@ -115,7 +115,7 @@ pub fn get_bookmark(bookmark_id: String) -> Result<Option<BookmarkDto>, FfiError
 
 fn sort_folder_items(items: &mut [FolderItemDto], sort_by: SortOrder) {
     match sort_by {
-        SortOrder::NameAsc | SortOrder::DateDesc | SortOrder::DateAsc => {
+        SortOrder::NameAsc | SortOrder::DateDesc | SortOrder::DateAsc | SortOrder::Relevance => {
             items.sort_by_key(|a| a.title.to_lowercase());
         }
         SortOrder::NameDesc => {
@@ -126,7 +126,9 @@ fn sort_folder_items(items: &mut [FolderItemDto], sort_by: SortOrder) {
 
 fn sort_bookmark_items(items: &mut [BookmarkItemDto], sort_by: SortOrder) {
     match sort_by {
-        SortOrder::NameAsc => items.sort_by_key(|a| a.title.to_lowercase()),
+        SortOrder::NameAsc | SortOrder::Relevance => {
+            items.sort_by_key(|a| a.title.to_lowercase());
+        }
         SortOrder::NameDesc => {
             items.sort_by_key(|a| std::cmp::Reverse(a.title.to_lowercase()));
         }
