@@ -152,6 +152,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
             if (historyState.reverted) {
                 folderViewModel.loadBookmarkDetail(historyBookmarkId)
+                folderViewModel.navigateToFolder(uiState.currentFolderId)
                 currentScreen = Screen.FOLDER
             } else {
                 HistoryScreen(
