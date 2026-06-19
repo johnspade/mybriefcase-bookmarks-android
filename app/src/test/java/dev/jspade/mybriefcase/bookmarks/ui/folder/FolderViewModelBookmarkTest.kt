@@ -17,6 +17,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import uniffi.mybriefcase_bookmarks_ffi.FfiException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FolderViewModelBookmarkTest {
@@ -312,6 +313,57 @@ class FolderViewModelBookmarkTest {
             viewModel.uiState.test {
                 val state = expectMostRecentItem()
                 assertNull(state.exportedHtml)
+            }
+        }
+
+    @Test
+    fun `addBookmark InvalidInput sets validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.addBookmarkThrow = FfiException.InvalidInput("URL must include a scheme (e.g. https://)")
+            viewModel.addBookmark("example.com", "Example")
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertEquals("URL must include a scheme (e.g. https://)", state.validationError)
+                assertNull(state.error)
+            }
+        }
+
+    @Test
+    fun `updateBookmark InvalidInput sets validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.updateBookmarkThrow = FfiException.InvalidInput("URL must include a scheme (e.g. https://)")
+            viewModel.updateBookmark("bm-1", "bad-url", null, null)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertEquals("URL must include a scheme (e.g. https://)", state.validationError)
+                assertNull(state.error)
+            }
+        }
+
+    @Test
+    fun `deleteBookmark error sets error not validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.deleteBookmarkThrow = FfiException.NotFound("bookmark not found")
+            viewModel.deleteBookmark("nonexistent")
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.NotFound)
+                assertNull(state.validationError)
             }
         }
 }

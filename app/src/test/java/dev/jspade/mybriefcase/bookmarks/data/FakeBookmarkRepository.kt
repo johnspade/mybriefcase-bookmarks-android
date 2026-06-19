@@ -162,6 +162,7 @@ class FakeBookmarkRepository : BookmarkRepository {
         url: String,
         title: String,
     ): String {
+        addBookmarkThrow?.let { throw it }
         shouldThrow?.let { throw it }
         addBookmarkCalls.add(Triple(folderId, url, title))
         val id = nextBookmarkId
@@ -198,6 +199,7 @@ class FakeBookmarkRepository : BookmarkRepository {
         title: String?,
         notes: String?,
     ) {
+        updateBookmarkThrow?.let { throw it }
         shouldThrow?.let { throw it }
         updateBookmarkCalls.add(listOf(bookmarkId, url, title, notes))
         val existing = bookmarks[bookmarkId] ?: return
@@ -211,6 +213,7 @@ class FakeBookmarkRepository : BookmarkRepository {
     }
 
     override suspend fun deleteBookmark(bookmarkId: String) {
+        deleteBookmarkThrow?.let { throw it }
         shouldThrow?.let { throw it }
         deleteBookmarkCalls.add(bookmarkId)
         bookmarks.remove(bookmarkId)
@@ -223,6 +226,9 @@ class FakeBookmarkRepository : BookmarkRepository {
         }
     }
 
+    var addBookmarkThrow: Exception? = null
+    var updateBookmarkThrow: Exception? = null
+    var deleteBookmarkThrow: Exception? = null
     var createFolderThrow: Exception? = null
     var renameFolderThrow: Exception? = null
 

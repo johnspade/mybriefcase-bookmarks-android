@@ -8,6 +8,8 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.AddBookmarkDialog
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -20,6 +22,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 
@@ -499,5 +502,67 @@ class FolderDialogsTest {
         composeTestRule.waitForIdle()
         composeTestRule.onNodeWithText("Move here").performClick()
         assert(selectedFolderId == "folder-1")
+    }
+
+    @Test
+    fun `create folder dialog shows validation error`() {
+        composeTestRule.setContent {
+            CreateFolderDialog(
+                onConfirm = {},
+                onDismiss = {},
+                validationError = "folder name already exists",
+            )
+        }
+
+        composeTestRule.onNodeWithText("folder name already exists").assertIsDisplayed()
+    }
+
+    @Test
+    fun `rename folder dialog shows validation error`() {
+        composeTestRule.setContent {
+            RenameFolderDialog(
+                currentTitle = "Work",
+                onConfirm = {},
+                onDismiss = {},
+                validationError = "name too long",
+            )
+        }
+
+        composeTestRule.onNodeWithText("name too long").assertIsDisplayed()
+    }
+
+    @Test
+    fun `add bookmark dialog shows validation error`() {
+        composeTestRule.setContent {
+            AddBookmarkDialog(
+                onDismiss = {},
+                onConfirm = { _, _ -> },
+                validationError = "URL must include a scheme (e.g. https://)",
+            )
+        }
+
+        composeTestRule.onNodeWithText("URL must include a scheme (e.g. https://)").assertIsDisplayed()
+    }
+
+    @Test
+    fun `edit bookmark dialog shows validation error`() {
+        composeTestRule.setContent {
+            EditBookmarkDialog(
+                bookmark =
+                    BookmarkDto(
+                        id = "bm-1",
+                        url = "example.com",
+                        title = "Example",
+                        notes = "",
+                        createdAt = "2024-01-01T00:00:00Z",
+                        updatedAt = "2024-01-01T00:00:00Z",
+                    ),
+                onDismiss = {},
+                onConfirm = { _, _, _, _ -> },
+                validationError = "URL must include a scheme (e.g. https://)",
+            )
+        }
+
+        composeTestRule.onNodeWithText("URL must include a scheme (e.g. https://)").assertIsDisplayed()
     }
 }

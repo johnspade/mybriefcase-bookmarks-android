@@ -390,6 +390,8 @@ fun FolderScreen(
                 viewModel.clearValidationError()
             },
             onConfirm = { url, title -> viewModel.addBookmark(url, title) },
+            validationError = uiState.validationError,
+            onValidationErrorClear = { viewModel.clearValidationError() },
         )
     }
 
@@ -412,6 +414,8 @@ fun FolderScreen(
                     newFolderId,
                 )
             },
+            validationError = uiState.validationError,
+            onValidationErrorClear = { viewModel.clearValidationError() },
         )
     }
 

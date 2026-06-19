@@ -37,6 +37,8 @@ fun EditBookmarkDialog(
     currentFolderId: String? = null,
     onDismiss: () -> Unit,
     onConfirm: (url: String, title: String, notes: String, newFolderId: String?) -> Unit,
+    validationError: String? = null,
+    onValidationErrorClear: () -> Unit = {},
 ) {
     var url by remember { mutableStateOf(bookmark.url) }
     var title by remember { mutableStateOf(bookmark.title) }
@@ -44,6 +46,9 @@ fun EditBookmarkDialog(
     var urlError by remember { mutableStateOf(false) }
     var selectedFolderId by remember { mutableStateOf(currentFolderId) }
     var folderPickerExpanded by remember { mutableStateOf(false) }
+
+    val showError = urlError || validationError != null
+    val errorText = validationError ?: if (urlError) "URL is required" else null
 
     val folderMap =
         remember(navTree) {
@@ -68,15 +73,11 @@ fun EditBookmarkDialog(
                     onValueChange = {
                         url = it
                         urlError = false
+                        if (validationError != null) onValidationErrorClear()
                     },
                     label = { Text("URL") },
-                    isError = urlError,
-                    supportingText =
-                        if (urlError) {
-                            { Text("URL is required") }
-                        } else {
-                            null
-                        },
+                    isError = showError,
+                    supportingText = errorText?.let { { Text(it) } },
                     singleLine = true,
                     modifier =
                         Modifier
