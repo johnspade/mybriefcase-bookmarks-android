@@ -24,7 +24,6 @@ class MyBriefcaseApp : Application() {
         clientId = getOrCreateClientId()
 
         repository.initRepo(dataDir, syncDir, clientId)
-        SyncWorker.enqueue(this)
     }
 
     private fun resolveSyncDir(): String {

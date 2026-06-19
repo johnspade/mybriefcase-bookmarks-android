@@ -46,7 +46,7 @@ data class FolderUiState(
 class FolderViewModel(
     private val repository: BookmarkRepository = MyBriefcaseApp.instance.repository,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
-    private val pollIntervalMs: Long = 30_000L,
+    private val pollIntervalMs: Long = 10_000L,
     private val syncDirPath: String? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FolderUiState())
