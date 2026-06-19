@@ -1,6 +1,7 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
 import app.cash.turbine.test
+import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,9 +13,11 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import uniffi.mybriefcase_bookmarks_ffi.FfiException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FolderViewModelBookmarkTest {
@@ -109,7 +112,7 @@ class FolderViewModelBookmarkTest {
                 advanceUntilIdle()
 
                 val state = expectMostRecentItem()
-                assertEquals("Bookmark not found", state.error)
+                assertEquals(BookmarkError.NotFound("Bookmark not found"), state.error)
             }
         }
 
@@ -196,7 +199,7 @@ class FolderViewModelBookmarkTest {
                 advanceUntilIdle()
 
                 val state = expectMostRecentItem()
-                assertEquals("import failed", state.error)
+                assertEquals(BookmarkError.Internal("import failed"), state.error)
             }
         }
 
@@ -215,7 +218,7 @@ class FolderViewModelBookmarkTest {
                 advanceUntilIdle()
 
                 val state = expectMostRecentItem()
-                assertEquals("export failed", state.error)
+                assertEquals(BookmarkError.Internal("export failed"), state.error)
             }
         }
 
@@ -251,5 +254,116 @@ class FolderViewModelBookmarkTest {
 
             assertEquals(1, fakeRepo.updateBookmarkCalls.size)
             assertTrue(fakeRepo.moveItemCalls.isEmpty())
+        }
+
+    @Test
+    fun `clearSelectedBookmark clears selection`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.loadBookmarkDetail("bm-1")
+            advanceUntilIdle()
+            assertNotNull(viewModel.uiState.value.selectedBookmark)
+
+            viewModel.clearSelectedBookmark()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.selectedBookmark)
+            }
+        }
+
+    @Test
+    fun `clearImportResult clears import result`() =
+        runTest {
+            fakeRepo.importResult =
+                uniffi.mybriefcase_bookmarks_ffi.ImportResultDto(
+                    bookmarksImported = 3u,
+                    foldersImported = 1u,
+                )
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.importHtml("<html></html>")
+            advanceUntilIdle()
+            assertNotNull(viewModel.uiState.value.importResult)
+
+            viewModel.clearImportResult()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.importResult)
+            }
+        }
+
+    @Test
+    fun `clearExportedHtml clears exported html`() =
+        runTest {
+            fakeRepo.exportResult = "<html><body></body></html>"
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.exportHtml()
+            advanceUntilIdle()
+            assertNotNull(viewModel.uiState.value.exportedHtml)
+
+            viewModel.clearExportedHtml()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.exportedHtml)
+            }
+        }
+
+    @Test
+    fun `addBookmark InvalidInput sets validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.addBookmarkThrow = FfiException.InvalidInput("URL must include a scheme (e.g. https://)")
+            viewModel.addBookmark("example.com", "Example")
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertEquals("URL must include a scheme (e.g. https://)", state.validationError)
+                assertNull(state.error)
+            }
+        }
+
+    @Test
+    fun `updateBookmark InvalidInput sets validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.updateBookmarkThrow = FfiException.InvalidInput("URL must include a scheme (e.g. https://)")
+            viewModel.updateBookmark("bm-1", "bad-url", null, null)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertEquals("URL must include a scheme (e.g. https://)", state.validationError)
+                assertNull(state.error)
+            }
+        }
+
+    @Test
+    fun `deleteBookmark error sets error not validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.deleteBookmarkThrow = FfiException.NotFound("bookmark not found")
+            viewModel.deleteBookmark("nonexistent")
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.NotFound)
+                assertNull(state.validationError)
+            }
         }
 }

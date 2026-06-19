@@ -1497,14 +1497,54 @@ public object FfiConverterTypeImportResultDto: FfiConverterRustBuffer<ImportResu
 
 
 
-sealed class FfiException(message: String): kotlin.Exception(message) {
+sealed class FfiException: kotlin.Exception() {
+    
+    class NotFound(
         
-        class General(message: String) : FfiException(message)
+        val `msg`: kotlin.String
+        ) : FfiException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
+    class InvalidInput(
         
+        val `msg`: kotlin.String
+        ) : FfiException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
+    class IoException(
+        
+        val `msg`: kotlin.String
+        ) : FfiException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
+    class NotInitialized(
+        
+        val `msg`: kotlin.String
+        ) : FfiException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
+    class Internal(
+        
+        val `msg`: kotlin.String
+        ) : FfiException() {
+        override val message
+            get() = "msg=${ `msg` }"
+    }
+    
 
     companion object ErrorHandler : UniffiRustCallStatusErrorHandler<FfiException> {
         override fun lift(error_buf: RustBuffer.ByValue): FfiException = FfiConverterTypeFfiError.lift(error_buf)
     }
+
+    
 }
 
 /**
@@ -1513,21 +1553,82 @@ sealed class FfiException(message: String): kotlin.Exception(message) {
 public object FfiConverterTypeFfiError : FfiConverterRustBuffer<FfiException> {
     override fun read(buf: ByteBuffer): FfiException {
         
-            return when(buf.getInt()) {
-            1 -> FfiException.General(FfiConverterString.read(buf))
+
+        return when(buf.getInt()) {
+            1 -> FfiException.NotFound(
+                FfiConverterString.read(buf),
+                )
+            2 -> FfiException.InvalidInput(
+                FfiConverterString.read(buf),
+                )
+            3 -> FfiException.IoException(
+                FfiConverterString.read(buf),
+                )
+            4 -> FfiException.NotInitialized(
+                FfiConverterString.read(buf),
+                )
+            5 -> FfiException.Internal(
+                FfiConverterString.read(buf),
+                )
             else -> throw RuntimeException("invalid error enum value, something is very wrong!!")
         }
-        
     }
 
     override fun allocationSize(value: FfiException): ULong {
-        return 4UL
+        return when(value) {
+            is FfiException.NotFound -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+            is FfiException.InvalidInput -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+            is FfiException.IoException -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+            is FfiException.NotInitialized -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+            is FfiException.Internal -> (
+                // Add the size for the Int that specifies the variant plus the size needed for all fields
+                4UL
+                + FfiConverterString.allocationSize(value.`msg`)
+            )
+        }
     }
 
     override fun write(value: FfiException, buf: ByteBuffer) {
         when(value) {
-            is FfiException.General -> {
+            is FfiException.NotFound -> {
                 buf.putInt(1)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+            is FfiException.InvalidInput -> {
+                buf.putInt(2)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+            is FfiException.IoException -> {
+                buf.putInt(3)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+            is FfiException.NotInitialized -> {
+                buf.putInt(4)
+                FfiConverterString.write(value.`msg`, buf)
+                Unit
+            }
+            is FfiException.Internal -> {
+                buf.putInt(5)
+                FfiConverterString.write(value.`msg`, buf)
                 Unit
             }
         }.let { /* this makes the `when` an expression, which ensures it is exhaustive */ }

@@ -50,6 +50,10 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -67,6 +71,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
 import dev.jspade.mybriefcase.bookmarks.ui.search.displayName
 import kotlinx.coroutines.launch
@@ -88,6 +93,40 @@ fun FolderScreen(
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Handle error-variant-specific behavior
+    LaunchedEffect(uiState.error) {
+        val error = uiState.error ?: return@LaunchedEffect
+        when (error) {
+            is BookmarkError.NotFound -> {
+                viewModel.navigateUp()
+                viewModel.clearError()
+            }
+            is BookmarkError.IoError -> {
+                val result =
+                    snackbarHostState.showSnackbar(
+                        message = error.message,
+                        actionLabel = "Retry",
+                        duration = SnackbarDuration.Long,
+                    )
+                if (result == SnackbarResult.ActionPerformed) {
+                    viewModel.refresh()
+                }
+                viewModel.clearError()
+            }
+            is BookmarkError.Internal -> {
+                snackbarHostState.showSnackbar(
+                    message = error.message,
+                    duration = SnackbarDuration.Long,
+                )
+                viewModel.clearError()
+            }
+            is BookmarkError.InvalidInput,
+            is BookmarkError.NotInitialized,
+            -> {}
+        }
+    }
 
     BackHandler(enabled = uiState.breadcrumbs.size > 1) {
         viewModel.navigateUp()
@@ -108,25 +147,39 @@ fun FolderScreen(
     var showEditDialog by remember { mutableStateOf(false) }
     var showDetailSheet by remember { mutableStateOf(false) }
 
+    // Dismiss dialogs on successful mutation
+    LaunchedEffect(uiState.mutationVersion) {
+        if (uiState.mutationVersion > 0L) {
+            showCreateFolderDialog = false
+            renameFolderTarget = null
+            showAddBookmarkDialog = false
+            showEditDialog = false
+        }
+    }
+
     // Folder CRUD Dialogs
     if (showCreateFolderDialog) {
         CreateFolderDialog(
-            onConfirm = { title ->
-                viewModel.createFolder(title)
+            onConfirm = { title -> viewModel.createFolder(title) },
+            onDismiss = {
                 showCreateFolderDialog = false
+                viewModel.clearValidationError()
             },
-            onDismiss = { showCreateFolderDialog = false },
+            validationError = uiState.validationError,
+            onValidationErrorClear = { viewModel.clearValidationError() },
         )
     }
 
     renameFolderTarget?.let { folder ->
         RenameFolderDialog(
             currentTitle = folder.title,
-            onConfirm = { newTitle ->
-                viewModel.renameFolder(folder.id, newTitle)
+            onConfirm = { newTitle -> viewModel.renameFolder(folder.id, newTitle) },
+            onDismiss = {
                 renameFolderTarget = null
+                viewModel.clearValidationError()
             },
-            onDismiss = { renameFolderTarget = null },
+            validationError = uiState.validationError,
+            onValidationErrorClear = { viewModel.clearValidationError() },
         )
     }
 
@@ -184,6 +237,7 @@ fun FolderScreen(
         modifier = modifier,
     ) {
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TopAppBar(
                     title = { Text(uiState.folderTitle) },
@@ -275,7 +329,7 @@ fun FolderScreen(
                         CircularProgressIndicator()
                     }
                 }
-                uiState.error != null -> {
+                uiState.error is BookmarkError.NotInitialized -> {
                     Box(
                         modifier =
                             Modifier
@@ -284,7 +338,7 @@ fun FolderScreen(
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
-                            text = uiState.error ?: "Unknown error",
+                            text = uiState.error?.message ?: "Unknown error",
                             color = MaterialTheme.colorScheme.error,
                         )
                     }
@@ -331,11 +385,13 @@ fun FolderScreen(
 
     if (showAddBookmarkDialog) {
         dev.jspade.mybriefcase.bookmarks.ui.bookmark.AddBookmarkDialog(
-            onDismiss = { showAddBookmarkDialog = false },
-            onConfirm = { url, title ->
+            onDismiss = {
                 showAddBookmarkDialog = false
-                viewModel.addBookmark(url, title)
+                viewModel.clearValidationError()
             },
+            onConfirm = { url, title -> viewModel.addBookmark(url, title) },
+            validationError = uiState.validationError,
+            onValidationErrorClear = { viewModel.clearValidationError() },
         )
     }
 
@@ -347,9 +403,9 @@ fun FolderScreen(
             onDismiss = {
                 showEditDialog = false
                 viewModel.clearSelectedBookmark()
+                viewModel.clearValidationError()
             },
             onConfirm = { url, title, notes, newFolderId ->
-                showEditDialog = false
                 viewModel.updateBookmarkAndMove(
                     uiState.selectedBookmark!!.id,
                     url,
@@ -358,6 +414,8 @@ fun FolderScreen(
                     newFolderId,
                 )
             },
+            validationError = uiState.validationError,
+            onValidationErrorClear = { viewModel.clearValidationError() },
         )
     }
 

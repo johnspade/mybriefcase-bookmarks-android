@@ -1,6 +1,7 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
 import app.cash.turbine.test
+import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +21,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import uniffi.mybriefcase_bookmarks_ffi.FfiException
 import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -185,8 +187,131 @@ class FolderViewModelTest {
 
             viewModel.uiState.test {
                 val state = expectMostRecentItem()
-                assertEquals("network error", state.error)
+                assertEquals(BookmarkError.Internal("network error"), state.error)
                 assertEquals(false, state.isLoading)
+            }
+        }
+
+    @Test
+    fun `NotFound error produces BookmarkError NotFound`() =
+        runTest {
+            fakeRepo.shouldThrow = FfiException.NotFound("folder not found: abc")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.NotFound)
+                assertEquals("folder not found: abc", state.error?.message)
+            }
+        }
+
+    @Test
+    fun `InvalidInput error produces validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.createFolderThrow = FfiException.InvalidInput("title cannot be empty")
+            viewModel.createFolder("")
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertEquals("title cannot be empty", state.validationError)
+                assertNull(state.error)
+            }
+        }
+
+    @Test
+    fun `clearValidationError clears validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.createFolderThrow = FfiException.InvalidInput("title cannot be empty")
+            viewModel.createFolder("")
+            advanceUntilIdle()
+
+            viewModel.clearValidationError()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.validationError)
+            }
+        }
+
+    @Test
+    fun `renameFolder InvalidInput sets validationError`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.renameFolderThrow = FfiException.InvalidInput("name too long")
+            viewModel.renameFolder("folder-1", "x".repeat(300))
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertEquals("name too long", state.validationError)
+                assertNull(state.error)
+            }
+        }
+
+    @Test
+    fun `clearError clears error`() =
+        runTest {
+            fakeRepo.shouldThrow = FfiException.IoException("disk full")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.clearError()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.error)
+            }
+        }
+
+    @Test
+    fun `IoError produces BookmarkError IoError`() =
+        runTest {
+            fakeRepo.shouldThrow = FfiException.IoException("permission denied")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.IoError)
+                assertEquals("permission denied", state.error?.message)
+            }
+        }
+
+    @Test
+    fun `NotInitialized error produces BookmarkError NotInitialized`() =
+        runTest {
+            fakeRepo.shouldThrow =
+                FfiException.NotInitialized("repo not initialized: call init_repo first")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.NotInitialized)
+            }
+        }
+
+    @Test
+    fun `Internal error produces BookmarkError Internal`() =
+        runTest {
+            fakeRepo.shouldThrow = FfiException.Internal("document corrupted")
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.error is BookmarkError.Internal)
+                assertEquals("document corrupted", state.error?.message)
             }
         }
 
@@ -298,9 +423,9 @@ class FolderViewModelTest {
         }
 
     @Test
-    fun `moveItem error sets error state`() =
+    fun `moveItem InvalidInput sets validationError`() =
         runTest {
-            fakeRepo.moveItemThrow = RuntimeException("cannot move into descendant")
+            fakeRepo.moveItemThrow = FfiException.InvalidInput("cannot move into descendant")
             val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
             advanceUntilIdle()
 
@@ -309,7 +434,8 @@ class FolderViewModelTest {
 
             viewModel.uiState.test {
                 val state = expectMostRecentItem()
-                assertEquals("cannot move into descendant", state.error)
+                assertEquals("cannot move into descendant", state.validationError)
+                assertNull(state.error)
             }
         }
 
@@ -400,6 +526,77 @@ class FolderViewModelTest {
             viewModel.uiState.test {
                 val state = expectMostRecentItem()
                 assertFalse(state.showSyncBanner)
+            }
+        }
+
+    @Test
+    fun `refresh reloads when merge returns true`() =
+        runTest {
+            fakeRepo.mergeResult = true
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            val callsBefore = fakeRepo.getFolderChildrenCallCount
+            val navCallsBefore = fakeRepo.getNavTreeCallCount
+
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            assertTrue(fakeRepo.getFolderChildrenCallCount > callsBefore)
+            assertTrue(fakeRepo.getNavTreeCallCount > navCallsBefore)
+        }
+
+    @Test
+    fun `refresh does not reload when merge returns false`() =
+        runTest {
+            fakeRepo.mergeResult = false
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            val callsBefore = fakeRepo.getFolderChildrenCallCount
+            val navCallsBefore = fakeRepo.getNavTreeCallCount
+
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            assertEquals(callsBefore, fakeRepo.getFolderChildrenCallCount)
+            assertEquals(navCallsBefore, fakeRepo.getNavTreeCallCount)
+        }
+
+    @Test
+    fun `refresh sets error on failure`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.mergeThrow = RuntimeException("sync failed")
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertEquals(BookmarkError.Internal("sync failed"), state.error)
+            }
+        }
+
+    @Test
+    fun `toggleFolderExpanded adds and removes folder ids`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.toggleFolderExpanded("folder-1")
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue("folder-1" in state.expandedFolderIds)
+            }
+
+            viewModel.toggleFolderExpanded("folder-1")
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertFalse("folder-1" in state.expandedFolderIds)
             }
         }
 }

@@ -4,7 +4,7 @@ use mybriefcase_bookmarks_core::repo::export_doc_to_shared;
 
 #[uniffi::export]
 pub fn add_bookmark(folder_id: String, url: String, title: String) -> Result<String, FfiError> {
-    let state = repo();
+    let state = repo()?;
     let id = ops::add_bookmark(&state.doc_handle, &folder_id, &url, &title)?;
     refresh_cache(state);
     export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id)?;
@@ -18,7 +18,7 @@ pub fn update_bookmark(
     title: Option<String>,
     notes: Option<String>,
 ) -> Result<(), FfiError> {
-    let state = repo();
+    let state = repo()?;
     ops::update_bookmark(
         &state.doc_handle,
         &bookmark_id,
@@ -33,7 +33,7 @@ pub fn update_bookmark(
 
 #[uniffi::export]
 pub fn delete_bookmark(bookmark_id: String) -> Result<(), FfiError> {
-    let state = repo();
+    let state = repo()?;
     ops::delete_bookmark(&state.doc_handle, &bookmark_id)?;
     refresh_cache(state);
     export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id)?;

@@ -29,6 +29,8 @@ import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 fun CreateFolderDialog(
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
+    validationError: String? = null,
+    onValidationErrorClear: () -> Unit = {},
 ) {
     var title by remember { mutableStateOf("") }
 
@@ -38,9 +40,14 @@ fun CreateFolderDialog(
         text = {
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = {
+                    title = it
+                    if (validationError != null) onValidationErrorClear()
+                },
                 label = { Text("Folder name") },
                 singleLine = true,
+                isError = validationError != null,
+                supportingText = validationError?.let { { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
             )
         },
@@ -65,6 +72,8 @@ fun RenameFolderDialog(
     currentTitle: String,
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
+    validationError: String? = null,
+    onValidationErrorClear: () -> Unit = {},
 ) {
     var title by remember { mutableStateOf(currentTitle) }
 
@@ -74,9 +83,14 @@ fun RenameFolderDialog(
         text = {
             OutlinedTextField(
                 value = title,
-                onValueChange = { title = it },
+                onValueChange = {
+                    title = it
+                    if (validationError != null) onValidationErrorClear()
+                },
                 label = { Text("Folder name") },
                 singleLine = true,
+                isError = validationError != null,
+                supportingText = validationError?.let { { Text(it) } },
                 modifier = Modifier.fillMaxWidth(),
             )
         },

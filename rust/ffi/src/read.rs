@@ -8,14 +8,14 @@ pub fn get_folder_children(
     folder_id: String,
     sort_by: SortOrder,
 ) -> Result<FolderChildrenDto, FfiError> {
-    let state = repo();
+    let state = repo()?;
     let cache = state.cache.read().unwrap();
 
     let folder = cache
         .folders
         .get(&folder_id)
-        .ok_or_else(|| FfiError::General {
-            message: format!("folder not found: {folder_id}"),
+        .ok_or_else(|| FfiError::NotFound {
+            msg: format!("folder not found: {folder_id}"),
         })?;
 
     let mut folder_items = Vec::new();
@@ -63,7 +63,7 @@ pub fn get_folder_children(
 
 #[uniffi::export]
 pub fn get_folder_nav_tree() -> Result<FolderNavTreeDto, FfiError> {
-    let state = repo();
+    let state = repo()?;
     let cache = state.cache.read().unwrap();
 
     let mut nav_folders = Vec::new();
@@ -94,7 +94,7 @@ pub fn get_folder_nav_tree() -> Result<FolderNavTreeDto, FfiError> {
 
 #[uniffi::export]
 pub fn get_bookmark(bookmark_id: String) -> Result<Option<BookmarkDto>, FfiError> {
-    let state = repo();
+    let state = repo()?;
     let cache = state.cache.read().unwrap();
 
     Ok(cache.bookmarks.get(&bookmark_id).and_then(|bm| {

@@ -16,7 +16,7 @@ impl From<SortOrder> for search::SortOrder {
 
 #[uniffi::export]
 pub fn search_bookmarks(query: String, sort_by: SortOrder) -> Result<Vec<BookmarkDto>, FfiError> {
-    let state = repo();
+    let state = repo()?;
     let cache = state.cache.read().unwrap();
 
     let hits = search::search_bookmarks(&cache, &query, sort_by.into());

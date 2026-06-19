@@ -21,10 +21,15 @@ import androidx.compose.ui.unit.dp
 fun AddBookmarkDialog(
     onDismiss: () -> Unit,
     onConfirm: (url: String, title: String) -> Unit,
+    validationError: String? = null,
+    onValidationErrorClear: () -> Unit = {},
 ) {
     var url by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var urlError by remember { mutableStateOf(false) }
+
+    val showError = urlError || validationError != null
+    val errorText = validationError ?: if (urlError) "URL is required" else null
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -36,15 +41,11 @@ fun AddBookmarkDialog(
                     onValueChange = {
                         url = it
                         urlError = false
+                        if (validationError != null) onValidationErrorClear()
                     },
                     label = { Text("URL") },
-                    isError = urlError,
-                    supportingText =
-                        if (urlError) {
-                            { Text("URL is required") }
-                        } else {
-                            null
-                        },
+                    isError = showError,
+                    supportingText = errorText?.let { { Text(it) } },
                     singleLine = true,
                     modifier =
                         Modifier
