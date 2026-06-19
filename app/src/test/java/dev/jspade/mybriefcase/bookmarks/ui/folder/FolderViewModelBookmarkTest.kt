@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -252,5 +253,65 @@ class FolderViewModelBookmarkTest {
 
             assertEquals(1, fakeRepo.updateBookmarkCalls.size)
             assertTrue(fakeRepo.moveItemCalls.isEmpty())
+        }
+
+    @Test
+    fun `clearSelectedBookmark clears selection`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.loadBookmarkDetail("bm-1")
+            advanceUntilIdle()
+            assertNotNull(viewModel.uiState.value.selectedBookmark)
+
+            viewModel.clearSelectedBookmark()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.selectedBookmark)
+            }
+        }
+
+    @Test
+    fun `clearImportResult clears import result`() =
+        runTest {
+            fakeRepo.importResult =
+                uniffi.mybriefcase_bookmarks_ffi.ImportResultDto(
+                    bookmarksImported = 3u,
+                    foldersImported = 1u,
+                )
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.importHtml("<html></html>")
+            advanceUntilIdle()
+            assertNotNull(viewModel.uiState.value.importResult)
+
+            viewModel.clearImportResult()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.importResult)
+            }
+        }
+
+    @Test
+    fun `clearExportedHtml clears exported html`() =
+        runTest {
+            fakeRepo.exportResult = "<html><body></body></html>"
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.exportHtml()
+            advanceUntilIdle()
+            assertNotNull(viewModel.uiState.value.exportedHtml)
+
+            viewModel.clearExportedHtml()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertNull(state.exportedHtml)
+            }
         }
 }

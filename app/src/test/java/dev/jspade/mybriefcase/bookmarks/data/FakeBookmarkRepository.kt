@@ -285,7 +285,10 @@ class FakeBookmarkRepository : BookmarkRepository {
         return exportResult
     }
 
+    var mergeThrow: Exception? = null
+
     override suspend fun triggerFullMerge(): Boolean {
+        mergeThrow?.let { throw it }
         onMergeCalled?.invoke()
         return mergeResult
     }

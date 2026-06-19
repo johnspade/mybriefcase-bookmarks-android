@@ -528,4 +528,75 @@ class FolderViewModelTest {
                 assertFalse(state.showSyncBanner)
             }
         }
+
+    @Test
+    fun `refresh reloads when merge returns true`() =
+        runTest {
+            fakeRepo.mergeResult = true
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            val callsBefore = fakeRepo.getFolderChildrenCallCount
+            val navCallsBefore = fakeRepo.getNavTreeCallCount
+
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            assertTrue(fakeRepo.getFolderChildrenCallCount > callsBefore)
+            assertTrue(fakeRepo.getNavTreeCallCount > navCallsBefore)
+        }
+
+    @Test
+    fun `refresh does not reload when merge returns false`() =
+        runTest {
+            fakeRepo.mergeResult = false
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            val callsBefore = fakeRepo.getFolderChildrenCallCount
+            val navCallsBefore = fakeRepo.getNavTreeCallCount
+
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            assertEquals(callsBefore, fakeRepo.getFolderChildrenCallCount)
+            assertEquals(navCallsBefore, fakeRepo.getNavTreeCallCount)
+        }
+
+    @Test
+    fun `refresh sets error on failure`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            fakeRepo.mergeThrow = RuntimeException("sync failed")
+            viewModel.refresh()
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertEquals(BookmarkError.Internal("sync failed"), state.error)
+            }
+        }
+
+    @Test
+    fun `toggleFolderExpanded adds and removes folder ids`() =
+        runTest {
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            advanceUntilIdle()
+
+            viewModel.toggleFolderExpanded("folder-1")
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue("folder-1" in state.expandedFolderIds)
+            }
+
+            viewModel.toggleFolderExpanded("folder-1")
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertFalse("folder-1" in state.expandedFolderIds)
+            }
+        }
 }
