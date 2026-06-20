@@ -1,5 +1,4 @@
 use crate::{FfiError, RepoState, REPO};
-use log::debug;
 use mybriefcase_bookmarks_core::model::BookmarkStore;
 use mybriefcase_bookmarks_core::repo;
 use mybriefcase_bookmarks_core::repo::Exporter;
@@ -49,7 +48,6 @@ pub fn init_repo(data_dir: String, sync_dir: String, client_id: String) -> Resul
 #[uniffi::export]
 pub fn shutdown() {
     if let Some(state) = REPO.get() {
-        debug!("[EXPORT] shutdown: export");
         let _ = state
             .exporter
             .export(&state.doc_handle, std::time::SystemTime::now());
