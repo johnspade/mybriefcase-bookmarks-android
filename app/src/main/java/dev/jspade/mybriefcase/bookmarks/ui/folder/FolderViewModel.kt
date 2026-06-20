@@ -30,6 +30,7 @@ data class FolderUiState(
     val bookmarks: List<BookmarkItemDto> = emptyList(),
     val navTree: FolderNavTreeDto? = null,
     val currentFolderId: String = "",
+    val syncRoot: String? = null,
     val sortOrder: SortOrder = SortOrder.NAME_ASC,
     val isLoading: Boolean = true,
     val error: BookmarkError? = null,
@@ -49,7 +50,17 @@ class FolderViewModel(
     private val pollIntervalMs: Long = 10_000L,
     private val syncDirPath: String? = null,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(FolderUiState())
+    private val _uiState =
+        MutableStateFlow(
+            FolderUiState(
+                syncRoot =
+                    syncDirPath ?: try {
+                        MyBriefcaseApp.instance.syncDir
+                    } catch (_: Exception) {
+                        null
+                    },
+            ),
+        )
     val uiState: StateFlow<FolderUiState> = _uiState.asStateFlow()
 
     private var pollingJob: Job? = null

@@ -94,6 +94,7 @@ pub struct BookmarkDto {
     pub url: String,
     pub title: String,
     pub notes: String,
+    pub favicon: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -112,6 +113,7 @@ pub struct BookmarkItemDto {
     pub id: String,
     pub title: String,
     pub url: String,
+    pub favicon: Option<String>,
     pub created_at: String,
 }
 

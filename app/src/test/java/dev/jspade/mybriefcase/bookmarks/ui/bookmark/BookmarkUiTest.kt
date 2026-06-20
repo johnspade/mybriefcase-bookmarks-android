@@ -113,6 +113,7 @@ class BookmarkUiTest {
                 url = "https://example.com",
                 title = "Example",
                 notes = "Some notes here",
+                favicon = null,
                 createdAt = "2024-01-15T10:30:00Z",
                 updatedAt = "2024-02-20T14:45:00Z",
             )
@@ -144,6 +145,7 @@ class BookmarkUiTest {
                 url = "https://example.com",
                 title = "Example",
                 notes = "",
+                favicon = null,
                 createdAt = "2024-01-15T10:30:00Z",
                 updatedAt = "2024-02-20T14:45:00Z",
             )
@@ -174,6 +176,7 @@ class BookmarkUiTest {
                 url = "https://prefilled.com",
                 title = "Prefilled Title",
                 notes = "Prefilled notes",
+                favicon = null,
                 createdAt = "2024-01-01T00:00:00Z",
                 updatedAt = "2024-01-01T00:00:00Z",
             )
@@ -262,6 +265,7 @@ class BookmarkUiTest {
                 url = "https://example.com",
                 title = "Example",
                 notes = "",
+                favicon = null,
                 createdAt = "2024-01-01T00:00:00Z",
                 updatedAt = "2024-01-01T00:00:00Z",
             )
@@ -304,6 +308,7 @@ class BookmarkUiTest {
                 url = "https://example.com",
                 title = "Example",
                 notes = "",
+                favicon = null,
                 createdAt = "2024-01-01T00:00:00Z",
                 updatedAt = "2024-01-01T00:00:00Z",
             )
@@ -357,6 +362,7 @@ class BookmarkUiTest {
                 url = "https://example.com",
                 title = "Example",
                 notes = "",
+                favicon = null,
                 createdAt = "2024-01-01T00:00:00Z",
                 updatedAt = "2024-01-01T00:00:00Z",
             )

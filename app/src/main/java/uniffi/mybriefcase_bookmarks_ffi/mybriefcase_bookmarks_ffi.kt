@@ -1197,6 +1197,7 @@ data class BookmarkDto (
     var `url`: kotlin.String, 
     var `title`: kotlin.String, 
     var `notes`: kotlin.String, 
+    var `favicon`: kotlin.String?, 
     var `createdAt`: kotlin.String, 
     var `updatedAt`: kotlin.String
 ) {
@@ -1214,6 +1215,7 @@ public object FfiConverterTypeBookmarkDto: FfiConverterRustBuffer<BookmarkDto> {
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
         )
@@ -1224,6 +1226,7 @@ public object FfiConverterTypeBookmarkDto: FfiConverterRustBuffer<BookmarkDto> {
             FfiConverterString.allocationSize(value.`url`) +
             FfiConverterString.allocationSize(value.`title`) +
             FfiConverterString.allocationSize(value.`notes`) +
+            FfiConverterOptionalString.allocationSize(value.`favicon`) +
             FfiConverterString.allocationSize(value.`createdAt`) +
             FfiConverterString.allocationSize(value.`updatedAt`)
     )
@@ -1233,6 +1236,7 @@ public object FfiConverterTypeBookmarkDto: FfiConverterRustBuffer<BookmarkDto> {
             FfiConverterString.write(value.`url`, buf)
             FfiConverterString.write(value.`title`, buf)
             FfiConverterString.write(value.`notes`, buf)
+            FfiConverterOptionalString.write(value.`favicon`, buf)
             FfiConverterString.write(value.`createdAt`, buf)
             FfiConverterString.write(value.`updatedAt`, buf)
     }
@@ -1284,6 +1288,7 @@ data class BookmarkItemDto (
     var `id`: kotlin.String, 
     var `title`: kotlin.String, 
     var `url`: kotlin.String, 
+    var `favicon`: kotlin.String?, 
     var `createdAt`: kotlin.String
 ) {
     
@@ -1299,6 +1304,7 @@ public object FfiConverterTypeBookmarkItemDto: FfiConverterRustBuffer<BookmarkIt
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterString.read(buf),
         )
     }
@@ -1307,6 +1313,7 @@ public object FfiConverterTypeBookmarkItemDto: FfiConverterRustBuffer<BookmarkIt
             FfiConverterString.allocationSize(value.`id`) +
             FfiConverterString.allocationSize(value.`title`) +
             FfiConverterString.allocationSize(value.`url`) +
+            FfiConverterOptionalString.allocationSize(value.`favicon`) +
             FfiConverterString.allocationSize(value.`createdAt`)
     )
 
@@ -1314,6 +1321,7 @@ public object FfiConverterTypeBookmarkItemDto: FfiConverterRustBuffer<BookmarkIt
             FfiConverterString.write(value.`id`, buf)
             FfiConverterString.write(value.`title`, buf)
             FfiConverterString.write(value.`url`, buf)
+            FfiConverterOptionalString.write(value.`favicon`, buf)
             FfiConverterString.write(value.`createdAt`, buf)
     }
 }
@@ -1757,7 +1765,7 @@ public object FfiConverterTypeFfiError : FfiConverterRustBuffer<FfiException> {
 
 
 enum class SortOrder {
-
+    
     NAME_ASC,
     NAME_DESC,
     DATE_DESC,

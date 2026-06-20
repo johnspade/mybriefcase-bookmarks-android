@@ -25,6 +25,8 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkFavicon
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.LetterAvatar
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchScreen
@@ -131,6 +133,7 @@ class ScreenshotTest {
                     url = "https://github.com",
                     title = "GitHub",
                     notes = "",
+                    favicon = null,
                     createdAt = "2024-01-01T00:00:00Z",
                     updatedAt = "2024-01-01T00:00:00Z",
                 ),
@@ -139,6 +142,7 @@ class ScreenshotTest {
                     url = "https://example.com",
                     title = "Example Site",
                     notes = "A sample bookmark",
+                    favicon = null,
                     createdAt = "2024-02-15T10:00:00Z",
                     updatedAt = "2024-02-15T10:00:00Z",
                 ),
@@ -163,6 +167,7 @@ class ScreenshotTest {
                     url = "https://github.com",
                     title = "GitHub",
                     notes = "",
+                    favicon = null,
                     createdAt = "2024-01-01T00:00:00Z",
                     updatedAt = "2024-01-01T00:00:00Z",
                 ),
@@ -171,6 +176,7 @@ class ScreenshotTest {
                     url = "https://example.com",
                     title = "Example Site",
                     notes = "A sample bookmark",
+                    favicon = null,
                     createdAt = "2024-02-15T10:00:00Z",
                     updatedAt = "2024-02-15T10:00:00Z",
                 ),
@@ -196,6 +202,7 @@ class ScreenshotTest {
                 url = "https://github.com",
                 title = "GitHub",
                 notes = "A code hosting platform",
+                favicon = null,
                 createdAt = "2024-01-15T10:30:00Z",
                 updatedAt = "2024-02-20T14:45:00Z",
             )
@@ -218,6 +225,7 @@ class ScreenshotTest {
                 url = "https://github.com",
                 title = "GitHub",
                 notes = "A code hosting platform",
+                favicon = null,
                 createdAt = "2024-01-15T10:30:00Z",
                 updatedAt = "2024-02-20T14:45:00Z",
             )
@@ -296,6 +304,64 @@ class ScreenshotTest {
         }
         composeTestRule.waitForIdle()
         composeTestRule.onRoot().captureRoboImage("src/test/snapshots/settings_dark.png")
+    }
+
+    // --- BookmarkFavicon: letter avatar ---
+
+    @Test
+    fun bookmarkFavicon_letterAvatar_light() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                Surface {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        LetterAvatar(url = "https://github.com")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LetterAvatar(url = "https://example.org")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LetterAvatar(url = "https://stackoverflow.com")
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/letter_avatar_light.png")
+    }
+
+    @Test
+    fun bookmarkFavicon_letterAvatar_dark() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
+                Surface {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        LetterAvatar(url = "https://github.com")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LetterAvatar(url = "https://example.org")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LetterAvatar(url = "https://stackoverflow.com")
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/letter_avatar_dark.png")
+    }
+
+    @Test
+    fun bookmarkFavicon_fallbackWhenNoFavicon() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                Surface {
+                    BookmarkFavicon(
+                        url = "https://github.com",
+                        favicon = null,
+                        syncRoot = null,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/favicon_fallback.png")
     }
 }
 

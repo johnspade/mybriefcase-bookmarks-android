@@ -73,6 +73,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkFavicon
 import dev.jspade.mybriefcase.bookmarks.ui.search.displayName
 import kotlinx.coroutines.launch
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
@@ -349,6 +350,7 @@ fun FolderScreen(
                         breadcrumbs = uiState.breadcrumbs,
                         folders = uiState.folders,
                         bookmarks = uiState.bookmarks,
+                        syncRoot = uiState.syncRoot,
                         sortOrder = uiState.sortOrder,
                         showSyncBanner = uiState.showSyncBanner,
                         onFolderClick = { viewModel.navigateToFolder(it) },
@@ -493,6 +495,7 @@ private fun FolderContent(
     breadcrumbs: List<BreadcrumbDto>,
     folders: List<FolderItemDto>,
     bookmarks: List<BookmarkItemDto>,
+    syncRoot: String?,
     sortOrder: SortOrder,
     showSyncBanner: Boolean,
     onFolderClick: (String) -> Unit,
@@ -557,6 +560,7 @@ private fun FolderContent(
                     Box {
                         BookmarkListItem(
                             bookmark = bookmark,
+                            syncRoot = syncRoot,
                             onClick = { onBookmarkClick(bookmark.id) },
                             onLongClick = { onBookmarkLongClick(bookmark.id) },
                         )
@@ -697,6 +701,7 @@ private fun FolderListItem(
 @Composable
 private fun BookmarkListItem(
     bookmark: BookmarkItemDto,
+    syncRoot: String?,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
@@ -708,6 +713,13 @@ private fun BookmarkListItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.outline,
+            )
+        },
+        leadingContent = {
+            BookmarkFavicon(
+                url = bookmark.url,
+                favicon = bookmark.favicon,
+                syncRoot = syncRoot,
             )
         },
         modifier =

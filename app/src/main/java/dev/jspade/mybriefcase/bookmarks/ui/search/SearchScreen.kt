@@ -41,6 +41,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkFavicon
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 
@@ -49,6 +50,7 @@ import uniffi.mybriefcase_bookmarks_ffi.SortOrder
 fun SearchScreen(
     viewModel: SearchViewModel,
     modifier: Modifier = Modifier,
+    syncRoot: String? = null,
     onBookmarkClick: (String) -> Unit = {},
     onBack: () -> Unit = {},
 ) {
@@ -160,6 +162,7 @@ fun SearchScreen(
                         items(results, key = { it.id }) { bookmark ->
                             SearchResultItem(
                                 bookmark = bookmark,
+                                syncRoot = syncRoot,
                                 onClick = { onBookmarkClick(bookmark.id) },
                             )
                         }
@@ -206,11 +209,19 @@ fun SortChip(
 @Composable
 private fun SearchResultItem(
     bookmark: BookmarkDto,
+    syncRoot: String?,
     onClick: () -> Unit,
 ) {
     ListItem(
         headlineContent = { Text(bookmark.title) },
         supportingContent = { Text(bookmark.url) },
+        leadingContent = {
+            BookmarkFavicon(
+                url = bookmark.url,
+                favicon = bookmark.favicon,
+                syncRoot = syncRoot,
+            )
+        },
         modifier = Modifier.clickable(onClick = onClick),
     )
 }
