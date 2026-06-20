@@ -7,12 +7,6 @@ use std::sync::RwLock;
 
 #[uniffi::export]
 pub fn init_repo(data_dir: String, sync_dir: String, client_id: String) -> Result<(), FfiError> {
-    android_logger::init_once(
-        android_logger::Config::default()
-            .with_max_level(log::LevelFilter::Debug)
-            .with_tag("MBB_FFI"),
-    );
-
     let runtime = tokio::runtime::Runtime::new().map_err(|e| FfiError::Internal {
         msg: format!("failed to create tokio runtime: {e}"),
     })?;
