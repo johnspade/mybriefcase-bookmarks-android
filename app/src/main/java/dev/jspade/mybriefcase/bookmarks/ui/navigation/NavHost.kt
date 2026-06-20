@@ -22,6 +22,8 @@ import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActio
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
+import dev.jspade.mybriefcase.bookmarks.ui.history.HistoryScreen
+import dev.jspade.mybriefcase.bookmarks.ui.history.HistoryViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchScreen
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.settings.SettingsScreen
@@ -33,6 +35,7 @@ private enum class Screen {
     FOLDER,
     SEARCH,
     SETTINGS,
+    HISTORY,
 }
 
 @Composable
@@ -62,6 +65,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
     var showDetailSheet by remember { mutableStateOf(false) }
     var showEditFromSearch by remember { mutableStateOf(false) }
+    var historyBookmarkId by remember { mutableStateOf("") }
 
     // SAF file picker for import
     val importLauncher =
@@ -103,6 +107,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 viewModel = folderViewModel,
                 onSettingsClick = { currentScreen = Screen.SETTINGS },
                 onSearchClick = { currentScreen = Screen.SEARCH },
+                onHistoryClick = { bookmarkId ->
+                    historyBookmarkId = bookmarkId
+                    currentScreen = Screen.HISTORY
+                },
                 modifier = modifier,
             )
         }
@@ -134,6 +142,30 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 },
             )
         }
+        Screen.HISTORY -> {
+            val historyViewModel: HistoryViewModel = viewModel()
+            val historyState by historyViewModel.uiState.collectAsState()
+
+            androidx.compose.runtime.LaunchedEffect(historyBookmarkId) {
+                historyViewModel.loadHistory(historyBookmarkId)
+            }
+
+            if (historyState.reverted) {
+                folderViewModel.loadBookmarkDetail(historyBookmarkId)
+                folderViewModel.navigateToFolder(uiState.currentFolderId)
+                currentScreen = Screen.FOLDER
+            } else {
+                HistoryScreen(
+                    entries = historyState.entries,
+                    isLoading = historyState.isLoading,
+                    onRevert = { changeHash ->
+                        historyViewModel.revertBookmark(historyBookmarkId, changeHash)
+                    },
+                    onBack = { currentScreen = Screen.FOLDER },
+                    modifier = modifier,
+                )
+            }
+        }
     }
 
     // Import result handling
@@ -158,6 +190,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             onEdit = {
                 showDetailSheet = false
                 showEditFromSearch = true
+            },
+            onHistory = {
+                showDetailSheet = false
+                historyBookmarkId = uiState.selectedBookmark!!.id
+                currentScreen = Screen.HISTORY
             },
         )
     }

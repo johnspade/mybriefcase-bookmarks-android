@@ -1,6 +1,7 @@
 package dev.jspade.mybriefcase.bookmarks.data
 
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import uniffi.mybriefcase_bookmarks_ffi.BookmarkHistoryEntryDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderChildrenDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 import uniffi.mybriefcase_bookmarks_ffi.ImportResultDto
@@ -75,6 +76,14 @@ interface BookmarkRepository {
     ): ImportResultDto
 
     suspend fun exportHtml(): String
+
+    // History
+    suspend fun getBookmarkHistory(bookmarkId: String): List<BookmarkHistoryEntryDto>
+
+    suspend fun revertBookmark(
+        bookmarkId: String,
+        changeHash: String,
+    )
 
     // Sync
     suspend fun triggerFullMerge(): Boolean

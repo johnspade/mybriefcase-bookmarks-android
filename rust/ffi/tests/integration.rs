@@ -911,3 +911,89 @@ fn item_count_reflects_recursive_bookmark_count() {
         parent_nav.item_count
     );
 }
+
+// ── Bookmark History tests ─────────────────────────────────────────────────
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn get_bookmark_history_returns_entries_after_mutations() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    let bm_id = add_bookmark(
+        folder_id.clone(),
+        "https://history-test.com".to_string(),
+        "History Test".to_string(),
+    )
+    .unwrap();
+
+    update_bookmark(
+        bm_id.clone(),
+        Some("https://history-updated.com".to_string()),
+        Some("History Updated".to_string()),
+        None,
+    )
+    .unwrap();
+
+    let history = get_bookmark_history(bm_id).unwrap();
+    assert!(
+        history.len() >= 2,
+        "should have at least 2 history entries (create + update), got {}",
+        history.len()
+    );
+    // Newest first
+    assert!(
+        history[0].changed_fields.iter().any(|f| f.field == "url"),
+        "latest entry should show url changed"
+    );
+    assert!(!history[0].change_hash.is_empty());
+    assert!(history[0].timestamp > 0);
+}
+
+#[test]
+#[cfg_attr(miri, ignore)]
+fn revert_bookmark_restores_previous_state() {
+    ensure_initialized();
+    let tree = get_folder_nav_tree().unwrap();
+    let root_children =
+        get_folder_children(tree.root_folder_id.clone(), SortOrder::NameAsc).unwrap();
+    let folder_id = &root_children.folders[0].id;
+
+    let bm_id = add_bookmark(
+        folder_id.clone(),
+        "https://revert-original.com".to_string(),
+        "Revert Original".to_string(),
+    )
+    .unwrap();
+
+    // Get create hash
+    let history = get_bookmark_history(bm_id.clone()).unwrap();
+    let create_hash = history.last().unwrap().change_hash.clone();
+
+    // Mutate
+    update_bookmark(
+        bm_id.clone(),
+        Some("https://revert-changed.com".to_string()),
+        Some("Revert Changed".to_string()),
+        None,
+    )
+    .unwrap();
+
+    // Revert to creation state
+    revert_bookmark(bm_id.clone(), create_hash).unwrap();
+
+    // Verify bookmark is back to original
+    let bm = get_bookmark(bm_id.clone()).unwrap().unwrap();
+    assert_eq!(bm.url, "https://revert-original.com");
+    assert_eq!(bm.title, "Revert Original");
+
+    // Revert should appear in history
+    let history = get_bookmark_history(bm_id).unwrap();
+    assert!(
+        history[0].change_hash.len() == 64,
+        "revert entry should have a valid change hash"
+    );
+}

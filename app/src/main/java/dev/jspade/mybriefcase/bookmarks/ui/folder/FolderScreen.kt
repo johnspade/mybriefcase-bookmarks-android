@@ -89,6 +89,7 @@ fun FolderScreen(
     modifier: Modifier = Modifier,
     onSettingsClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
+    onHistoryClick: ((bookmarkId: String) -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -439,6 +440,10 @@ fun FolderScreen(
             onEdit = {
                 showDetailSheet = false
                 showEditDialog = true
+            },
+            onHistory = {
+                showDetailSheet = false
+                onHistoryClick?.invoke(uiState.selectedBookmark!!.id)
             },
         )
     }

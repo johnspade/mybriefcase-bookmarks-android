@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import uniffi.mybriefcase_bookmarks_ffi.BookmarkHistoryEntryDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderChildrenDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 import uniffi.mybriefcase_bookmarks_ffi.ImportResultDto
@@ -73,6 +74,13 @@ interface BookmarkFfi {
 
     fun exportHtml(): String
 
+    fun getBookmarkHistory(bookmarkId: String): List<BookmarkHistoryEntryDto>
+
+    fun revertBookmark(
+        bookmarkId: String,
+        changeHash: String,
+    )
+
     fun triggerFullMerge(): Boolean
 }
 
@@ -139,6 +147,14 @@ class DefaultBookmarkFfi : BookmarkFfi {
     ) = uniffi.mybriefcase_bookmarks_ffi.importHtml(folderId, html)
 
     override fun exportHtml() = uniffi.mybriefcase_bookmarks_ffi.exportHtml()
+
+    override fun getBookmarkHistory(bookmarkId: String) =
+        uniffi.mybriefcase_bookmarks_ffi.getBookmarkHistory(bookmarkId)
+
+    override fun revertBookmark(
+        bookmarkId: String,
+        changeHash: String,
+    ) = uniffi.mybriefcase_bookmarks_ffi.revertBookmark(bookmarkId, changeHash)
 
     override fun triggerFullMerge() = uniffi.mybriefcase_bookmarks_ffi.triggerFullMerge()
 }
@@ -217,6 +233,14 @@ class BookmarkRepositoryImpl(
     ): ImportResultDto = withContext(ioDispatcher) { ffi.importHtml(folderId, html) }
 
     override suspend fun exportHtml(): String = withContext(ioDispatcher) { ffi.exportHtml() }
+
+    override suspend fun getBookmarkHistory(bookmarkId: String): List<BookmarkHistoryEntryDto> =
+        withContext(ioDispatcher) { ffi.getBookmarkHistory(bookmarkId) }
+
+    override suspend fun revertBookmark(
+        bookmarkId: String,
+        changeHash: String,
+    ) = withContext(ioDispatcher) { ffi.revertBookmark(bookmarkId, changeHash) }
 
     override suspend fun triggerFullMerge(): Boolean = withContext(ioDispatcher) { ffi.triggerFullMerge() }
 }

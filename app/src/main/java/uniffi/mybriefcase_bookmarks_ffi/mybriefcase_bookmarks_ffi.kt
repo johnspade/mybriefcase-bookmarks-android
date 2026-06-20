@@ -743,6 +743,10 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -770,6 +774,8 @@ internal interface UniffiLib : Library {
     ): RustBuffer.ByValue
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_get_bookmark(`bookmarkId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_mybriefcase_bookmarks_ffi_fn_func_get_bookmark_history(`bookmarkId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_get_folder_children(`folderId`: RustBuffer.ByValue,`sortBy`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_get_folder_nav_tree(uniffi_out_err: UniffiRustCallStatus, 
@@ -781,6 +787,8 @@ internal interface UniffiLib : Library {
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_move_item(`itemId`: RustBuffer.ByValue,`fromFolderId`: RustBuffer.ByValue,`toFolderId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_rename_folder(`folderId`: RustBuffer.ByValue,`title`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
+    fun uniffi_mybriefcase_bookmarks_ffi_fn_func_revert_bookmark(`bookmarkId`: RustBuffer.ByValue,`changeHash`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_search_bookmarks(`query`: RustBuffer.ByValue,`sortBy`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
@@ -914,6 +922,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_get_bookmark(
     ): Short
+    fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_get_bookmark_history(
+    ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_get_folder_children(
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_get_folder_nav_tree(
@@ -925,6 +935,8 @@ internal interface UniffiLib : Library {
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_move_item(
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_rename_folder(
+    ): Short
+    fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_revert_bookmark(
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_search_bookmarks(
     ): Short
@@ -969,6 +981,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_get_bookmark() != 4562.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
+    if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_get_bookmark_history() != 60069.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_get_folder_children() != 959.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
@@ -985,6 +1000,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_rename_folder() != 48976.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_revert_bookmark() != 20674.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_search_bookmarks() != 32213.toShort()) {
@@ -1066,6 +1084,29 @@ public object FfiConverterUInt: FfiConverter<UInt, Int> {
 
     override fun write(value: UInt, buf: ByteBuffer) {
         buf.putInt(value.toInt())
+    }
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterLong: FfiConverter<Long, Long> {
+    override fun lift(value: Long): Long {
+        return value
+    }
+
+    override fun read(buf: ByteBuffer): Long {
+        return buf.getLong()
+    }
+
+    override fun lower(value: Long): Long {
+        return value
+    }
+
+    override fun allocationSize(value: Long) = 8UL
+
+    override fun write(value: Long, buf: ByteBuffer) {
+        buf.putLong(value)
     }
 }
 
@@ -1199,6 +1240,46 @@ public object FfiConverterTypeBookmarkDto: FfiConverterRustBuffer<BookmarkDto> {
 
 
 
+data class BookmarkHistoryEntryDto (
+    var `changeHash`: kotlin.String, 
+    var `timestamp`: kotlin.Long, 
+    var `actor`: kotlin.String, 
+    var `changedFields`: List<FieldChangeDto>
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeBookmarkHistoryEntryDto: FfiConverterRustBuffer<BookmarkHistoryEntryDto> {
+    override fun read(buf: ByteBuffer): BookmarkHistoryEntryDto {
+        return BookmarkHistoryEntryDto(
+            FfiConverterString.read(buf),
+            FfiConverterLong.read(buf),
+            FfiConverterString.read(buf),
+            FfiConverterSequenceTypeFieldChangeDto.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: BookmarkHistoryEntryDto) = (
+            FfiConverterString.allocationSize(value.`changeHash`) +
+            FfiConverterLong.allocationSize(value.`timestamp`) +
+            FfiConverterString.allocationSize(value.`actor`) +
+            FfiConverterSequenceTypeFieldChangeDto.allocationSize(value.`changedFields`)
+    )
+
+    override fun write(value: BookmarkHistoryEntryDto, buf: ByteBuffer) {
+            FfiConverterString.write(value.`changeHash`, buf)
+            FfiConverterLong.write(value.`timestamp`, buf)
+            FfiConverterString.write(value.`actor`, buf)
+            FfiConverterSequenceTypeFieldChangeDto.write(value.`changedFields`, buf)
+    }
+}
+
+
+
 data class BookmarkItemDto (
     var `id`: kotlin.String, 
     var `title`: kotlin.String, 
@@ -1266,6 +1347,42 @@ public object FfiConverterTypeBreadcrumbDto: FfiConverterRustBuffer<BreadcrumbDt
     override fun write(value: BreadcrumbDto, buf: ByteBuffer) {
             FfiConverterString.write(value.`id`, buf)
             FfiConverterString.write(value.`title`, buf)
+    }
+}
+
+
+
+data class FieldChangeDto (
+    var `field`: kotlin.String, 
+    var `oldValue`: kotlin.String?, 
+    var `newValue`: kotlin.String?
+) {
+    
+    companion object
+}
+
+/**
+ * @suppress
+ */
+public object FfiConverterTypeFieldChangeDto: FfiConverterRustBuffer<FieldChangeDto> {
+    override fun read(buf: ByteBuffer): FieldChangeDto {
+        return FieldChangeDto(
+            FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
+            FfiConverterOptionalString.read(buf),
+        )
+    }
+
+    override fun allocationSize(value: FieldChangeDto) = (
+            FfiConverterString.allocationSize(value.`field`) +
+            FfiConverterOptionalString.allocationSize(value.`oldValue`) +
+            FfiConverterOptionalString.allocationSize(value.`newValue`)
+    )
+
+    override fun write(value: FieldChangeDto, buf: ByteBuffer) {
+            FfiConverterString.write(value.`field`, buf)
+            FfiConverterOptionalString.write(value.`oldValue`, buf)
+            FfiConverterOptionalString.write(value.`newValue`, buf)
     }
 }
 
@@ -1795,6 +1912,34 @@ public object FfiConverterSequenceTypeBookmarkDto: FfiConverterRustBuffer<List<B
 /**
  * @suppress
  */
+public object FfiConverterSequenceTypeBookmarkHistoryEntryDto: FfiConverterRustBuffer<List<BookmarkHistoryEntryDto>> {
+    override fun read(buf: ByteBuffer): List<BookmarkHistoryEntryDto> {
+        val len = buf.getInt()
+        return List<BookmarkHistoryEntryDto>(len) {
+            FfiConverterTypeBookmarkHistoryEntryDto.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<BookmarkHistoryEntryDto>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeBookmarkHistoryEntryDto.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<BookmarkHistoryEntryDto>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeBookmarkHistoryEntryDto.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
 public object FfiConverterSequenceTypeBookmarkItemDto: FfiConverterRustBuffer<List<BookmarkItemDto>> {
     override fun read(buf: ByteBuffer): List<BookmarkItemDto> {
         val len = buf.getInt()
@@ -1841,6 +1986,34 @@ public object FfiConverterSequenceTypeBreadcrumbDto: FfiConverterRustBuffer<List
         buf.putInt(value.size)
         value.iterator().forEach {
             FfiConverterTypeBreadcrumbDto.write(it, buf)
+        }
+    }
+}
+
+
+
+
+/**
+ * @suppress
+ */
+public object FfiConverterSequenceTypeFieldChangeDto: FfiConverterRustBuffer<List<FieldChangeDto>> {
+    override fun read(buf: ByteBuffer): List<FieldChangeDto> {
+        val len = buf.getInt()
+        return List<FieldChangeDto>(len) {
+            FfiConverterTypeFieldChangeDto.read(buf)
+        }
+    }
+
+    override fun allocationSize(value: List<FieldChangeDto>): ULong {
+        val sizeForLength = 4UL
+        val sizeForItems = value.map { FfiConverterTypeFieldChangeDto.allocationSize(it) }.sum()
+        return sizeForLength + sizeForItems
+    }
+
+    override fun write(value: List<FieldChangeDto>, buf: ByteBuffer) {
+        buf.putInt(value.size)
+        value.iterator().forEach {
+            FfiConverterTypeFieldChangeDto.write(it, buf)
         }
     }
 }
@@ -1958,6 +2131,16 @@ public object FfiConverterSequenceTypeFolderNavDto: FfiConverterRustBuffer<List<
     }
     
 
+    @Throws(FfiException::class) fun `getBookmarkHistory`(`bookmarkId`: kotlin.String): List<BookmarkHistoryEntryDto> {
+            return FfiConverterSequenceTypeBookmarkHistoryEntryDto.lift(
+    uniffiRustCallWithError(FfiException) { _status ->
+    UniffiLib.INSTANCE.uniffi_mybriefcase_bookmarks_ffi_fn_func_get_bookmark_history(
+        FfiConverterString.lower(`bookmarkId`),_status)
+}
+    )
+    }
+    
+
     @Throws(FfiException::class) fun `getFolderChildren`(`folderId`: kotlin.String, `sortBy`: SortOrder): FolderChildrenDto {
             return FfiConverterTypeFolderChildrenDto.lift(
     uniffiRustCallWithError(FfiException) { _status ->
@@ -2011,6 +2194,15 @@ public object FfiConverterSequenceTypeFolderNavDto: FfiConverterRustBuffer<List<
     uniffiRustCallWithError(FfiException) { _status ->
     UniffiLib.INSTANCE.uniffi_mybriefcase_bookmarks_ffi_fn_func_rename_folder(
         FfiConverterString.lower(`folderId`),FfiConverterString.lower(`title`),_status)
+}
+    
+    
+
+    @Throws(FfiException::class) fun `revertBookmark`(`bookmarkId`: kotlin.String, `changeHash`: kotlin.String)
+        = 
+    uniffiRustCallWithError(FfiException) { _status ->
+    UniffiLib.INSTANCE.uniffi_mybriefcase_bookmarks_ffi_fn_func_revert_bookmark(
+        FfiConverterString.lower(`bookmarkId`),FfiConverterString.lower(`changeHash`),_status)
 }
     
     

@@ -2,6 +2,7 @@ uniffi::setup_scaffolding!();
 
 pub mod bookmarks;
 pub mod folders;
+pub mod history;
 pub mod import_export;
 pub mod lifecycle;
 pub mod read;
@@ -11,6 +12,7 @@ pub mod sync;
 // Re-export all FFI functions for integration tests
 pub use bookmarks::{add_bookmark, delete_bookmark, update_bookmark};
 pub use folders::{create_folder, delete_folder, move_item, rename_folder};
+pub use history::{get_bookmark_history, revert_bookmark};
 pub use import_export::{export_html, import_html};
 pub use lifecycle::{init_repo, shutdown};
 pub use read::{get_bookmark, get_folder_children, get_folder_nav_tree};
