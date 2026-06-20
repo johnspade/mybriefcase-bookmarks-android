@@ -1,11 +1,19 @@
 use crate::{FfiError, RepoState, REPO};
+use log::debug;
 use mybriefcase_bookmarks_core::model::BookmarkStore;
 use mybriefcase_bookmarks_core::repo;
+use mybriefcase_bookmarks_core::repo::Exporter;
 use std::path::Path;
 use std::sync::RwLock;
 
 #[uniffi::export]
 pub fn init_repo(data_dir: String, sync_dir: String, client_id: String) -> Result<(), FfiError> {
+    android_logger::init_once(
+        android_logger::Config::default()
+            .with_max_level(log::LevelFilter::Debug)
+            .with_tag("MBB_FFI"),
+    );
+
     let runtime = tokio::runtime::Runtime::new().map_err(|e| FfiError::Internal {
         msg: format!("failed to create tokio runtime: {e}"),
     })?;
@@ -14,10 +22,12 @@ pub fn init_repo(data_dir: String, sync_dir: String, client_id: String) -> Resul
     let sync_path = Path::new(&sync_dir).to_path_buf();
     let cid = client_id.clone();
 
-    let (repo_handle, doc_handle, _doc_id) =
-        runtime.block_on(async { repo::init_repo(&data_path, &sync_path, &cid).await })?;
+    let (repo_handle, doc_handle) = runtime.block_on(async {
+        repo::init_repo(&data_path, &sync_path, &cid, chrono::Utc::now()).await
+    })?;
 
     let store: BookmarkStore = doc_handle.with_doc(|doc| autosurgeon::hydrate(doc).unwrap());
+    let exporter = Exporter::new(&sync_path, &client_id);
 
     let state = RepoState {
         runtime,
@@ -26,6 +36,7 @@ pub fn init_repo(data_dir: String, sync_dir: String, client_id: String) -> Resul
         sync_root: sync_path,
         client_id,
         cache: RwLock::new(store),
+        exporter,
     };
 
     REPO.set(state).map_err(|_| FfiError::Internal {
@@ -37,15 +48,11 @@ pub fn init_repo(data_dir: String, sync_dir: String, client_id: String) -> Resul
 
 #[uniffi::export]
 pub fn shutdown() {
-    // OnceLock cannot be reset, but we drop the runtime by letting it idle.
-    // In practice the app process is killed, so this is a best-effort cleanup.
     if let Some(state) = REPO.get() {
-        // Export current doc state before shutdown
-        let _ = mybriefcase_bookmarks_core::repo::export_doc_to_shared(
-            &state.doc_handle,
-            &state.sync_root,
-            &state.client_id,
-        );
+        debug!("[EXPORT] shutdown: export");
+        let _ = state
+            .exporter
+            .export(&state.doc_handle, std::time::SystemTime::now());
     }
 }
 
@@ -56,8 +63,6 @@ mod tests {
     #[test]
     #[cfg_attr(miri, ignore)]
     fn init_repo_creates_state() {
-        // This test must run in isolation since REPO is a global singleton.
-        // We test the underlying core init instead.
         let tmp = tempfile::tempdir().unwrap();
         let data_dir = tmp.path().join("data");
         let sync_dir = tmp.path().join("sync");
@@ -65,8 +70,10 @@ mod tests {
         std::fs::create_dir_all(&sync_dir).unwrap();
 
         let rt = tokio::runtime::Runtime::new().unwrap();
-        let (_repo_handle, doc_handle, _) = rt
-            .block_on(async { repo::init_repo(&data_dir, &sync_dir, "test-client").await })
+        let (_repo_handle, doc_handle) = rt
+            .block_on(async {
+                repo::init_repo(&data_dir, &sync_dir, "test-client", chrono::Utc::now()).await
+            })
             .unwrap();
 
         let store: BookmarkStore = doc_handle.with_doc(|doc| autosurgeon::hydrate(doc).unwrap());

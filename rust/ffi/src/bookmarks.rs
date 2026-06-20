@@ -1,13 +1,16 @@
 use crate::{refresh_cache, repo, FfiError};
+use log::debug;
 use mybriefcase_bookmarks_core::ops;
-use mybriefcase_bookmarks_core::repo::export_doc_to_shared;
 
 #[uniffi::export]
 pub fn add_bookmark(folder_id: String, url: String, title: String) -> Result<String, FfiError> {
     let state = repo()?;
     let id = ops::add_bookmark(&state.doc_handle, &folder_id, &url, &title)?;
     refresh_cache(state);
-    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id)?;
+    debug!("[EXPORT] add_bookmark: export");
+    state
+        .exporter
+        .export(&state.doc_handle, std::time::SystemTime::now())?;
     Ok(id)
 }
 
@@ -27,7 +30,14 @@ pub fn update_bookmark(
         notes.as_deref(),
     )?;
     refresh_cache(state);
-    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id)?;
+    debug!("[EXPORT] update_bookmark: export");
+    state
+        .exporter
+        .export(&state.doc_handle, std::time::SystemTime::now())
+        .inspect_err(|e| {
+            debug!("[EXPORT] update_bookmark: write FAILED: {e}");
+        })?;
+    debug!("[EXPORT] update_bookmark: write succeeded");
     Ok(())
 }
 
@@ -36,6 +46,9 @@ pub fn delete_bookmark(bookmark_id: String) -> Result<(), FfiError> {
     let state = repo()?;
     ops::delete_bookmark(&state.doc_handle, &bookmark_id)?;
     refresh_cache(state);
-    export_doc_to_shared(&state.doc_handle, &state.sync_root, &state.client_id)?;
+    debug!("[EXPORT] delete_bookmark: export");
+    state
+        .exporter
+        .export(&state.doc_handle, std::time::SystemTime::now())?;
     Ok(())
 }

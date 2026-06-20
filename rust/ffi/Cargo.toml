@@ -15,17 +15,20 @@ path = "src/bindgen.rs"
 
 [dependencies]
 uniffi = { version = "0.28", features = ["cli", "bindgen"] }
-mybriefcase-bookmarks-core = { git = "https://github.com/johnspade/mybriefcase-bookmarks", rev = "fc73133" } # v1.12.1
+mybriefcase-bookmarks-core = { git = "https://github.com/johnspade/mybriefcase-bookmarks", rev = "546f8b8" }
 automerge_repo = { version = "0.3", features = ["tokio"] }
 autosurgeon = "0.9"
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread"] }
+log = "0.4"
+android_logger = "0.14"
+chrono = "0.4"
 
 [dev-dependencies]
 tempfile = "3"
 automerge = "0.7"
 automerge_repo = { version = "0.3", features = ["tokio"] }
-mybriefcase-bookmarks-core = { git = "https://github.com/johnspade/mybriefcase-bookmarks", rev = "fc73133" } # v1.12.1
+mybriefcase-bookmarks-core = { git = "https://github.com/johnspade/mybriefcase-bookmarks", rev = "546f8b8" }
 proptest = "1"
 uuid = { version = "1", features = ["v4"] }
 chrono = "0.4"

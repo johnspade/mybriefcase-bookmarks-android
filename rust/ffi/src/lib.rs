@@ -20,6 +20,7 @@ pub use sync::trigger_full_merge;
 use automerge_repo::{DocHandle, RepoHandle};
 use autosurgeon::hydrate;
 use mybriefcase_bookmarks_core::model::BookmarkStore;
+use mybriefcase_bookmarks_core::repo::Exporter;
 use std::sync::{OnceLock, RwLock};
 use tokio::runtime::Runtime;
 
@@ -32,6 +33,7 @@ struct RepoState {
     sync_root: std::path::PathBuf,
     client_id: String,
     cache: RwLock<BookmarkStore>,
+    exporter: Exporter,
 }
 
 static REPO: OnceLock<RepoState> = OnceLock::new();
