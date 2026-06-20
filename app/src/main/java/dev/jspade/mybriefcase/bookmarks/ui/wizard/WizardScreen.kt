@@ -179,7 +179,7 @@ private fun WelcomeSlide() {
         verticalArrangement = Arrangement.Center,
     ) {
         Image(
-            painter = painterResource(id = dev.jspade.mybriefcase.bookmarks.R.drawable.ic_launcher_foreground),
+            painter = painterResource(id = dev.jspade.mybriefcase.bookmarks.R.drawable.ic_app_logo),
             contentDescription = null,
             modifier = Modifier.size(96.dp),
         )
