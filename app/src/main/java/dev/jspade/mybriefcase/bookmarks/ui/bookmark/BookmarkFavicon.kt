@@ -62,7 +62,7 @@ fun BookmarkFavicon(
     favicon: String?,
     syncRoot: String?,
     modifier: Modifier = Modifier,
-    size: Dp = 40.dp,
+    size: Dp = 24.dp,
 ) {
     if (favicon != null && syncRoot != null) {
         val file = File(syncRoot, "favicons/$favicon")
@@ -84,7 +84,7 @@ fun BookmarkFavicon(
 fun LetterAvatar(
     url: String,
     modifier: Modifier = Modifier,
-    size: Dp = 40.dp,
+    size: Dp = 24.dp,
 ) {
     val letter = avatarLetter(url)
     val colorIndex = avatarColorIndex(url)
