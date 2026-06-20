@@ -27,11 +27,16 @@ import dev.jspade.mybriefcase.bookmarks.ui.history.HistoryViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchScreen
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.settings.SettingsScreen
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.StartupDecision
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.StartupDestination
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.WizardScreen
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.WizardViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 private enum class Screen {
+    WIZARD,
     FOLDER,
     SEARCH,
     SETTINGS,
@@ -40,6 +45,32 @@ private enum class Screen {
 
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val initialScreen =
+        remember {
+            when (StartupDecision.decide(context)) {
+                StartupDestination.WIZARD -> Screen.WIZARD
+                StartupDestination.FOLDER -> Screen.FOLDER
+            }
+        }
+    var currentScreen by remember { mutableStateOf(initialScreen) }
+
+    if (currentScreen == Screen.WIZARD) {
+        val wizardViewModel =
+            remember {
+                WizardViewModel(context.applicationContext)
+            }
+        WizardScreen(
+            viewModel = wizardViewModel,
+            onComplete = {
+                MyBriefcaseApp.instance.initFromWizard()
+                currentScreen = Screen.FOLDER
+            },
+            modifier = modifier,
+        )
+        return
+    }
+
     val folderViewModel: FolderViewModel = viewModel()
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -59,8 +90,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    var currentScreen by remember { mutableStateOf(Screen.FOLDER) }
-    val context = LocalContext.current
     val uiState by folderViewModel.uiState.collectAsState()
 
     var showDetailSheet by remember { mutableStateOf(false) }
@@ -102,6 +131,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         }
 
     when (currentScreen) {
+        Screen.WIZARD -> {} // handled above with early return
         Screen.FOLDER -> {
             FolderScreen(
                 viewModel = folderViewModel,

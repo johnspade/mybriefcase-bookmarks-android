@@ -3,6 +3,7 @@ package dev.jspade.mybriefcase.bookmarks
 import android.app.Application
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepositoryImpl
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.StartupDecision
 
 class MyBriefcaseApp : Application() {
     lateinit var repository: BookmarkRepository
@@ -14,35 +15,29 @@ class MyBriefcaseApp : Application() {
     lateinit var clientId: String
         private set
 
+    private var initialized = false
+
     override fun onCreate() {
         super.onCreate()
         instance = this
         repository = BookmarkRepositoryImpl()
 
-        val dataDir = filesDir.absolutePath
-        syncDir = resolveSyncDir()
-        clientId = getOrCreateClientId()
-
-        repository.initRepo(dataDir, syncDir, clientId)
+        val persistedDir = StartupDecision.getPersistedSyncDir(this)
+        if (persistedDir != null) {
+            syncDir = persistedDir
+            clientId = getOrCreateClientId()
+            repository.initRepo(filesDir.absolutePath, syncDir, clientId)
+            initialized = true
+        }
     }
 
-    private fun resolveSyncDir(): String {
-        val external = java.io.File(SYNC_ROOT)
-        if ((external.exists() || external.mkdirs()) && external.canWrite()) {
-            // Verify actual write access (canWrite() is unreliable with scoped storage)
-            val probe = java.io.File(external, ".probe")
-            try {
-                probe.writeText("ok")
-                probe.delete()
-                return external.absolutePath
-            } catch (_: Exception) {
-                // Fall through to internal storage
-            }
-        }
-        // Fall back to internal storage when external sync dir is inaccessible
-        val internal = java.io.File(filesDir, "sync")
-        internal.mkdirs()
-        return internal.absolutePath
+    fun initFromWizard() {
+        if (initialized) return
+        val persistedDir = StartupDecision.getPersistedSyncDir(this) ?: return
+        syncDir = persistedDir
+        clientId = getOrCreateClientId()
+        repository.initRepo(filesDir.absolutePath, syncDir, clientId)
+        initialized = true
     }
 
     override fun onTerminate() {
@@ -65,7 +60,6 @@ class MyBriefcaseApp : Application() {
     }
 
     companion object {
-        const val SYNC_ROOT = "/storage/emulated/0/Syncthing/mybriefcase_bookmarks"
         private const val CLIENT_ID_SUFFIX_LENGTH = 4
 
         lateinit var instance: MyBriefcaseApp

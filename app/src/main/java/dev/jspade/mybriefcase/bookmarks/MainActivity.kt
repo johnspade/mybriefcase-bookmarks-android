@@ -37,13 +37,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Check storage permission result when coming back from Settings
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && Environment.isExternalStorageManager()) {
             showStorageRationale = false
         }
     }
 
-    private fun requestStoragePermissionIfNeeded() {
+    fun requestStoragePermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && !Environment.isExternalStorageManager()) {
             val intent =
                 Intent(
