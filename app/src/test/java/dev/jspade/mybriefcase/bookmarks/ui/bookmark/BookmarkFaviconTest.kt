@@ -1,51 +1,43 @@
 package dev.jspade.mybriefcase.bookmarks.ui.bookmark
 
+import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class BookmarkFaviconTest {
     @Test
-    fun `extractDomain returns domain from https URL`() {
-        assertEquals("github.com", extractDomain("https://github.com/user/repo"))
+    fun `golden pairs match core crate`() {
+        assertEquals("G", domainLetter("https://github.com/foo/bar"))
+        assertEquals(Color(0xFF673AB7), domainColor("https://github.com/foo/bar"))
+
+        assertEquals("R", domainLetter("https://www.reddit.com/r/rust"))
+        assertEquals(Color(0xFF009688), domainColor("https://www.reddit.com/r/rust"))
+
+        assertEquals("E", domainLetter("http://example.com"))
+        assertEquals(Color(0xFF039BE5), domainColor("http://example.com"))
+
+        assertEquals("D", domainLetter("https://docs.rs/tokio"))
+        assertEquals(Color(0xFF0F9D58), domainColor("https://docs.rs/tokio"))
     }
 
     @Test
-    fun `extractDomain returns domain from http URL`() {
-        assertEquals("example.org", extractDomain("http://example.org/path?q=1"))
+    fun `case insensitive`() {
+        assertEquals(
+            domainColor("https://GitHub.com/foo"),
+            domainColor("https://github.com/bar"),
+        )
     }
 
     @Test
-    fun `extractDomain strips www prefix`() {
-        assertEquals("example.com", extractDomain("https://www.example.com/page"))
+    fun `same domain different paths same color`() {
+        val a = domainColor("https://github.com/foo")
+        val b = domainColor("https://github.com/bar/baz?q=1")
+        assertEquals(a, b)
     }
 
     @Test
-    fun `extractDomain returns raw string for invalid URL`() {
-        assertEquals("not a url", extractDomain("not a url"))
-    }
-
-    @Test
-    fun `avatarLetter returns uppercase first letter of domain`() {
-        assertEquals('G', avatarLetter("https://github.com"))
-    }
-
-    @Test
-    fun `avatarLetter returns hash for empty domain`() {
-        assertEquals('#', avatarLetter(""))
-    }
-
-    @Test
-    fun `avatarColorIndex is deterministic for same domain`() {
-        val idx1 = avatarColorIndex("https://github.com")
-        val idx2 = avatarColorIndex("https://github.com/different/path")
-        assertEquals(idx1, idx2)
-    }
-
-    @Test
-    fun `avatarColorIndex differs for different domains`() {
-        val idx1 = avatarColorIndex("https://github.com")
-        val idx2 = avatarColorIndex("https://example.com")
-        assertNotEquals(idx1, idx2)
+    fun `unparseable url returns question mark`() {
+        assertEquals("?", domainLetter(""))
+        assertEquals("?", domainLetter("://"))
     }
 }

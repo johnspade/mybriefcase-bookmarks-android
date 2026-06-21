@@ -16,44 +16,54 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import java.io.File
-import kotlin.math.absoluteValue
 
-private val AVATAR_COLORS =
+private val PALETTE =
     listOf(
-        Color(0xFFE57373),
-        Color(0xFFF06292),
-        Color(0xFFBA68C8),
-        Color(0xFF9575CD),
-        Color(0xFF7986CB),
-        Color(0xFF64B5F6),
-        Color(0xFF4FC3F7),
-        Color(0xFF4DD0E1),
-        Color(0xFF4DB6AC),
-        Color(0xFF81C784),
-        Color(0xFFAED581),
-        Color(0xFFFF8A65),
-        Color(0xFFA1887F),
-        Color(0xFF90A4AE),
+        Color(0xFFDB4437),
+        Color(0xFFE91E63),
+        Color(0xFF9C27B0),
+        Color(0xFF673AB7),
+        Color(0xFF3F51B5),
+        Color(0xFF4285F4),
+        Color(0xFF039BE5),
+        Color(0xFF0097A7),
+        Color(0xFF009688),
+        Color(0xFF0F9D58),
+        Color(0xFF689F38),
+        Color(0xFFEF6C00),
+        Color(0xFFFF5722),
+        Color(0xFF757575),
     )
 
 internal fun extractDomain(url: String): String {
-    val host =
-        try {
-            java.net.URI(url).host ?: url
-        } catch (_: Exception) {
-            url
-        }
-    return host.removePrefix("www.")
+    val rest =
+        url.removePrefix("https://").removePrefix("http://")
+    val host = rest.split('/').first()
+    return host.lowercase().removePrefix("www.")
 }
 
-internal fun avatarLetter(url: String): Char {
-    val domain = extractDomain(url)
-    return domain.firstOrNull()?.uppercaseChar() ?: '#'
+private fun djb2(input: String): UInt {
+    var hash: UInt = 5381u
+    for (b in input.encodeToByteArray()) {
+        hash = hash * 33u + b.toUByte().toUInt()
+    }
+    return hash
 }
 
-internal fun avatarColorIndex(url: String): Int {
+internal fun domainLetter(url: String): String {
     val domain = extractDomain(url)
-    return domain.hashCode().absoluteValue % AVATAR_COLORS.size
+    val first = domain.firstOrNull()
+    return if (first != null && first.isLetter()) {
+        first.uppercaseChar().toString()
+    } else {
+        "?"
+    }
+}
+
+internal fun domainColor(url: String): Color {
+    val domain = extractDomain(url)
+    val hash = djb2(domain)
+    return PALETTE[(hash % PALETTE.size.toUInt()).toInt()]
 }
 
 @Composable
@@ -86,9 +96,8 @@ fun LetterAvatar(
     modifier: Modifier = Modifier,
     size: Dp = 24.dp,
 ) {
-    val letter = avatarLetter(url)
-    val colorIndex = avatarColorIndex(url)
-    val bgColor = AVATAR_COLORS[colorIndex]
+    val letter = domainLetter(url)
+    val bgColor = domainColor(url)
 
     Box(
         modifier =
@@ -99,7 +108,7 @@ fun LetterAvatar(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = letter.toString(),
+            text = letter,
             style = MaterialTheme.typography.titleMedium,
             color = Color.White,
         )

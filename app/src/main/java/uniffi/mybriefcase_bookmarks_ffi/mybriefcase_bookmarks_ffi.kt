@@ -747,6 +747,10 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -770,6 +774,10 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_delete_folder(`folderId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_mybriefcase_bookmarks_ffi_fn_func_domain_color(`url`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_mybriefcase_bookmarks_ffi_fn_func_domain_letter(`url`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_export_html(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_get_bookmark(`bookmarkId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -918,6 +926,10 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_delete_folder(
     ): Short
+    fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_domain_color(
+    ): Short
+    fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_domain_letter(
+    ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_export_html(
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_get_bookmark(
@@ -973,6 +985,12 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_delete_folder() != 30490.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_domain_color() != 10464.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_domain_letter() != 38954.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_export_html() != 12712.toShort()) {
@@ -2117,6 +2135,24 @@ public object FfiConverterSequenceTypeFolderNavDto: FfiConverterRustBuffer<List<
         FfiConverterString.lower(`folderId`),_status)
 }
     
+    
+ fun `domainColor`(`url`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_mybriefcase_bookmarks_ffi_fn_func_domain_color(
+        FfiConverterString.lower(`url`),_status)
+}
+    )
+    }
+    
+ fun `domainLetter`(`url`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_mybriefcase_bookmarks_ffi_fn_func_domain_letter(
+        FfiConverterString.lower(`url`),_status)
+}
+    )
+    }
     
 
     @Throws(FfiException::class) fun `exportHtml`(): kotlin.String {
