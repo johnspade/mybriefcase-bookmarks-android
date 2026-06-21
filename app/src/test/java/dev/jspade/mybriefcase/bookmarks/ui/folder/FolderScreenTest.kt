@@ -21,6 +21,7 @@ import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import uniffi.mybriefcase_bookmarks_ffi.FfiException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -221,5 +222,42 @@ class FolderScreenTest {
 
         composeTestRule.onNodeWithTag("folder_sort_chip").assertIsDisplayed()
         composeTestRule.onNodeWithText("Name A-Z").assertIsDisplayed()
+    }
+
+    @Test
+    fun `permission denied shows grant snackbar`() {
+        val viewModel = FolderViewModel(
+            repository = fakeRepo,
+            ioDispatcher = testDispatcher,
+            storagePermissionCheck = { false },
+        )
+
+        composeTestRule.setContent {
+            FolderScreen(viewModel = viewModel)
+        }
+
+        viewModel.refresh()
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithText("Storage permission required. Grant access to sync bookmarks.")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Grant").assertIsDisplayed()
+    }
+
+    @Test
+    fun `IoError shows generic retry snackbar`() {
+        fakeRepo.shouldThrow = FfiException.IoException("No such file or directory")
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+
+        composeTestRule.setContent {
+            FolderScreen(viewModel = viewModel)
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule
+            .onNodeWithText("No such file or directory")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("Retry").assertIsDisplayed()
     }
 }

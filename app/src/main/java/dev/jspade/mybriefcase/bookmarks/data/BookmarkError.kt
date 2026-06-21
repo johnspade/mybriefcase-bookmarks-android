@@ -21,6 +21,10 @@ sealed interface BookmarkError {
         override val message: String,
     ) : BookmarkError
 
+    data class PermissionDenied(
+        override val message: String,
+    ) : BookmarkError
+
     data class Internal(
         override val message: String,
     ) : BookmarkError

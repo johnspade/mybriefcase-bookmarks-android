@@ -2,6 +2,9 @@ package dev.jspade.mybriefcase.bookmarks.ui.wizard
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -21,6 +24,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
@@ -35,9 +39,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,9 +56,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.launch
 
-private const val PAGE_COUNT = 3
+private const val PAGE_COUNT = 4
 private const val SYNCTHING_PACKAGE = "com.github.catfriend1.syncthingfork"
 private const val SYNCTHING_FDROID_URL = "https://f-droid.org/packages/com.github.catfriend1.syncthingfork/"
 
@@ -63,11 +75,31 @@ fun WizardScreen(
     val pagerState = rememberPagerState(pageCount = { PAGE_COUNT })
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    if (uiState.isComplete) {
-        onComplete()
-        return
+    var storagePermissionGranted by remember {
+        mutableStateOf(
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager(),
+        )
     }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                storagePermissionGranted =
+                    Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    LaunchedEffect(uiState.isComplete) {
+        if (uiState.isComplete) {
+            onComplete()
+        }
+    }
+
+    if (uiState.isComplete) return
 
     val dirPickerLauncher =
         rememberLauncherForActivityResult(
@@ -100,6 +132,7 @@ fun WizardScreen(
                             error = uiState.error,
                             onChooseDirectory = { dirPickerLauncher.launch(null) },
                         )
+                    3 -> PermissionSlide(context, storagePermissionGranted)
                 }
             }
 
@@ -156,7 +189,7 @@ fun WizardScreen(
                 } else {
                     FilledTonalButton(
                         onClick = { viewModel.finish() },
-                        enabled = uiState.canFinish,
+                        enabled = uiState.canFinish && storagePermissionGranted,
                         modifier = Modifier.testTag("wizard_done"),
                     ) {
                         Text("Done")
@@ -317,5 +350,64 @@ private fun DirectorySlide(
                 modifier = Modifier.testTag("wizard_error"),
             )
         }
+    }
+}
+
+@Composable
+private fun PermissionSlide(context: android.content.Context, isGranted: Boolean) {
+
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(32.dp)
+                .testTag("wizard_slide_permission"),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Default.Security,
+            contentDescription = null,
+            modifier = Modifier.size(96.dp),
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = "Due to Android restrictions, the app requires permission to manage all files" +
+                " in order to read from and write to synchronized folders in external storage",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        if (!isGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Button(
+                onClick = {
+                    val intent = Intent(
+                        Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                        "package:${context.packageName}".toUri(),
+                    )
+                    context.startActivity(intent)
+                },
+                modifier = Modifier.testTag("wizard_grant_permission"),
+            ) {
+                Text("Grant Access")
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        AssistChip(
+            onClick = {},
+            label = {
+                Text(if (isGranted) "Granted" else "Not granted")
+            },
+            colors =
+                if (isGranted) {
+                    AssistChipDefaults.assistChipColors(
+                        labelColor = MaterialTheme.colorScheme.primary,
+                    )
+                } else {
+                    AssistChipDefaults.assistChipColors()
+                },
+            modifier = Modifier.testTag("wizard_permission_status"),
+        )
     }
 }
