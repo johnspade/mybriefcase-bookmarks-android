@@ -101,26 +101,21 @@
         gradle-lint = {
           type = "app";
           program = toString (pkgs.writeShellScript "gradle-lint" ''
-            set -euo pipefail
-            ./gradlew detekt spotlessCheck lint
+            exec nix develop --command gradle-lint
           '');
         };
 
         gradle-test = {
           type = "app";
           program = toString (pkgs.writeShellScript "gradle-test" ''
-            set -euo pipefail
-            export PATH="${pkgs.rustToolchain}/bin:$PATH"
-            cargo build --manifest-path rust/ffi/Cargo.toml --release
-            ./gradlew testDebugUnitTest verifyRoborazziDebug
+            exec nix develop --command gradle-test
           '');
         };
 
         gradle-coverage = {
           type = "app";
           program = toString (pkgs.writeShellScript "gradle-coverage" ''
-            set -euo pipefail
-            ./gradlew koverVerify
+            exec nix develop --command gradle-coverage
           '');
         };
 
