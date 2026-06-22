@@ -75,7 +75,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: app/src/main/jniLibs
-          key: rust-so-x86_64-${{ hashFiles('rust/**') }}
+          key: rust-so-x86_64-${{ hashFiles('rust/**', 'rust-toolchain.toml') }}
       - name: Build Rust .so for x86_64 emulator
         if: steps.cache-rust-so.outputs.cache-hit != 'true'
         run: |
