@@ -1,5 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks.ui.screenshot
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,6 +48,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -362,6 +364,38 @@ class ScreenshotTest {
         }
         composeTestRule.waitForIdle()
         composeTestRule.onRoot().captureRoboImage("src/test/snapshots/favicon_fallback.png")
+    }
+
+    @Test
+    fun bookmarkFavicon_withFaviconImage() {
+        val tempDir = File(System.getProperty("java.io.tmpdir"), "screenshot_test_favicons")
+        val faviconsDir = File(tempDir, "favicons")
+        faviconsDir.mkdirs()
+        val faviconFile = File(faviconsDir, "abc123.png")
+        try {
+            val bmp = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888)
+            bmp.eraseColor(android.graphics.Color.RED)
+            faviconFile.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+
+            composeTestRule.setContent {
+                MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                    Surface {
+                        BookmarkFavicon(
+                            url = "https://github.com",
+                            favicon = "abc123.png",
+                            syncRoot = tempDir.absolutePath,
+                            modifier = Modifier.padding(16.dp),
+                        )
+                    }
+                }
+            }
+            composeTestRule.waitForIdle()
+            composeTestRule.onRoot().captureRoboImage("src/test/snapshots/favicon_image.png")
+        } finally {
+            faviconFile.delete()
+            faviconsDir.delete()
+            tempDir.delete()
+        }
     }
 }
 
