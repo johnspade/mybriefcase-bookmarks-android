@@ -81,6 +81,16 @@
         checks = nixpkgs.lib.getAttrs [ "x86_64-linux" ] self.checks;
       };
 
+      packages.x86_64-linux =
+        let
+          pkgs = import nixpkgs {
+            system = "x86_64-linux";
+            overlays = [ rust-overlay.overlays.default self.overlays.default ];
+          };
+        in {
+          screenshot-image = import ./nix/screenshot-image.nix { inherit pkgs; };
+        };
+
       apps = forEachSupportedSystem ({ pkgs, ... }:
         let
           nightlyToolchain = pkgs.rust-bin.selectLatestNightlyWith (toolchain:
