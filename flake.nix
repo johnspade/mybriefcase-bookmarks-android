@@ -144,6 +144,20 @@
             exec nix develop --command validate-all
           '');
         };
+
+        verify-screenshots = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "verify-screenshots" ''
+            exec nix develop --command verify-screenshots
+          '');
+        };
+
+        record-screenshots = {
+          type = "app";
+          program = toString (pkgs.writeShellScript "record-screenshots" ''
+            exec nix develop --command record-screenshots
+          '');
+        };
       });
 
       devShells = forEachSupportedSystem ({ pkgs, ... }:
@@ -162,7 +176,7 @@
           gradle-test = pkgs.writeShellScriptBin "gradle-test" ''
             set -euo pipefail
             cargo build --manifest-path rust/ffi/Cargo.toml --release
-            ./gradlew testDebugUnitTest verifyRoborazziDebug
+            ./gradlew testDebugUnitTest
           '';
 
           gradle-coverage = pkgs.writeShellScriptBin "gradle-coverage" ''
@@ -192,9 +206,52 @@
           validate-all = pkgs.writeShellScriptBin "validate-all" ''
             set -euo pipefail
             validate
+            echo "==> Screenshot verification..."
+            verify-screenshots
             echo "==> Running Miri..."
             miri
             echo "==> All validations (including Miri) passed!"
+          '';
+
+          screenshot-docker = pkgs.writeShellScriptBin "screenshot-docker" ''
+            set -euo pipefail
+            if ! command -v docker &>/dev/null; then
+              echo "Error: Docker is required for screenshot tests" >&2
+              exit 1
+            fi
+
+            IMAGE="ghcr.io/johnspade/mybriefcase-bookmarks-android/roborazzi-screenshot-recorder:latest"
+            echo "==> Pulling $IMAGE..."
+            docker pull --platform linux/amd64 "$IMAGE"
+
+            TASK="''${1:-verifyRoborazziDebug}"
+            GIT_COMMON="$(git rev-parse --git-common-dir)"
+            VOLUME_ARGS="-v $PWD:/project"
+            if [ "$GIT_COMMON" != ".git" ]; then
+              VOLUME_ARGS="$VOLUME_ARGS -v $GIT_COMMON:$GIT_COMMON"
+            fi
+
+            echo "==> Running $TASK via Docker (linux/amd64)..."
+            docker run --platform linux/amd64 --rm \
+              $VOLUME_ARGS \
+              "$IMAGE" \
+              bash -c "
+                git config --global --add safe.directory /project
+                cargo build --manifest-path rust/ffi/Cargo.toml --release
+                ./gradlew $TASK -PskipRustBuild=true
+              "
+          '';
+
+          verify-screenshots = pkgs.writeShellScriptBin "verify-screenshots" ''
+            set -euo pipefail
+            screenshot-docker verifyRoborazziDebug
+            echo "==> Screenshots verified successfully!"
+          '';
+
+          record-screenshots = pkgs.writeShellScriptBin "record-screenshots" ''
+            set -euo pipefail
+            screenshot-docker recordRoborazziDebug
+            echo "==> Screenshots recorded successfully!"
           '';
         in {
         default = pkgs.mkShell {
@@ -208,6 +265,9 @@
             miri
             validate
             validate-all
+            screenshot-docker
+            verify-screenshots
+            record-screenshots
           ];
 
           shellHook = ''
