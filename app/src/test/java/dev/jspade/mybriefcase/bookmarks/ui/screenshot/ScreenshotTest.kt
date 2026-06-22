@@ -76,7 +76,7 @@ class ScreenshotTest {
 
     @Test
     fun folderScreen_populated_light() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
                 FolderScreen(viewModel = viewModel)
@@ -87,7 +87,7 @@ class ScreenshotTest {
 
     @Test
     fun folderScreen_populated_dark() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
                 FolderScreen(viewModel = viewModel)
@@ -100,7 +100,7 @@ class ScreenshotTest {
 
     @Test
     fun folderScreen_empty_light() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
         viewModel.navigateToFolder("folder-2") // Personal folder (empty)
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
@@ -113,7 +113,7 @@ class ScreenshotTest {
 
     @Test
     fun folderScreen_empty_dark() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
         viewModel.navigateToFolder("folder-2")
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {

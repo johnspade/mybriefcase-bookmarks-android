@@ -46,7 +46,7 @@ class FolderViewModelTest {
     @Test
     fun `initial state is loading then content`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
             viewModel.uiState.test {
                 // Initial state
@@ -68,7 +68,7 @@ class FolderViewModelTest {
     @Test
     fun `navigateToFolder updates content`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -90,7 +90,7 @@ class FolderViewModelTest {
     @Test
     fun `navigateToFolder updates breadcrumbs`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -109,7 +109,7 @@ class FolderViewModelTest {
     @Test
     fun `navigateUp goes to parent folder`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             // Navigate into a subfolder first
@@ -130,7 +130,7 @@ class FolderViewModelTest {
     @Test
     fun `navigateUp returns false at root`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             val result = viewModel.navigateUp()
@@ -145,7 +145,7 @@ class FolderViewModelTest {
     @Test
     fun `empty folder shows no items`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -164,7 +164,7 @@ class FolderViewModelTest {
     @Test
     fun `setSortOrder reloads with new sort`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -182,7 +182,7 @@ class FolderViewModelTest {
     fun `error state on repository failure`() =
         runTest {
             fakeRepo.shouldThrow = RuntimeException("network error")
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -196,7 +196,7 @@ class FolderViewModelTest {
     fun `NotFound error produces BookmarkError NotFound`() =
         runTest {
             fakeRepo.shouldThrow = FfiException.NotFound("folder not found: abc")
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -209,7 +209,7 @@ class FolderViewModelTest {
     @Test
     fun `InvalidInput error produces validationError`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             fakeRepo.createFolderThrow = FfiException.InvalidInput("title cannot be empty")
@@ -226,7 +226,7 @@ class FolderViewModelTest {
     @Test
     fun `clearValidationError clears validationError`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             fakeRepo.createFolderThrow = FfiException.InvalidInput("title cannot be empty")
@@ -244,7 +244,7 @@ class FolderViewModelTest {
     @Test
     fun `renameFolder InvalidInput sets validationError`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             fakeRepo.renameFolderThrow = FfiException.InvalidInput("name too long")
@@ -262,7 +262,7 @@ class FolderViewModelTest {
     fun `clearError clears error`() =
         runTest {
             fakeRepo.shouldThrow = FfiException.IoException("disk full")
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.clearError()
@@ -277,7 +277,7 @@ class FolderViewModelTest {
     fun `IoError produces BookmarkError IoError`() =
         runTest {
             fakeRepo.shouldThrow = FfiException.IoException("permission denied")
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -292,7 +292,7 @@ class FolderViewModelTest {
         runTest {
             fakeRepo.shouldThrow =
                 FfiException.NotInitialized("repo not initialized: call init_repo first")
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -305,7 +305,7 @@ class FolderViewModelTest {
     fun `Internal error produces BookmarkError Internal`() =
         runTest {
             fakeRepo.shouldThrow = FfiException.Internal("document corrupted")
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -318,7 +318,7 @@ class FolderViewModelTest {
     @Test
     fun `nav tree is populated`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -332,7 +332,7 @@ class FolderViewModelTest {
     @Test
     fun `createFolder calls repository and re-fetches`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             val callsBefore = fakeRepo.getFolderChildrenCallCount
@@ -356,7 +356,7 @@ class FolderViewModelTest {
     @Test
     fun `renameFolder calls repository and re-fetches`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             val callsBefore = fakeRepo.getFolderChildrenCallCount
@@ -379,7 +379,7 @@ class FolderViewModelTest {
     @Test
     fun `deleteFolder calls repository and re-fetches`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             val callsBefore = fakeRepo.getFolderChildrenCallCount
@@ -402,7 +402,7 @@ class FolderViewModelTest {
     @Test
     fun `moveItem calls repository and re-fetches`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             val callsBefore = fakeRepo.getFolderChildrenCallCount
@@ -426,7 +426,7 @@ class FolderViewModelTest {
     fun `moveItem InvalidInput sets validationError`() =
         runTest {
             fakeRepo.moveItemThrow = FfiException.InvalidInput("cannot move into descendant")
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.moveItem("folder-1", "root-id", "folder-1")
@@ -449,6 +449,7 @@ class FolderViewModelTest {
                     repository = fakeRepo,
                     ioDispatcher = testDispatcher,
                     pollIntervalMs = 1000L,
+                    syncDirPath = null,
                 )
             advanceUntilIdle()
 
@@ -533,7 +534,7 @@ class FolderViewModelTest {
     fun `refresh reloads when merge returns true`() =
         runTest {
             fakeRepo.mergeResult = true
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             val callsBefore = fakeRepo.getFolderChildrenCallCount
@@ -550,7 +551,7 @@ class FolderViewModelTest {
     fun `refresh does not reload when merge returns false`() =
         runTest {
             fakeRepo.mergeResult = false
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             val callsBefore = fakeRepo.getFolderChildrenCallCount
@@ -566,7 +567,7 @@ class FolderViewModelTest {
     @Test
     fun `refresh sets error on failure`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             fakeRepo.mergeThrow = RuntimeException("sync failed")
@@ -582,7 +583,7 @@ class FolderViewModelTest {
     @Test
     fun `toggleFolderExpanded adds and removes folder ids`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.toggleFolderExpanded("folder-1")

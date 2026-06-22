@@ -48,7 +48,7 @@ class FolderScreenTest {
 
     @Test
     fun `folder items are displayed`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -61,7 +61,7 @@ class FolderScreenTest {
 
     @Test
     fun `tap folder navigates into it`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -77,7 +77,7 @@ class FolderScreenTest {
 
     @Test
     fun `breadcrumbs update after navigation`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -92,7 +92,7 @@ class FolderScreenTest {
 
     @Test
     fun `empty folder shows empty state`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -107,7 +107,7 @@ class FolderScreenTest {
 
     @Test
     fun `drawer opens with folder tree`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -123,7 +123,7 @@ class FolderScreenTest {
 
     @Test
     fun `drawer shows item count badges for folders`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -202,7 +202,7 @@ class FolderScreenTest {
 
     @Test
     fun `search button is displayed`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -213,7 +213,7 @@ class FolderScreenTest {
 
     @Test
     fun `sort chip is displayed in folder view`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)

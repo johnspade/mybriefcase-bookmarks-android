@@ -53,7 +53,7 @@ class BookmarkUiTest {
 
     @Test
     fun `FAB opens speed-dial menu`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -73,7 +73,7 @@ class BookmarkUiTest {
 
     @Test
     fun `FAB opens add bookmark dialog`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -196,7 +196,7 @@ class BookmarkUiTest {
 
     @Test
     fun `context menu appears on long-press`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -219,7 +219,7 @@ class BookmarkUiTest {
 
     @Test
     fun `delete shows confirmation dialog`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
@@ -245,7 +245,7 @@ class BookmarkUiTest {
 
     @Test
     fun `overflow menu shows settings option`() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
