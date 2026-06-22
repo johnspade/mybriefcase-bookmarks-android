@@ -230,6 +230,7 @@ class FolderScreenTest {
             FolderViewModel(
                 repository = fakeRepo,
                 ioDispatcher = testDispatcher,
+                syncDirPath = null,
                 storagePermissionCheck = { false },
             )
 
@@ -249,7 +250,7 @@ class FolderScreenTest {
     @Test
     fun `IoError shows generic retry snackbar`() {
         fakeRepo.shouldThrow = FfiException.IoException("No such file or directory")
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)
