@@ -118,6 +118,12 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            all {
+                it.systemProperty(
+                    "jna.library.path",
+                    rootProject.file("rust/target/release").absolutePath,
+                )
+            }
         }
     }
 }

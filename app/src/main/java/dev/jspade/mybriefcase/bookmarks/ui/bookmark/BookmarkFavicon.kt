@@ -14,57 +14,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.toColorInt
 import coil3.compose.AsyncImage
+import uniffi.mybriefcase_bookmarks_ffi.domainColor
+import uniffi.mybriefcase_bookmarks_ffi.domainLetter
 import java.io.File
-
-private val PALETTE =
-    listOf(
-        Color(0xFFDB4437),
-        Color(0xFFE91E63),
-        Color(0xFF9C27B0),
-        Color(0xFF673AB7),
-        Color(0xFF3F51B5),
-        Color(0xFF4285F4),
-        Color(0xFF039BE5),
-        Color(0xFF0097A7),
-        Color(0xFF009688),
-        Color(0xFF0F9D58),
-        Color(0xFF689F38),
-        Color(0xFFEF6C00),
-        Color(0xFFFF5722),
-        Color(0xFF757575),
-    )
-
-internal fun extractDomain(url: String): String {
-    val rest =
-        url.removePrefix("https://").removePrefix("http://")
-    val host = rest.split('/').first()
-    return host.lowercase().removePrefix("www.")
-}
-
-private fun djb2(input: String): UInt {
-    var hash: UInt = 5381u
-    for (b in input.encodeToByteArray()) {
-        hash = hash * 33u + b.toUByte().toUInt()
-    }
-    return hash
-}
-
-internal fun domainLetter(url: String): String {
-    val domain = extractDomain(url)
-    val first = domain.firstOrNull()
-    return if (first != null && first.isLetter()) {
-        first.uppercaseChar().toString()
-    } else {
-        "?"
-    }
-}
-
-internal fun domainColor(url: String): Color {
-    val domain = extractDomain(url)
-    val hash = djb2(domain)
-    return PALETTE[(hash % PALETTE.size.toUInt()).toInt()]
-}
 
 @Composable
 fun BookmarkFavicon(
@@ -97,7 +51,7 @@ fun LetterAvatar(
     size: Dp = 24.dp,
 ) {
     val letter = domainLetter(url)
-    val bgColor = domainColor(url)
+    val bgColor = Color(domainColor(url).toColorInt())
 
     Box(
         modifier =
