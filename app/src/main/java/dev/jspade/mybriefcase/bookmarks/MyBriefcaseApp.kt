@@ -40,6 +40,12 @@ class MyBriefcaseApp : Application() {
         initialized = true
     }
 
+    fun changeSyncDir(newPath: String) {
+        StartupDecision.persistSyncDir(this, newPath)
+        java.io.File(filesDir, "local_doc_id").delete()
+        java.io.File(filesDir, "repo_store").deleteRecursively()
+    }
+
     override fun onTerminate() {
         super.onTerminate()
         repository.shutdown()

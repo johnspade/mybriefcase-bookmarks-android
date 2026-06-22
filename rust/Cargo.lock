@@ -1180,7 +1180,7 @@ checksum = "bc0287524726960e07b119cebd01678f852f147742ae0d925e6a520dca956126"
 [[package]]
 name = "mybriefcase-bookmarks-core"
 version = "0.0.1"
-source = "git+https://github.com/johnspade/mybriefcase-bookmarks?rev=784c59b#784c59b3b40e4612ed73d9dea989550061c1d0ed"
+source = "git+https://github.com/johnspade/mybriefcase-bookmarks?rev=9d5ae5b#9d5ae5ba62a7b368949e11aa5b638f407eb2fbfd"
 dependencies = [
  "automerge",
  "automerge_repo",

@@ -42,7 +42,10 @@ class ArchitectureTest {
         appScope
             .classes()
             .withNameEndingWith("ViewModel")
-            .assertTrue { it.hasParentOf(androidx.lifecycle.ViewModel::class) }
+            .assertTrue {
+                it.hasParentOf(androidx.lifecycle.ViewModel::class) ||
+                    it.hasParentOf(androidx.lifecycle.AndroidViewModel::class)
+            }
     }
 
     @Test

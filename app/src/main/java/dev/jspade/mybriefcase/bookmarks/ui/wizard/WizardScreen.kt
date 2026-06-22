@@ -83,12 +83,14 @@ fun WizardScreen(
         )
     }
     DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                storagePermissionGranted =
-                    Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    storagePermissionGranted =
+                        Build.VERSION.SDK_INT < Build.VERSION_CODES.R ||
+                        Environment.isExternalStorageManager()
+                }
             }
-        }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
@@ -354,8 +356,10 @@ private fun DirectorySlide(
 }
 
 @Composable
-private fun PermissionSlide(context: android.content.Context, isGranted: Boolean) {
-
+private fun PermissionSlide(
+    context: android.content.Context,
+    isGranted: Boolean,
+) {
     Column(
         modifier =
             Modifier
@@ -373,8 +377,9 @@ private fun PermissionSlide(context: android.content.Context, isGranted: Boolean
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Due to Android restrictions, the app requires permission to manage all files" +
-                " in order to read from and write to synchronized folders in external storage",
+            text =
+                "Due to Android restrictions, the app requires permission to manage all files" +
+                    " in order to read from and write to synchronized folders in external storage",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
         )
@@ -382,10 +387,11 @@ private fun PermissionSlide(context: android.content.Context, isGranted: Boolean
         if (!isGranted && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Button(
                 onClick = {
-                    val intent = Intent(
-                        Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
-                        "package:${context.packageName}".toUri(),
-                    )
+                    val intent =
+                        Intent(
+                            Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                            "package:${context.packageName}".toUri(),
+                        )
                     context.startActivity(intent)
                 },
                 modifier = Modifier.testTag("wizard_grant_permission"),

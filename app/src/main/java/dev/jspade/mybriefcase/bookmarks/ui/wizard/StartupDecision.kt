@@ -28,6 +28,6 @@ object StartupDecision {
     ) {
         context
             .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .edit { putString(KEY_SYNC_DIR, path) }
+            .edit(commit = true) { putString(KEY_SYNC_DIR, path) }
     }
 }

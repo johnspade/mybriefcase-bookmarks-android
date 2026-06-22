@@ -1,9 +1,8 @@
 package dev.jspade.mybriefcase.bookmarks.ui.wizard
 
-import android.annotation.SuppressLint
-import android.content.Context
+import android.app.Application
 import android.net.Uri
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,10 +15,9 @@ data class WizardUiState(
     val isComplete: Boolean = false,
 )
 
-@SuppressLint("StaticFieldLeak") // Always receives applicationContext from NavHost
 class WizardViewModel(
-    private val context: Context,
-) : ViewModel() {
+    application: Application,
+) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(WizardUiState())
     val uiState: StateFlow<WizardUiState> = _uiState.asStateFlow()
 
@@ -40,7 +38,7 @@ class WizardViewModel(
 
     fun finish() {
         val path = _uiState.value.selectedPath ?: return
-        StartupDecision.persistSyncDir(context, path)
+        StartupDecision.persistSyncDir(getApplication(), path)
         _uiState.update { it.copy(isComplete = true) }
     }
 }

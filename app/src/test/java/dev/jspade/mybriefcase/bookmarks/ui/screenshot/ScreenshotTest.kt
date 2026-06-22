@@ -281,6 +281,7 @@ class ScreenshotTest {
                     clientId = "Pixel-7-MyBriefcaseBookmarks-a3f2",
                     appVersion = "1.0.0",
                     onBack = {},
+                    onChangeSyncDir = {},
                     onImport = {},
                     onExport = {},
                 )
@@ -299,6 +300,7 @@ class ScreenshotTest {
                     clientId = "Pixel-7-MyBriefcaseBookmarks-a3f2",
                     appVersion = "1.0.0",
                     onBack = {},
+                    onChangeSyncDir = {},
                     onImport = {},
                     onExport = {},
                 )

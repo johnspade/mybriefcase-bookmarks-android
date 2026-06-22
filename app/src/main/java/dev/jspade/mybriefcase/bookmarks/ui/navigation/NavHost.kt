@@ -4,6 +4,9 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -29,9 +32,9 @@ import dev.jspade.mybriefcase.bookmarks.ui.search.SearchViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.settings.SettingsScreen
 import dev.jspade.mybriefcase.bookmarks.ui.wizard.StartupDecision
 import dev.jspade.mybriefcase.bookmarks.ui.wizard.StartupDestination
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.SyncDirResolver
 import dev.jspade.mybriefcase.bookmarks.ui.wizard.WizardScreen
 import dev.jspade.mybriefcase.bookmarks.ui.wizard.WizardViewModel
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -56,10 +59,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     var currentScreen by remember { mutableStateOf(initialScreen) }
 
     if (currentScreen == Screen.WIZARD) {
-        val wizardViewModel =
-            remember {
-                WizardViewModel(context.applicationContext)
-            }
+        val wizardViewModel: WizardViewModel = viewModel()
         WizardScreen(
             viewModel = wizardViewModel,
             onComplete = {
@@ -95,6 +95,22 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     var showDetailSheet by remember { mutableStateOf(false) }
     var showEditFromSearch by remember { mutableStateOf(false) }
     var historyBookmarkId by remember { mutableStateOf("") }
+    var pendingSyncDirChange by remember { mutableStateOf<String?>(null) }
+
+    // SAF directory picker for changing sync dir
+    val syncDirLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocumentTree(),
+        ) { uri: Uri? ->
+            uri?.let {
+                val path = SyncDirResolver.resolveTreeUri(it)
+                if (path != null) {
+                    pendingSyncDirChange = path
+                } else {
+                    Toast.makeText(context, "Please select a folder on internal storage", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
     // SAF file picker for import
     val importLauncher =
@@ -131,7 +147,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         }
 
     when (currentScreen) {
-        Screen.WIZARD -> {} // handled above with early return
         Screen.FOLDER -> {
             FolderScreen(
                 viewModel = folderViewModel,
@@ -163,6 +178,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 clientId = MyBriefcaseApp.instance.clientId,
                 appVersion = "1.0",
                 onBack = { currentScreen = Screen.FOLDER },
+                onChangeSyncDir = { syncDirLauncher.launch(null) },
                 onImport = {
                     importLauncher.launch(arrayOf("text/html"))
                 },
@@ -173,6 +189,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 },
             )
         }
+        Screen.WIZARD -> {} // handled above with early return
         Screen.HISTORY -> {
             val historyViewModel: HistoryViewModel = viewModel()
             val historyState by historyViewModel.uiState.collectAsState()
@@ -248,6 +265,35 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     notes,
                     newFolderId,
                 )
+            },
+        )
+    }
+
+    pendingSyncDirChange?.let { newPath ->
+        AlertDialog(
+            onDismissRequest = { pendingSyncDirChange = null },
+            title = { Text("Change sync directory?") },
+            text = { Text("The app will use the new location. Existing data will not be moved.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    MyBriefcaseApp.instance.changeSyncDir(newPath)
+                    val intent =
+                        context.packageManager
+                            .getLaunchIntentForPackage(context.packageName)!!
+                            .addFlags(
+                                android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                                    android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK,
+                            )
+                    context.startActivity(intent)
+                    Runtime.getRuntime().exit(0)
+                }) {
+                    Text("Change")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingSyncDirChange = null }) {
+                    Text("Cancel")
+                }
             },
         )
     }

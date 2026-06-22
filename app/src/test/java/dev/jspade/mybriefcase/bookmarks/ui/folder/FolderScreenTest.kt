@@ -226,11 +226,12 @@ class FolderScreenTest {
 
     @Test
     fun `permission denied shows grant snackbar`() {
-        val viewModel = FolderViewModel(
-            repository = fakeRepo,
-            ioDispatcher = testDispatcher,
-            storagePermissionCheck = { false },
-        )
+        val viewModel =
+            FolderViewModel(
+                repository = fakeRepo,
+                ioDispatcher = testDispatcher,
+                storagePermissionCheck = { false },
+            )
 
         composeTestRule.setContent {
             FolderScreen(viewModel = viewModel)

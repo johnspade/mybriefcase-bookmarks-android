@@ -1,5 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks.ui.wizard
 
+import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
@@ -48,7 +49,7 @@ class WizardViewModelTest {
     @Test
     fun `initial state has no selected path and done disabled`() =
         runTest {
-            val viewModel = WizardViewModel(context)
+            val viewModel = WizardViewModel(context as Application)
 
             viewModel.uiState.test {
                 val state = awaitItem()
@@ -61,7 +62,7 @@ class WizardViewModelTest {
     @Test
     fun `selecting valid primary storage URI sets path and enables done`() =
         runTest {
-            val viewModel = WizardViewModel(context)
+            val viewModel = WizardViewModel(context as Application)
 
             val uri =
                 Uri.parse(
@@ -80,7 +81,7 @@ class WizardViewModelTest {
     @Test
     fun `selecting non-primary URI shows error`() =
         runTest {
-            val viewModel = WizardViewModel(context)
+            val viewModel = WizardViewModel(context as Application)
 
             val uri = Uri.parse("content://com.android.externalstorage.documents/tree/1234-5678%3ASome%2FPath")
             viewModel.onDirectorySelected(uri)
@@ -96,7 +97,7 @@ class WizardViewModelTest {
     @Test
     fun `finishing wizard persists path and marks complete`() =
         runTest {
-            val viewModel = WizardViewModel(context)
+            val viewModel = WizardViewModel(context as Application)
 
             val uri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ASyncthing%2Fbookmarks")
             viewModel.onDirectorySelected(uri)
@@ -118,7 +119,7 @@ class WizardViewModelTest {
     @Test
     fun `cannot finish without a selected path`() =
         runTest {
-            val viewModel = WizardViewModel(context)
+            val viewModel = WizardViewModel(context as Application)
 
             viewModel.finish()
             advanceUntilIdle()

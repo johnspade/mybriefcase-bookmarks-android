@@ -141,9 +141,10 @@ class FolderViewModel(
     fun refresh() {
         viewModelScope.launch(ioDispatcher) {
             if (!hasStoragePermission()) {
-                _uiState.value = _uiState.value.copy(
-                    error = BookmarkError.PermissionDenied("Storage permission required"),
-                )
+                _uiState.value =
+                    _uiState.value.copy(
+                        error = BookmarkError.PermissionDenied("Storage permission required"),
+                    )
                 return@launch
             }
             try {
@@ -165,9 +166,10 @@ class FolderViewModel(
                 while (isActive) {
                     delay(pollIntervalMs)
                     if (!hasStoragePermission()) {
-                        _uiState.value = _uiState.value.copy(
-                            error = BookmarkError.PermissionDenied("Storage permission required"),
-                        )
+                        _uiState.value =
+                            _uiState.value.copy(
+                                error = BookmarkError.PermissionDenied("Storage permission required"),
+                            )
                         return@launch
                     }
                     try {
