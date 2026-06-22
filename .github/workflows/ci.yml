@@ -50,7 +50,7 @@ jobs:
       - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
       - run: nix run .#gradle-lint
       - run: nix run .#gradle-test
@@ -68,7 +68,7 @@ jobs:
       - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
       - name: Cache Rust .so
         id: cache-rust-so
@@ -123,3 +123,26 @@ jobs:
       - run: npx --yes semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  screenshot-image:
+    name: Screenshot image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - uses: DeterminateSystems/magic-nix-cache-action@908b263ff629f4cc17666315b7fd3ec127c6244d # v14
+        with:
+          use-flakehub: false
+      - name: Build image
+        run: nix build .#packages.x86_64-linux.screenshot-image
+      - name: Push to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker load < result
+          docker tag roborazzi-screenshot-recorder:latest ghcr.io/johnspade/mybriefcase-bookmarks-android/roborazzi-screenshot-recorder:${{ github.sha }}
+          docker tag roborazzi-screenshot-recorder:latest ghcr.io/johnspade/mybriefcase-bookmarks-android/roborazzi-screenshot-recorder:latest
+          docker push ghcr.io/johnspade/mybriefcase-bookmarks-android/roborazzi-screenshot-recorder:${{ github.sha }}
+          docker push ghcr.io/johnspade/mybriefcase-bookmarks-android/roborazzi-screenshot-recorder:latest
