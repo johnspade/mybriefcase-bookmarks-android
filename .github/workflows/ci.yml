@@ -52,8 +52,6 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
-      - name: Build host native library for unit tests
-        run: nix develop --command cargo build --manifest-path rust/ffi/Cargo.toml --release
       - run: nix run .#gradle-lint
       - run: nix run .#gradle-test
       - run: nix run .#gradle-coverage

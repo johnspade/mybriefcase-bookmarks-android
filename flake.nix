@@ -110,6 +110,8 @@
           type = "app";
           program = toString (pkgs.writeShellScript "gradle-test" ''
             set -euo pipefail
+            export PATH="${pkgs.rustToolchain}/bin:$PATH"
+            cargo build --manifest-path rust/ffi/Cargo.toml --release
             ./gradlew testDebugUnitTest verifyRoborazziDebug
           '');
         };
@@ -152,6 +154,7 @@
 
           gradle-test = pkgs.writeShellScriptBin "gradle-test" ''
             set -euo pipefail
+            cargo build --manifest-path rust/ffi/Cargo.toml --release
             ./gradlew testDebugUnitTest verifyRoborazziDebug
           '';
 
