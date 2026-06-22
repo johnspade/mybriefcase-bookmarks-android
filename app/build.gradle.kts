@@ -118,6 +118,12 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            all {
+                it.systemProperty(
+                    "jna.library.path",
+                    rootProject.file("rust/target/release").absolutePath,
+                )
+            }
         }
     }
 }
@@ -186,6 +192,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.coil.compose)
     implementation(libs.androidx.profileinstaller)
     testImplementation(libs.konsist)
     testImplementation(libs.junit)

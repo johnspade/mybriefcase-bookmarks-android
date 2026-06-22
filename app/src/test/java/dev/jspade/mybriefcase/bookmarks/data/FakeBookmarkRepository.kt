@@ -69,6 +69,7 @@ class FakeBookmarkRepository : BookmarkRepository {
                                 id = "bm-1",
                                 title = "GitHub",
                                 url = "https://github.com",
+                                favicon = null,
                                 createdAt = "2024-01-01T00:00:00Z",
                             ),
                         ),
@@ -94,6 +95,7 @@ class FakeBookmarkRepository : BookmarkRepository {
                     url = "https://github.com",
                     title = "GitHub",
                     notes = "A code hosting platform",
+                    favicon = null,
                     createdAt = "2024-01-01T00:00:00Z",
                     updatedAt = "2024-01-01T00:00:00Z",
                 ),
@@ -177,6 +179,7 @@ class FakeBookmarkRepository : BookmarkRepository {
                 url = url,
                 title = title,
                 notes = "",
+                favicon = null,
                 createdAt = "2024-06-01T12:00:00Z",
                 updatedAt = "2024-06-01T12:00:00Z",
             )
@@ -191,6 +194,7 @@ class FakeBookmarkRepository : BookmarkRepository {
                                 id = id,
                                 title = title,
                                 url = url,
+                                favicon = null,
                                 createdAt = "2024-06-01T12:00:00Z",
                             ),
                 )

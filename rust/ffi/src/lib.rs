@@ -1,5 +1,6 @@
 uniffi::setup_scaffolding!();
 
+pub mod avatar;
 pub mod bookmarks;
 pub mod folders;
 pub mod history;
@@ -10,6 +11,7 @@ pub mod search;
 pub mod sync;
 
 // Re-export all FFI functions for integration tests
+pub use avatar::{domain_color, domain_letter};
 pub use bookmarks::{add_bookmark, delete_bookmark, update_bookmark};
 pub use folders::{create_folder, delete_folder, move_item, rename_folder};
 pub use history::{get_bookmark_history, revert_bookmark};
@@ -94,6 +96,7 @@ pub struct BookmarkDto {
     pub url: String,
     pub title: String,
     pub notes: String,
+    pub favicon: Option<String>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -112,6 +115,7 @@ pub struct BookmarkItemDto {
     pub id: String,
     pub title: String,
     pub url: String,
+    pub favicon: Option<String>,
     pub created_at: String,
 }
 

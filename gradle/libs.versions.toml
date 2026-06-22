@@ -20,6 +20,7 @@ robolectric = "4.14.1"
 kover = "0.9.8"
 benchmarkMacroJunit4 = "1.5.0-alpha06"
 profileinstaller = "1.4.1"
+coil = "3.2.0"
 roborazzi = "1.64.0"
 
 [libraries]
@@ -51,6 +52,7 @@ roborazzi-compose = { group = "io.github.takahirom.roborazzi", name = "roborazzi
 roborazzi-junit-rule = { group = "io.github.takahirom.roborazzi", name = "roborazzi-junit-rule", version.ref = "roborazzi" }
 desugar-jdk-libs = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar" }
 jna = { group = "net.java.dev.jna", name = "jna", version.ref = "jna" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 konsist = { group = "com.lemonappdev", name = "konsist", version.ref = "konsist" }
 
 [plugins]

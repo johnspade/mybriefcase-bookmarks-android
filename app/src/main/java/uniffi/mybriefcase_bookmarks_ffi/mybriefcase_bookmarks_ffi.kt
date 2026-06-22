@@ -747,6 +747,10 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -770,6 +774,10 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_delete_folder(`folderId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
+    fun uniffi_mybriefcase_bookmarks_ffi_fn_func_domain_color(`url`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
+    fun uniffi_mybriefcase_bookmarks_ffi_fn_func_domain_letter(`url`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): RustBuffer.ByValue
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_export_html(uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_get_bookmark(`bookmarkId`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
@@ -918,6 +926,10 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_delete_folder(
     ): Short
+    fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_domain_color(
+    ): Short
+    fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_domain_letter(
+    ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_export_html(
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_get_bookmark(
@@ -973,6 +985,12 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_delete_folder() != 30490.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_domain_color() != 10464.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_domain_letter() != 38954.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_export_html() != 12712.toShort()) {
@@ -1197,6 +1215,7 @@ data class BookmarkDto (
     var `url`: kotlin.String, 
     var `title`: kotlin.String, 
     var `notes`: kotlin.String, 
+    var `favicon`: kotlin.String?, 
     var `createdAt`: kotlin.String, 
     var `updatedAt`: kotlin.String
 ) {
@@ -1214,6 +1233,7 @@ public object FfiConverterTypeBookmarkDto: FfiConverterRustBuffer<BookmarkDto> {
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
         )
@@ -1224,6 +1244,7 @@ public object FfiConverterTypeBookmarkDto: FfiConverterRustBuffer<BookmarkDto> {
             FfiConverterString.allocationSize(value.`url`) +
             FfiConverterString.allocationSize(value.`title`) +
             FfiConverterString.allocationSize(value.`notes`) +
+            FfiConverterOptionalString.allocationSize(value.`favicon`) +
             FfiConverterString.allocationSize(value.`createdAt`) +
             FfiConverterString.allocationSize(value.`updatedAt`)
     )
@@ -1233,6 +1254,7 @@ public object FfiConverterTypeBookmarkDto: FfiConverterRustBuffer<BookmarkDto> {
             FfiConverterString.write(value.`url`, buf)
             FfiConverterString.write(value.`title`, buf)
             FfiConverterString.write(value.`notes`, buf)
+            FfiConverterOptionalString.write(value.`favicon`, buf)
             FfiConverterString.write(value.`createdAt`, buf)
             FfiConverterString.write(value.`updatedAt`, buf)
     }
@@ -1284,6 +1306,7 @@ data class BookmarkItemDto (
     var `id`: kotlin.String, 
     var `title`: kotlin.String, 
     var `url`: kotlin.String, 
+    var `favicon`: kotlin.String?, 
     var `createdAt`: kotlin.String
 ) {
     
@@ -1299,6 +1322,7 @@ public object FfiConverterTypeBookmarkItemDto: FfiConverterRustBuffer<BookmarkIt
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
             FfiConverterString.read(buf),
+            FfiConverterOptionalString.read(buf),
             FfiConverterString.read(buf),
         )
     }
@@ -1307,6 +1331,7 @@ public object FfiConverterTypeBookmarkItemDto: FfiConverterRustBuffer<BookmarkIt
             FfiConverterString.allocationSize(value.`id`) +
             FfiConverterString.allocationSize(value.`title`) +
             FfiConverterString.allocationSize(value.`url`) +
+            FfiConverterOptionalString.allocationSize(value.`favicon`) +
             FfiConverterString.allocationSize(value.`createdAt`)
     )
 
@@ -1314,6 +1339,7 @@ public object FfiConverterTypeBookmarkItemDto: FfiConverterRustBuffer<BookmarkIt
             FfiConverterString.write(value.`id`, buf)
             FfiConverterString.write(value.`title`, buf)
             FfiConverterString.write(value.`url`, buf)
+            FfiConverterOptionalString.write(value.`favicon`, buf)
             FfiConverterString.write(value.`createdAt`, buf)
     }
 }
@@ -1757,7 +1783,7 @@ public object FfiConverterTypeFfiError : FfiConverterRustBuffer<FfiException> {
 
 
 enum class SortOrder {
-
+    
     NAME_ASC,
     NAME_DESC,
     DATE_DESC,
@@ -2109,6 +2135,24 @@ public object FfiConverterSequenceTypeFolderNavDto: FfiConverterRustBuffer<List<
         FfiConverterString.lower(`folderId`),_status)
 }
     
+    
+ fun `domainColor`(`url`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_mybriefcase_bookmarks_ffi_fn_func_domain_color(
+        FfiConverterString.lower(`url`),_status)
+}
+    )
+    }
+    
+ fun `domainLetter`(`url`: kotlin.String): kotlin.String {
+            return FfiConverterString.lift(
+    uniffiRustCall() { _status ->
+    UniffiLib.INSTANCE.uniffi_mybriefcase_bookmarks_ffi_fn_func_domain_letter(
+        FfiConverterString.lower(`url`),_status)
+}
+    )
+    }
     
 
     @Throws(FfiException::class) fun `exportHtml`(): kotlin.String {

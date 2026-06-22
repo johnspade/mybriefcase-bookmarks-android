@@ -38,7 +38,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `addBookmark triggers re-fetch with new item`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             // Navigate to folder-1 which has one bookmark
@@ -61,7 +61,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `deleteBookmark triggers re-fetch without item`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.navigateToFolder("folder-1")
@@ -82,7 +82,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `loadBookmarkDetail sets selectedBookmark`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -102,7 +102,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `loadBookmarkDetail with invalid id sets error`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -119,7 +119,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `updateBookmark refreshes detail and folder contents`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.navigateToFolder("folder-1")
@@ -145,7 +145,7 @@ class FolderViewModelBookmarkTest {
                     bookmarksImported = 5u,
                     foldersImported = 2u,
                 )
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -165,7 +165,7 @@ class FolderViewModelBookmarkTest {
     fun `exportHtml produces non-empty string`() =
         runTest {
             fakeRepo.exportResult = "<html><body><h1>Bookmarks</h1></body></html>"
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -184,7 +184,7 @@ class FolderViewModelBookmarkTest {
     fun `importHtml error state`() =
         runTest {
             fakeRepo.shouldThrow = RuntimeException("import failed")
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             // Clear the error from init that also throws
             fakeRepo.shouldThrow = null
             advanceUntilIdle()
@@ -206,7 +206,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `exportHtml error state`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             fakeRepo.shouldThrow = RuntimeException("export failed")
@@ -225,7 +225,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `updateBookmarkAndMove calls both updateBookmark and moveItem`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.navigateToFolder("folder-1")
@@ -243,7 +243,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `updateBookmarkAndMove with null folderId does not move`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.navigateToFolder("folder-1")
@@ -259,7 +259,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `clearSelectedBookmark clears selection`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.loadBookmarkDetail("bm-1")
@@ -282,7 +282,7 @@ class FolderViewModelBookmarkTest {
                     bookmarksImported = 3u,
                     foldersImported = 1u,
                 )
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.importHtml("<html></html>")
@@ -301,7 +301,7 @@ class FolderViewModelBookmarkTest {
     fun `clearExportedHtml clears exported html`() =
         runTest {
             fakeRepo.exportResult = "<html><body></body></html>"
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             viewModel.exportHtml()
@@ -319,7 +319,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `addBookmark InvalidInput sets validationError`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             fakeRepo.addBookmarkThrow = FfiException.InvalidInput("URL must include a scheme (e.g. https://)")
@@ -336,7 +336,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `updateBookmark InvalidInput sets validationError`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             fakeRepo.updateBookmarkThrow = FfiException.InvalidInput("URL must include a scheme (e.g. https://)")
@@ -353,7 +353,7 @@ class FolderViewModelBookmarkTest {
     @Test
     fun `deleteBookmark error sets error not validationError`() =
         runTest {
-            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+            val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
             advanceUntilIdle()
 
             fakeRepo.deleteBookmarkThrow = FfiException.NotFound("bookmark not found")

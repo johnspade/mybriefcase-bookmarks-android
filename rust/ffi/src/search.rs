@@ -28,6 +28,7 @@ pub fn search_bookmarks(query: String, sort_by: SortOrder) -> Result<Vec<Bookmar
             url: h.url,
             title: h.title,
             notes: h.notes,
+            favicon: h.favicon,
             created_at: h.created_at,
             updated_at: h.updated_at,
         })

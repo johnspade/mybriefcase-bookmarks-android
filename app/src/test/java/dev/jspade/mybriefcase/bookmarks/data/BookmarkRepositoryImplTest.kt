@@ -144,6 +144,7 @@ class BookmarkRepositoryImplTest {
                     url = "http://x.com",
                     title = "X",
                     notes = "",
+                    favicon = null,
                     createdAt = "2024-01-01T00:00:00Z",
                     updatedAt = "2024-01-01T00:00:00Z",
                 )
@@ -221,6 +222,7 @@ private class RecordingFfi : BookmarkFfi {
                         id = "bm-1",
                         title = "B1",
                         url = "http://b1.com",
+                        favicon = null,
                         createdAt = "2024-01-01T00:00:00Z",
                     ),
                 ),

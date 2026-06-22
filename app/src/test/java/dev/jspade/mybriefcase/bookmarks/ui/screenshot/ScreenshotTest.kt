@@ -1,5 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks.ui.screenshot
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +26,8 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkFavicon
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.LetterAvatar
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchScreen
@@ -45,6 +48,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -72,7 +76,7 @@ class ScreenshotTest {
 
     @Test
     fun folderScreen_populated_light() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
                 FolderScreen(viewModel = viewModel)
@@ -83,7 +87,7 @@ class ScreenshotTest {
 
     @Test
     fun folderScreen_populated_dark() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
                 FolderScreen(viewModel = viewModel)
@@ -96,7 +100,7 @@ class ScreenshotTest {
 
     @Test
     fun folderScreen_empty_light() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
         viewModel.navigateToFolder("folder-2") // Personal folder (empty)
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
@@ -109,7 +113,7 @@ class ScreenshotTest {
 
     @Test
     fun folderScreen_empty_dark() {
-        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher)
+        val viewModel = FolderViewModel(repository = fakeRepo, ioDispatcher = testDispatcher, syncDirPath = null)
         viewModel.navigateToFolder("folder-2")
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
@@ -131,6 +135,7 @@ class ScreenshotTest {
                     url = "https://github.com",
                     title = "GitHub",
                     notes = "",
+                    favicon = null,
                     createdAt = "2024-01-01T00:00:00Z",
                     updatedAt = "2024-01-01T00:00:00Z",
                 ),
@@ -139,6 +144,7 @@ class ScreenshotTest {
                     url = "https://example.com",
                     title = "Example Site",
                     notes = "A sample bookmark",
+                    favicon = null,
                     createdAt = "2024-02-15T10:00:00Z",
                     updatedAt = "2024-02-15T10:00:00Z",
                 ),
@@ -163,6 +169,7 @@ class ScreenshotTest {
                     url = "https://github.com",
                     title = "GitHub",
                     notes = "",
+                    favicon = null,
                     createdAt = "2024-01-01T00:00:00Z",
                     updatedAt = "2024-01-01T00:00:00Z",
                 ),
@@ -171,6 +178,7 @@ class ScreenshotTest {
                     url = "https://example.com",
                     title = "Example Site",
                     notes = "A sample bookmark",
+                    favicon = null,
                     createdAt = "2024-02-15T10:00:00Z",
                     updatedAt = "2024-02-15T10:00:00Z",
                 ),
@@ -196,6 +204,7 @@ class ScreenshotTest {
                 url = "https://github.com",
                 title = "GitHub",
                 notes = "A code hosting platform",
+                favicon = null,
                 createdAt = "2024-01-15T10:30:00Z",
                 updatedAt = "2024-02-20T14:45:00Z",
             )
@@ -218,6 +227,7 @@ class ScreenshotTest {
                 url = "https://github.com",
                 title = "GitHub",
                 notes = "A code hosting platform",
+                favicon = null,
                 createdAt = "2024-01-15T10:30:00Z",
                 updatedAt = "2024-02-20T14:45:00Z",
             )
@@ -296,6 +306,96 @@ class ScreenshotTest {
         }
         composeTestRule.waitForIdle()
         composeTestRule.onRoot().captureRoboImage("src/test/snapshots/settings_dark.png")
+    }
+
+    // --- BookmarkFavicon: letter avatar ---
+
+    @Test
+    fun bookmarkFavicon_letterAvatar_light() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                Surface {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        LetterAvatar(url = "https://github.com")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LetterAvatar(url = "https://example.org")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LetterAvatar(url = "https://stackoverflow.com")
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/letter_avatar_light.png")
+    }
+
+    @Test
+    fun bookmarkFavicon_letterAvatar_dark() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
+                Surface {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        LetterAvatar(url = "https://github.com")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LetterAvatar(url = "https://example.org")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LetterAvatar(url = "https://stackoverflow.com")
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/letter_avatar_dark.png")
+    }
+
+    @Test
+    fun bookmarkFavicon_fallbackWhenNoFavicon() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                Surface {
+                    BookmarkFavicon(
+                        url = "https://github.com",
+                        favicon = null,
+                        syncRoot = null,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/favicon_fallback.png")
+    }
+
+    @Test
+    fun bookmarkFavicon_withFaviconImage() {
+        val tempDir = File(System.getProperty("java.io.tmpdir"), "screenshot_test_favicons")
+        val faviconsDir = File(tempDir, "favicons")
+        faviconsDir.mkdirs()
+        val faviconFile = File(faviconsDir, "abc123.png")
+        try {
+            val bmp = Bitmap.createBitmap(32, 32, Bitmap.Config.ARGB_8888)
+            bmp.eraseColor(android.graphics.Color.RED)
+            faviconFile.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+
+            composeTestRule.setContent {
+                MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                    Surface {
+                        BookmarkFavicon(
+                            url = "https://github.com",
+                            favicon = "abc123.png",
+                            syncRoot = tempDir.absolutePath,
+                            modifier = Modifier.padding(16.dp),
+                        )
+                    }
+                }
+            }
+            composeTestRule.waitForIdle()
+            composeTestRule.onRoot().captureRoboImage("src/test/snapshots/favicon_image.png")
+        } finally {
+            faviconFile.delete()
+            faviconsDir.delete()
+            tempDir.delete()
+        }
     }
 }
 

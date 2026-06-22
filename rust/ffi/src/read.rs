@@ -40,6 +40,7 @@ pub fn get_folder_children(
                 id: child_id.clone(),
                 title: bm.title.clone(),
                 url: bm.url.clone(),
+                favicon: bm.favicon.clone(),
                 created_at: bm.created_at.clone(),
             });
         }
@@ -106,6 +107,7 @@ pub fn get_bookmark(bookmark_id: String) -> Result<Option<BookmarkDto>, FfiError
                 url: bm.url.clone(),
                 title: bm.title.clone(),
                 notes: bm.notes.clone(),
+                favicon: bm.favicon.clone(),
                 created_at: bm.created_at.clone(),
                 updated_at: bm.updated_at.clone(),
             })
@@ -208,12 +210,14 @@ mod tests {
                 id: "1".into(),
                 title: "Zebra".into(),
                 url: "https://z.com".into(),
+                favicon: None,
                 created_at: "2024-01-01T00:00:00Z".into(),
             },
             BookmarkItemDto {
                 id: "2".into(),
                 title: "Apple".into(),
                 url: "https://a.com".into(),
+                favicon: None,
                 created_at: "2024-01-02T00:00:00Z".into(),
             },
         ];
@@ -229,12 +233,14 @@ mod tests {
                 id: "1".into(),
                 title: "Old".into(),
                 url: "https://old.com".into(),
+                favicon: None,
                 created_at: "2024-01-01T00:00:00Z".into(),
             },
             BookmarkItemDto {
                 id: "2".into(),
                 title: "New".into(),
                 url: "https://new.com".into(),
+                favicon: None,
                 created_at: "2024-06-01T00:00:00Z".into(),
             },
         ];

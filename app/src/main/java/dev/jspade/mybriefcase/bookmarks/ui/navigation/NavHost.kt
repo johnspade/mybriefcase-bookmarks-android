@@ -118,6 +118,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             val searchViewModel: SearchViewModel = viewModel()
             SearchScreen(
                 viewModel = searchViewModel,
+                syncRoot = uiState.syncRoot,
                 onBookmarkClick = { bookmarkId ->
                     folderViewModel.loadBookmarkDetail(bookmarkId)
                     showDetailSheet = true
