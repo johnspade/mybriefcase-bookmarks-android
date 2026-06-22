@@ -53,12 +53,7 @@ class FolderViewModel(
     private val _uiState =
         MutableStateFlow(
             FolderUiState(
-                syncRoot =
-                    syncDirPath ?: try {
-                        MyBriefcaseApp.instance.syncDir
-                    } catch (_: Exception) {
-                        null
-                    },
+                syncRoot = syncDirPath ?: runCatching { MyBriefcaseApp.instance.syncDir }.getOrNull(),
             ),
         )
     val uiState: StateFlow<FolderUiState> = _uiState.asStateFlow()
