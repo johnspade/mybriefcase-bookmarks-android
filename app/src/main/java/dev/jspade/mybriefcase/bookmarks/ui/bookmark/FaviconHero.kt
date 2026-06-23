@@ -29,6 +29,7 @@ fun FaviconHero(
     onFetch: () -> Unit,
     modifier: Modifier = Modifier,
     onDelete: (() -> Unit)? = null,
+    fetchEnabled: Boolean = true,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -78,6 +79,7 @@ fun FaviconHero(
         ) {
             TextButton(
                 onClick = onFetch,
+                enabled = fetchEnabled && fetchState !is FaviconFetchState.Loading,
                 modifier = Modifier.testTag("favicon_fetch_button"),
             ) {
                 Text(

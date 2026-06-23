@@ -185,13 +185,13 @@ class BookmarkUiTest {
             EditBookmarkDialog(
                 bookmark = bookmark,
                 onDismiss = {},
-                onConfirm = { _, _, _, _ -> },
+                onConfirm = { _, _, _, _, _ -> },
             )
         }
 
         composeTestRule.onNodeWithText("https://prefilled.com").assertIsDisplayed()
         composeTestRule.onNodeWithText("Prefilled Title").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Prefilled notes").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Prefilled notes").performScrollTo().assertIsDisplayed()
     }
 
     @Test
@@ -291,7 +291,7 @@ class BookmarkUiTest {
                 navTree = navTree,
                 currentFolderId = "folder-1",
                 onDismiss = {},
-                onConfirm = { _, _, _, _ -> },
+                onConfirm = { _, _, _, _, _ -> },
             )
         }
 
@@ -335,7 +335,7 @@ class BookmarkUiTest {
                 navTree = navTree,
                 currentFolderId = "folder-1",
                 onDismiss = {},
-                onConfirm = { _, _, _, folderId -> confirmedFolderId = folderId },
+                onConfirm = { _, _, _, folderId, _ -> confirmedFolderId = folderId },
             )
         }
 
@@ -393,7 +393,7 @@ class BookmarkUiTest {
                 navTree = navTree,
                 currentFolderId = "folder-1",
                 onDismiss = {},
-                onConfirm = { _, _, _, folderId -> confirmedFolderId = folderId },
+                onConfirm = { _, _, _, folderId, _ -> confirmedFolderId = folderId },
             )
         }
 

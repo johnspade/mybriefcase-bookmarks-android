@@ -373,7 +373,8 @@ class FolderViewModel(
                         selectedBookmark = repository.getBookmark(bookmarkId),
                         faviconFetchState = FaviconFetchState.Idle,
                     )
-                refreshAfterMutation()
+                // Don't use refreshAfterMutation() — it bumps mutationVersion which dismisses dialogs
+                loadFolderContents(_uiState.value.currentFolderId)
             } catch (e: Exception) {
                 handleMutationError(e)
             }

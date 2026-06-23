@@ -559,7 +559,7 @@ class FolderDialogsTest {
                         updatedAt = "2024-01-01T00:00:00Z",
                     ),
                 onDismiss = {},
-                onConfirm = { _, _, _, _ -> },
+                onConfirm = { _, _, _, _, _ -> },
                 validationError = "URL must include a scheme (e.g. https://)",
             )
         }

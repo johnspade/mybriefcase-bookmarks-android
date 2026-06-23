@@ -24,6 +24,7 @@ import dev.jspade.mybriefcase.bookmarks.BuildConfig
 import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconAction
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.history.HistoryScreen
@@ -271,8 +272,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 showEditFromSearch = false
                 folderViewModel.clearSelectedBookmark()
             },
-            onConfirm = { url, title, notes, newFolderId ->
+            onConfirm = { url, title, notes, newFolderId, faviconAction ->
                 showEditFromSearch = false
+                when (faviconAction) {
+                    is FaviconAction.Set ->
+                        folderViewModel.saveFavicon(uiState.selectedBookmark!!.id, faviconAction.filename)
+                    is FaviconAction.Delete ->
+                        folderViewModel.deleteFavicon(uiState.selectedBookmark!!.id)
+                    FaviconAction.Keep -> {}
+                }
                 folderViewModel.updateBookmarkAndMove(
                     uiState.selectedBookmark!!.id,
                     url,
@@ -281,6 +289,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     newFolderId,
                 )
             },
+            faviconFetchEnabled = MyBriefcaseApp.instance.faviconSettings.fetchEnabled,
+            faviconFetchState = uiState.faviconFetchState,
+            onFetchFavicon = { url -> folderViewModel.fetchFavicon(url) },
+            syncRoot = uiState.syncRoot,
         )
     }
 

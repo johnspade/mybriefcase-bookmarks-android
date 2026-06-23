@@ -79,7 +79,7 @@ import androidx.core.net.toUri
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkFavicon
-import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconFetchState
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconAction
 import dev.jspade.mybriefcase.bookmarks.ui.search.displayName
 import kotlinx.coroutines.launch
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
@@ -441,10 +441,13 @@ fun FolderScreen(
                 viewModel.clearValidationError()
                 viewModel.clearFaviconFetchState()
             },
-            onConfirm = { url, title, notes, newFolderId ->
-                val faviconState = uiState.faviconFetchState
-                if (faviconState is FaviconFetchState.Success) {
-                    viewModel.saveFavicon(uiState.selectedBookmark!!.id, faviconState.filename)
+            onConfirm = { url, title, notes, newFolderId, faviconAction ->
+                when (faviconAction) {
+                    is FaviconAction.Set ->
+                        viewModel.saveFavicon(uiState.selectedBookmark!!.id, faviconAction.filename)
+                    is FaviconAction.Delete ->
+                        viewModel.deleteFavicon(uiState.selectedBookmark!!.id)
+                    FaviconAction.Keep -> {}
                 }
                 viewModel.updateBookmarkAndMove(
                     uiState.selectedBookmark!!.id,
@@ -459,7 +462,6 @@ fun FolderScreen(
             faviconFetchEnabled = faviconFetchEnabled,
             faviconFetchState = uiState.faviconFetchState,
             onFetchFavicon = { url -> viewModel.fetchFavicon(url) },
-            onDeleteFavicon = { viewModel.deleteFavicon(uiState.selectedBookmark!!.id) },
             syncRoot = uiState.syncRoot,
         )
     }

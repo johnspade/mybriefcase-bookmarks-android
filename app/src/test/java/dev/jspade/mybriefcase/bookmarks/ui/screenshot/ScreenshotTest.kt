@@ -308,11 +308,10 @@ class ScreenshotTest {
                 EditBookmarkDialog(
                     bookmark = bookmark,
                     onDismiss = {},
-                    onConfirm = { _, _, _, _ -> },
+                    onConfirm = { _, _, _, _, _ -> },
                     faviconFetchEnabled = true,
                     faviconFetchState = FaviconFetchState.Idle,
                     onFetchFavicon = {},
-                    onDeleteFavicon = {},
                 )
             }
         }
@@ -337,11 +336,10 @@ class ScreenshotTest {
                 EditBookmarkDialog(
                     bookmark = bookmark,
                     onDismiss = {},
-                    onConfirm = { _, _, _, _ -> },
+                    onConfirm = { _, _, _, _, _ -> },
                     faviconFetchEnabled = true,
                     faviconFetchState = FaviconFetchState.Idle,
                     onFetchFavicon = {},
-                    onDeleteFavicon = {},
                 )
             }
         }

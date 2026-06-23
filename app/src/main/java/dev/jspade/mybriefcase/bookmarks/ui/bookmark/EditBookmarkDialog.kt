@@ -36,13 +36,12 @@ fun EditBookmarkDialog(
     navTree: FolderNavTreeDto? = null,
     currentFolderId: String? = null,
     onDismiss: () -> Unit,
-    onConfirm: (url: String, title: String, notes: String, newFolderId: String?) -> Unit,
+    onConfirm: (url: String, title: String, notes: String, newFolderId: String?, faviconAction: FaviconAction) -> Unit,
     validationError: String? = null,
     onValidationErrorClear: () -> Unit = {},
     faviconFetchEnabled: Boolean = false,
     faviconFetchState: FaviconFetchState = FaviconFetchState.Idle,
     onFetchFavicon: (String) -> Unit = {},
-    onDeleteFavicon: (() -> Unit)? = null,
     syncRoot: String? = null,
 ) {
     var url by remember { mutableStateOf(bookmark.url) }
@@ -51,6 +50,7 @@ fun EditBookmarkDialog(
     var urlError by remember { mutableStateOf(false) }
     var selectedFolderId by remember { mutableStateOf(currentFolderId) }
     var folderPickerExpanded by remember { mutableStateOf(false) }
+    var faviconDeleted by remember { mutableStateOf(false) }
 
     val showError = urlError || validationError != null
     val errorText = validationError ?: if (urlError) "URL is required" else null
@@ -73,20 +73,23 @@ fun EditBookmarkDialog(
         title = { Text("Edit Bookmark") },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                if (faviconFetchEnabled) {
-                    FaviconHero(
-                        url = url,
-                        favicon =
-                            when (faviconFetchState) {
-                                is FaviconFetchState.Success -> faviconFetchState.filename
-                                else -> bookmark.favicon
-                            },
-                        syncRoot = syncRoot,
-                        fetchState = faviconFetchState,
-                        onFetch = { onFetchFavicon(url) },
-                        onDelete = onDeleteFavicon,
-                    )
-                }
+                FaviconHero(
+                    url = url,
+                    favicon =
+                        when {
+                            faviconFetchState is FaviconFetchState.Success -> faviconFetchState.filename
+                            faviconDeleted -> null
+                            else -> bookmark.favicon
+                        },
+                    syncRoot = syncRoot,
+                    fetchState = faviconFetchState,
+                    onFetch = {
+                        faviconDeleted = false
+                        onFetchFavicon(url)
+                    },
+                    onDelete = { faviconDeleted = true },
+                    fetchEnabled = faviconFetchEnabled,
+                )
                 OutlinedTextField(
                     value = url,
                     onValueChange = {
@@ -176,7 +179,14 @@ fun EditBookmarkDialog(
                             } else {
                                 null
                             }
-                        onConfirm(url.trim(), title.trim(), notes.trim(), newFolderId)
+                        val faviconAction =
+                            when {
+                                faviconFetchState is FaviconFetchState.Success ->
+                                    FaviconAction.Set(faviconFetchState.filename)
+                                faviconDeleted -> FaviconAction.Delete
+                                else -> FaviconAction.Keep
+                            }
+                        onConfirm(url.trim(), title.trim(), notes.trim(), newFolderId, faviconAction)
                     }
                 },
                 modifier = Modifier.testTag("edit_bookmark_confirm"),

@@ -13,3 +13,13 @@ sealed class FaviconFetchState {
         val message: String,
     ) : FaviconFetchState()
 }
+
+sealed class FaviconAction {
+    data object Keep : FaviconAction()
+
+    data class Set(
+        val filename: String,
+    ) : FaviconAction()
+
+    data object Delete : FaviconAction()
+}
