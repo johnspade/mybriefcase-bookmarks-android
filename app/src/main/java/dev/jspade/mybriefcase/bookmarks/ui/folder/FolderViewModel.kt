@@ -368,13 +368,12 @@ class FolderViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 repository.setFavicon(bookmarkId, null)
-                val updated = repository.getBookmark(bookmarkId)
                 _uiState.value =
                     _uiState.value.copy(
-                        selectedBookmark = updated,
+                        selectedBookmark = repository.getBookmark(bookmarkId),
                         faviconFetchState = FaviconFetchState.Idle,
                     )
-                loadFolderContents(_uiState.value.currentFolderId)
+                refreshAfterMutation()
             } catch (e: Exception) {
                 handleMutationError(e)
             }
