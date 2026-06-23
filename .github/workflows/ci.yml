@@ -38,8 +38,8 @@ jobs:
           use-flakehub: false
       - run: nix run .#miri
 
-  android-checks:
-    name: Android checks
+  android-lint:
+    name: Android lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -52,9 +52,52 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
-      - run: nix run .#gradle-lint
+      - name: Cache Rust .so (Android targets)
+        id: cache-rust-android
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: app/src/main/jniLibs
+          key: rust-so-android-${{ hashFiles('rust/**', 'rust-toolchain.toml') }}
+      - name: Build Rust .so (Android targets)
+        if: steps.cache-rust-android.outputs.cache-hit != 'true'
+        run: |
+          nix develop --command bash -c '
+            cd rust
+            cargo ndk -t arm64-v8a -t x86_64 -o ../app/src/main/jniLibs build --release
+          '
+      - run: nix run .#gradle-lint -- -PskipRustBuild=true
+
+  android-test:
+    name: Android test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - uses: DeterminateSystems/magic-nix-cache-action@908b263ff629f4cc17666315b7fd3ec127c6244d # v14
+        with:
+          use-flakehub: false
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
       - run: nix run .#gradle-test
       - run: nix run .#gradle-coverage
+
+  android-screenshots:
+    name: Android screenshots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: DeterminateSystems/nix-installer-action@ef8a148080ab6020fd15196c2084a2eea5ff2d25 # v22
+      - uses: DeterminateSystems/magic-nix-cache-action@908b263ff629f4cc17666315b7fd3ec127c6244d # v14
+        with:
+          use-flakehub: false
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
       - run: nix run .#verify-screenshots
 
   instrumented-tests:
@@ -109,7 +152,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [nix-checks, miri, android-checks, instrumented-tests]
+    needs: [nix-checks, miri, android-lint, android-test, android-screenshots, instrumented-tests]
     permissions:
       contents: write
       issues: write

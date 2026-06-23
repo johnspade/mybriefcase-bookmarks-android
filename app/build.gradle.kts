@@ -46,7 +46,9 @@ val cargoNdkAvailable =
         .map { it.exitValue == 0 }
         .get()
 
-if (cargoNdkAvailable) {
+val skipRustBuild = providers.gradleProperty("skipRustBuild").map { it.toBoolean() }.getOrElse(false)
+
+if (cargoNdkAvailable && !skipRustBuild) {
     val buildRustNativeLibs by tasks.registering(Exec::class) {
         description = "Build Rust FFI native libraries with cargo-ndk"
 
