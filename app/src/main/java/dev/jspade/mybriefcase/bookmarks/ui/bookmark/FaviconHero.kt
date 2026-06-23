@@ -39,7 +39,7 @@ fun FaviconHero(
             contentAlignment = Alignment.Center,
             modifier =
                 Modifier
-                    .size(72.dp)
+                    .size(48.dp)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
@@ -48,9 +48,9 @@ fun FaviconHero(
                     CircularProgressIndicator(
                         modifier =
                             Modifier
-                                .size(32.dp)
+                                .size(24.dp)
                                 .testTag("favicon_fetch_loading"),
-                        strokeWidth = 3.dp,
+                        strokeWidth = 2.dp,
                     )
                 }
 
@@ -59,7 +59,7 @@ fun FaviconHero(
                         url = url,
                         favicon = favicon,
                         syncRoot = syncRoot,
-                        size = 48.dp,
+                        size = 32.dp,
                         modifier = Modifier.testTag("favicon_hero_image"),
                     )
                 }
