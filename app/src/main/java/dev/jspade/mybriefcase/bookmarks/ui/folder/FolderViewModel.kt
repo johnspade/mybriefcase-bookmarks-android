@@ -7,6 +7,9 @@ import androidx.lifecycle.viewModelScope
 import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
+import dev.jspade.mybriefcase.bookmarks.data.FaviconFetcher
+import dev.jspade.mybriefcase.bookmarks.data.FetchResult
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconFetchState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -43,6 +46,7 @@ data class FolderUiState(
     val exportedHtml: String? = null,
     val showSyncBanner: Boolean = false,
     val expandedFolderIds: Set<String> = emptySet(),
+    val faviconFetchState: FaviconFetchState = FaviconFetchState.Idle,
 )
 
 @Suppress("TooManyFunctions")
@@ -52,6 +56,8 @@ class FolderViewModel(
     private val pollIntervalMs: Long = 10_000L,
     private val syncDirPath: String? = MyBriefcaseApp.instance.syncDir,
     private val storagePermissionCheck: () -> Boolean = ::checkStoragePermission,
+    private val faviconFetcher: FaviconFetcher? = null,
+    private val faviconFetcherFactory: (() -> FaviconFetcher?)? = ::defaultFaviconFetcher,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FolderUiState(syncRoot = syncDirPath))
     val uiState: StateFlow<FolderUiState> = _uiState.asStateFlow()
@@ -195,9 +201,13 @@ class FolderViewModel(
         title: String,
     ) {
         val folderId = _uiState.value.currentFolderId
+        val faviconState = _uiState.value.faviconFetchState
         viewModelScope.launch(ioDispatcher) {
             try {
-                repository.addBookmark(folderId, url, title)
+                val bookmarkId = repository.addBookmark(folderId, url, title)
+                if (faviconState is FaviconFetchState.Success) {
+                    repository.setFavicon(bookmarkId, faviconState.filename)
+                }
                 refreshAfterMutation()
             } catch (e: Exception) {
                 handleMutationError(e)
@@ -315,6 +325,45 @@ class FolderViewModel(
         _uiState.value = _uiState.value.copy(showSyncBanner = false)
     }
 
+    private var fetchFaviconJob: Job? = null
+
+    fun fetchFavicon(url: String) {
+        val fetcher = faviconFetcher ?: faviconFetcherFactory?.invoke() ?: return
+        val syncRoot = syncDirPath ?: return
+        _uiState.value = _uiState.value.copy(faviconFetchState = FaviconFetchState.Loading)
+        fetchFaviconJob?.cancel()
+        fetchFaviconJob =
+            viewModelScope.launch(ioDispatcher) {
+                val result = fetcher.fetch(url, syncRoot)
+                val newState =
+                    when (result) {
+                        is FetchResult.Success -> FaviconFetchState.Success(result.filename)
+                        is FetchResult.Failed -> FaviconFetchState.Error(result.reason)
+                    }
+                _uiState.value = _uiState.value.copy(faviconFetchState = newState)
+            }
+    }
+
+    fun clearFaviconFetchState() {
+        fetchFaviconJob?.cancel()
+        fetchFaviconJob = null
+        _uiState.value = _uiState.value.copy(faviconFetchState = FaviconFetchState.Idle)
+    }
+
+    fun saveFavicon(
+        bookmarkId: String,
+        filename: String,
+    ) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.setFavicon(bookmarkId, filename)
+                refreshAfterMutation()
+            } catch (e: Exception) {
+                handleMutationError(e)
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
@@ -391,3 +440,10 @@ class FolderViewModel(
 
 private fun checkStoragePermission(): Boolean =
     Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
+
+private fun defaultFaviconFetcher(): FaviconFetcher? =
+    try {
+        MyBriefcaseApp.instance.createFaviconFetcher()
+    } catch (_: UninitializedPropertyAccessException) {
+        null
+    }

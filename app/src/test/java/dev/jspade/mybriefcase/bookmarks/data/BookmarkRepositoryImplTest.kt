@@ -260,6 +260,13 @@ private class RecordingFfi : BookmarkFfi {
         shouldThrow?.let { throw it }
     }
 
+    override fun setFavicon(
+        bookmarkId: String,
+        favicon: String?,
+    ) {
+        shouldThrow?.let { throw it }
+    }
+
     override fun deleteBookmark(bookmarkId: String) {
         shouldThrow?.let { throw it }
     }

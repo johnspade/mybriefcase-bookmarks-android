@@ -35,6 +35,17 @@ pub fn update_bookmark(
 }
 
 #[uniffi::export]
+pub fn set_favicon(bookmark_id: String, favicon: Option<String>) -> Result<(), FfiError> {
+    let state = repo()?;
+    ops::update_favicon(&state.doc_handle, &bookmark_id, favicon.as_deref())?;
+    refresh_cache(state);
+    state
+        .exporter
+        .export(&state.doc_handle, std::time::SystemTime::now())?;
+    Ok(())
+}
+
+#[uniffi::export]
 pub fn delete_bookmark(bookmark_id: String) -> Result<(), FfiError> {
     let state = repo()?;
     ops::delete_bookmark(&state.doc_handle, &bookmark_id)?;

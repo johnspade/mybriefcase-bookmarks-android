@@ -42,6 +42,11 @@ interface BookmarkFfi {
         notes: String?,
     )
 
+    fun setFavicon(
+        bookmarkId: String,
+        favicon: String?,
+    )
+
     fun deleteBookmark(bookmarkId: String)
 
     fun createFolder(
@@ -115,6 +120,11 @@ class DefaultBookmarkFfi : BookmarkFfi {
         title: String?,
         notes: String?,
     ) = uniffi.mybriefcase_bookmarks_ffi.updateBookmark(bookmarkId, url, title, notes)
+
+    override fun setFavicon(
+        bookmarkId: String,
+        favicon: String?,
+    ) = uniffi.mybriefcase_bookmarks_ffi.setFavicon(bookmarkId, favicon)
 
     override fun deleteBookmark(bookmarkId: String) = uniffi.mybriefcase_bookmarks_ffi.deleteBookmark(bookmarkId)
 
@@ -200,6 +210,11 @@ class BookmarkRepositoryImpl(
         title: String?,
         notes: String?,
     ) = withContext(ioDispatcher) { ffi.updateBookmark(bookmarkId, url, title, notes) }
+
+    override suspend fun setFavicon(
+        bookmarkId: String,
+        favicon: String?,
+    ) = withContext(ioDispatcher) { ffi.setFavicon(bookmarkId, favicon) }
 
     override suspend fun deleteBookmark(bookmarkId: String) =
         withContext(ioDispatcher) { ffi.deleteBookmark(bookmarkId) }

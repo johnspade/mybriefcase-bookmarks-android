@@ -221,6 +221,18 @@ class FakeBookmarkRepository : BookmarkRepository {
             )
     }
 
+    var setFaviconCalls = mutableListOf<Pair<String, String?>>()
+
+    override suspend fun setFavicon(
+        bookmarkId: String,
+        favicon: String?,
+    ) {
+        shouldThrow?.let { throw it }
+        setFaviconCalls.add(bookmarkId to favicon)
+        val existing = bookmarks[bookmarkId] ?: return
+        bookmarks[bookmarkId] = existing.copy(favicon = favicon)
+    }
+
     override suspend fun deleteBookmark(bookmarkId: String) {
         deleteBookmarkThrow?.let { throw it }
         shouldThrow?.let { throw it }

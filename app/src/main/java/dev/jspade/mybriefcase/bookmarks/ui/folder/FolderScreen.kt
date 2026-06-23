@@ -96,6 +96,7 @@ fun FolderScreen(
     onSettingsClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onHistoryClick: ((bookmarkId: String) -> Unit)? = null,
+    faviconFetchEnabled: Boolean = true,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -416,10 +417,15 @@ fun FolderScreen(
             onDismiss = {
                 showAddBookmarkDialog = false
                 viewModel.clearValidationError()
+                viewModel.clearFaviconFetchState()
             },
             onConfirm = { url, title -> viewModel.addBookmark(url, title) },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
+            faviconFetchEnabled = faviconFetchEnabled,
+            faviconFetchState = uiState.faviconFetchState,
+            onFetchFavicon = { url -> viewModel.fetchFavicon(url) },
+            syncRoot = uiState.syncRoot,
         )
     }
 
@@ -432,8 +438,13 @@ fun FolderScreen(
                 showEditDialog = false
                 viewModel.clearSelectedBookmark()
                 viewModel.clearValidationError()
+                viewModel.clearFaviconFetchState()
             },
             onConfirm = { url, title, notes, newFolderId ->
+                val faviconState = uiState.faviconFetchState
+                if (faviconState is dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconFetchState.Success) {
+                    viewModel.saveFavicon(uiState.selectedBookmark!!.id, faviconState.filename)
+                }
                 viewModel.updateBookmarkAndMove(
                     uiState.selectedBookmark!!.id,
                     url,
@@ -444,6 +455,10 @@ fun FolderScreen(
             },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
+            faviconFetchEnabled = faviconFetchEnabled,
+            faviconFetchState = uiState.faviconFetchState,
+            onFetchFavicon = { url -> viewModel.fetchFavicon(url) },
+            syncRoot = uiState.syncRoot,
         )
     }
 

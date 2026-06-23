@@ -39,6 +39,10 @@ fun EditBookmarkDialog(
     onConfirm: (url: String, title: String, notes: String, newFolderId: String?) -> Unit,
     validationError: String? = null,
     onValidationErrorClear: () -> Unit = {},
+    faviconFetchEnabled: Boolean = false,
+    faviconFetchState: FaviconFetchState = FaviconFetchState.Idle,
+    onFetchFavicon: (String) -> Unit = {},
+    syncRoot: String? = null,
 ) {
     var url by remember { mutableStateOf(bookmark.url) }
     var title by remember { mutableStateOf(bookmark.title) }
@@ -106,6 +110,14 @@ fun EditBookmarkDialog(
                             .fillMaxWidth()
                             .testTag("edit_bookmark_notes"),
                 )
+                if (faviconFetchEnabled) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    FaviconFetchButton(
+                        fetchState = faviconFetchState,
+                        onFetch = { onFetchFavicon(url) },
+                        syncRoot = syncRoot,
+                    )
+                }
                 if (navTree != null && currentFolderId != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     ExposedDropdownMenuBox(
