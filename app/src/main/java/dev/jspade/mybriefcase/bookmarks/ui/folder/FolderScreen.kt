@@ -188,25 +188,21 @@ fun FolderScreen(
 
     // Folder CRUD Dialogs
     if (showCreateFolderDialog) {
+        LaunchedEffect(Unit) { viewModel.clearValidationError() }
         CreateFolderDialog(
             onConfirm = { title -> viewModel.createFolder(title) },
-            onDismiss = {
-                showCreateFolderDialog = false
-                viewModel.clearValidationError()
-            },
+            onDismiss = { showCreateFolderDialog = false },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
         )
     }
 
     renameFolderTarget?.let { folder ->
+        LaunchedEffect(Unit) { viewModel.clearValidationError() }
         RenameFolderDialog(
             currentTitle = folder.title,
             onConfirm = { newTitle -> viewModel.renameFolder(folder.id, newTitle) },
-            onDismiss = {
-                renameFolderTarget = null
-                viewModel.clearValidationError()
-            },
+            onDismiss = { renameFolderTarget = null },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
         )
@@ -414,12 +410,12 @@ fun FolderScreen(
     }
 
     if (showAddBookmarkDialog) {
+        LaunchedEffect(Unit) {
+            viewModel.clearValidationError()
+            viewModel.clearFaviconFetchState()
+        }
         dev.jspade.mybriefcase.bookmarks.ui.bookmark.AddBookmarkDialog(
-            onDismiss = {
-                showAddBookmarkDialog = false
-                viewModel.clearValidationError()
-                viewModel.clearFaviconFetchState()
-            },
+            onDismiss = { showAddBookmarkDialog = false },
             onConfirm = { url, title -> viewModel.addBookmark(url, title) },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
@@ -431,6 +427,10 @@ fun FolderScreen(
     }
 
     if (showEditDialog && uiState.selectedBookmark != null) {
+        LaunchedEffect(Unit) {
+            viewModel.clearValidationError()
+            viewModel.clearFaviconFetchState()
+        }
         dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog(
             bookmark = uiState.selectedBookmark!!,
             navTree = uiState.navTree,
@@ -438,8 +438,6 @@ fun FolderScreen(
             onDismiss = {
                 showEditDialog = false
                 viewModel.clearSelectedBookmark()
-                viewModel.clearValidationError()
-                viewModel.clearFaviconFetchState()
             },
             onConfirm = { url, title, notes, newFolderId, faviconAction ->
                 when (faviconAction) {
