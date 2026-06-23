@@ -55,6 +55,7 @@ jobs:
       - run: nix run .#gradle-lint
       - run: nix run .#gradle-test
       - run: nix run .#gradle-coverage
+      - run: nix run .#verify-screenshots
 
   instrumented-tests:
     name: Instrumented tests

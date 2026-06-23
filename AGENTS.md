@@ -19,7 +19,7 @@ Two validation tiers:
 | Command | What it runs |
 |---------|-------------|
 | `validate` | `nix flake check` + `gradle-lint` + `gradle-test` (fast, pre-commit) |
-| `validate-all` | `validate` + `miri` (full CI equivalent) |
+| `validate-all` | `validate` + `verify-screenshots` + `miri` (full CI equivalent) |
 
 Individual steps:
 
@@ -27,7 +27,9 @@ Individual steps:
 |---------|-------------|
 | `nix flake check` | Rust fmt, clippy, test, deny, audit, doc |
 | `gradle-lint` | Android Lint |
-| `gradle-test` | Android unit tests + Roborazzi screenshot verify |
+| `gradle-test` | Android unit tests |
+| `nix run .#verify-screenshots` | Verify golden PNGs via Docker (linux/amd64) |
+| `nix run .#record-screenshots` | Re-record golden PNGs via Docker (linux/amd64) |
 | `miri` | Miri (nightly toolchain) |
 
 Never force-push to `main`. If a commit needs fixing, create a new commit instead of amending.
@@ -64,10 +66,12 @@ Golden-file screenshot regression tests live in `app/src/test/java/.../ui/screen
 
 | Command | Purpose |
 |---------|---------|
-| `./gradlew recordRoborazziDebug` | Record new golden PNGs to `app/src/test/snapshots/` |
-| `./gradlew verifyRoborazziDebug` | Verify current UI matches golden PNGs (fails on diff) |
+| `nix run .#record-screenshots` | Record golden PNGs via Docker (matches CI rendering) |
+| `nix run .#verify-screenshots` | Verify current UI matches golden PNGs (fails on diff) |
 
-When adding or changing UI components, re-record goldens and commit the updated PNGs.
+When adding or changing UI components, re-record goldens with `nix run .#record-screenshots` and commit the updated PNGs.
+
+**Important:** Goldens must be recorded in a Linux x86_64 environment to match CI. The `record-screenshots` command handles this automatically via Docker (`--platform linux/amd64`). On macOS it uses Rosetta for x86_64 emulation — requires Docker (e.g. Colima with `--vm-type vz --vz-rosetta`). Do NOT use `./gradlew recordRoborazziDebug` directly on macOS — the resulting PNGs will have subtle font rendering differences that fail CI verification.
 
 ## Native Rust Libraries
 
