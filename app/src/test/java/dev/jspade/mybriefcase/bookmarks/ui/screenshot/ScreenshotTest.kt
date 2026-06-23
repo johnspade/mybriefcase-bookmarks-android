@@ -1,40 +1,27 @@
 package dev.jspade.mybriefcase.bookmarks.ui.screenshot
 
 import android.graphics.Bitmap
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.OpenInBrowser
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
+import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.AddBookmarkDialog
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheet
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkFavicon
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconFetchState
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.LetterAvatar
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
@@ -62,7 +49,7 @@ import org.robolectric.annotation.GraphicsMode
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import java.io.File
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalRoborazziApi::class)
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [34], application = dev.jspade.mybriefcase.bookmarks.TestApp::class)
@@ -206,7 +193,7 @@ class ScreenshotTest {
         composeTestRule.onRoot().captureRoboImage("src/test/snapshots/search_results_dark.png")
     }
 
-    // --- Bookmark detail content ---
+    // --- Bookmark detail sheet ---
 
     @Test
     fun bookmarkDetailSheet_light() {
@@ -222,13 +209,19 @@ class ScreenshotTest {
             )
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
-                Surface {
-                    BookmarkDetailContent(bookmark)
-                }
+                BookmarkDetailSheet(
+                    bookmark = bookmark,
+                    onDismiss = {},
+                    onEdit = {},
+                    onHistory = {},
+                    onOpenInBrowser = {},
+                    onShare = {},
+                    onCopyUrl = {},
+                )
             }
         }
         composeTestRule.waitForIdle()
-        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/bookmark_detail_light.png")
+        captureScreenRoboImage("src/test/snapshots/bookmark_detail_light.png")
     }
 
     @Test
@@ -245,41 +238,115 @@ class ScreenshotTest {
             )
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
-                Surface {
-                    BookmarkDetailContent(bookmark)
-                }
+                BookmarkDetailSheet(
+                    bookmark = bookmark,
+                    onDismiss = {},
+                    onEdit = {},
+                    onHistory = {},
+                    onOpenInBrowser = {},
+                    onShare = {},
+                    onCopyUrl = {},
+                )
             }
         }
         composeTestRule.waitForIdle()
-        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/bookmark_detail_dark.png")
+        captureScreenRoboImage("src/test/snapshots/bookmark_detail_dark.png")
     }
 
-    // --- Add bookmark dialog content ---
+    // --- Add bookmark dialog ---
 
     @Test
     fun addBookmarkDialog_light() {
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
-                Surface {
-                    AddBookmarkDialogContent()
-                }
+                AddBookmarkDialog(
+                    onDismiss = {},
+                    onConfirm = { _, _ -> },
+                    faviconFetchEnabled = true,
+                    faviconFetchState = FaviconFetchState.Idle,
+                    onFetchFavicon = {},
+                )
             }
         }
         composeTestRule.waitForIdle()
-        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/add_bookmark_dialog_light.png")
+        captureScreenRoboImage("src/test/snapshots/add_bookmark_dialog_light.png")
     }
 
     @Test
     fun addBookmarkDialog_dark() {
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
-                Surface {
-                    AddBookmarkDialogContent()
-                }
+                AddBookmarkDialog(
+                    onDismiss = {},
+                    onConfirm = { _, _ -> },
+                    faviconFetchEnabled = true,
+                    faviconFetchState = FaviconFetchState.Idle,
+                    onFetchFavicon = {},
+                )
             }
         }
         composeTestRule.waitForIdle()
-        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/add_bookmark_dialog_dark.png")
+        captureScreenRoboImage("src/test/snapshots/add_bookmark_dialog_dark.png")
+    }
+
+    // --- Edit bookmark dialog ---
+
+    @Test
+    fun editBookmarkDialog_light() {
+        val bookmark =
+            BookmarkDto(
+                id = "bm-1",
+                url = "https://github.com",
+                title = "GitHub",
+                notes = "A code hosting platform",
+                favicon = null,
+                createdAt = "2024-01-15T10:30:00Z",
+                updatedAt = "2024-02-20T14:45:00Z",
+            )
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                EditBookmarkDialog(
+                    bookmark = bookmark,
+                    onDismiss = {},
+                    onConfirm = { _, _, _, _ -> },
+                    faviconFetchEnabled = true,
+                    faviconFetchState = FaviconFetchState.Idle,
+                    onFetchFavicon = {},
+                    onDeleteFavicon = {},
+                )
+            }
+        }
+        composeTestRule.waitForIdle()
+        captureScreenRoboImage("src/test/snapshots/edit_bookmark_dialog_light.png")
+    }
+
+    @Test
+    fun editBookmarkDialog_dark() {
+        val bookmark =
+            BookmarkDto(
+                id = "bm-1",
+                url = "https://github.com",
+                title = "GitHub",
+                notes = "A code hosting platform",
+                favicon = null,
+                createdAt = "2024-01-15T10:30:00Z",
+                updatedAt = "2024-02-20T14:45:00Z",
+            )
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
+                EditBookmarkDialog(
+                    bookmark = bookmark,
+                    onDismiss = {},
+                    onConfirm = { _, _, _, _ -> },
+                    faviconFetchEnabled = true,
+                    faviconFetchState = FaviconFetchState.Idle,
+                    onFetchFavicon = {},
+                    onDeleteFavicon = {},
+                )
+            }
+        }
+        composeTestRule.waitForIdle()
+        captureScreenRoboImage("src/test/snapshots/edit_bookmark_dialog_dark.png")
     }
 
     // --- Settings screen ---
@@ -538,107 +605,5 @@ class ScreenshotTest {
         }
         composeTestRule.waitForIdle()
         composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_permission_dark.png")
-    }
-}
-
-@Composable
-private fun BookmarkDetailContent(bookmark: BookmarkDto) {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier =
-                    Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-            ) {
-                BookmarkFavicon(
-                    url = bookmark.url,
-                    favicon = bookmark.favicon,
-                    syncRoot = null,
-                    size = 32.dp,
-                )
-            }
-            Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
-                Text(
-                    text = bookmark.title,
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                Text(
-                    text = bookmark.url,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-        }
-        if (bookmark.notes.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = bookmark.notes,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-        Spacer(modifier = Modifier.height(12.dp))
-        Text(
-            text = "Created: ${bookmark.createdAt}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = "Updated: ${bookmark.updatedAt}",
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.OpenInBrowser, contentDescription = "Open in browser")
-            }
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.Share, contentDescription = "Share")
-            }
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.ContentCopy, contentDescription = "Copy URL")
-            }
-            IconButton(onClick = {}) {
-                Icon(Icons.Default.Edit, contentDescription = "Edit")
-            }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-}
-
-@Composable
-private fun AddBookmarkDialogContent() {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("Add Bookmark", style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(16.dp))
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            label = { Text("URL") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            label = { Text("Title (optional)") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 }
