@@ -1,3 +1,11 @@
+---
+name: validate-local
+description: Run local CI validation with Nix (fast or full)
+metadata:
+  requires:
+    bins: ["nix"]
+---
+
 # validate-local
 
 Run local CI validation. Use when the user types `/validate-local`.
