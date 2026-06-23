@@ -16,6 +16,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -31,6 +32,7 @@ fun SettingsScreen(
     clientId: String,
     appVersion: String,
     onBack: () -> Unit,
+    onChangeSyncDir: () -> Unit,
     onImport: () -> Unit,
     onExport: () -> Unit,
 ) {
@@ -71,6 +73,13 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.testTag("settings_sync_dir"),
             )
+            Spacer(modifier = Modifier.height(8.dp))
+            OutlinedButton(
+                onClick = onChangeSyncDir,
+                modifier = Modifier.testTag("settings_change_sync_dir"),
+            ) {
+                Text("Change")
+            }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Client ID",

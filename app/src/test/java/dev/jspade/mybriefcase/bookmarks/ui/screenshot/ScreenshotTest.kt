@@ -2,9 +2,11 @@ package dev.jspade.mybriefcase.bookmarks.ui.screenshot
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
@@ -34,6 +37,10 @@ import dev.jspade.mybriefcase.bookmarks.ui.search.SearchScreen
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.settings.SettingsScreen
 import dev.jspade.mybriefcase.bookmarks.ui.theme.MyBriefcaseBookmarksTheme
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.DirectorySlide
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.PermissionSlide
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.SyncthingSlide
+import dev.jspade.mybriefcase.bookmarks.ui.wizard.WelcomeSlide
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -281,6 +288,7 @@ class ScreenshotTest {
                     clientId = "Pixel-7-MyBriefcaseBookmarks-a3f2",
                     appVersion = "1.0.0",
                     onBack = {},
+                    onChangeSyncDir = {},
                     onImport = {},
                     onExport = {},
                 )
@@ -299,6 +307,7 @@ class ScreenshotTest {
                     clientId = "Pixel-7-MyBriefcaseBookmarks-a3f2",
                     appVersion = "1.0.0",
                     onBack = {},
+                    onChangeSyncDir = {},
                     onImport = {},
                     onExport = {},
                 )
@@ -396,6 +405,134 @@ class ScreenshotTest {
             faviconsDir.delete()
             tempDir.delete()
         }
+    }
+
+    // --- Wizard: Welcome slide ---
+
+    @Test
+    fun wizard_welcome_light() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                Surface { Box(modifier = Modifier.fillMaxSize()) { WelcomeSlide() } }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_welcome_light.png")
+    }
+
+    @Test
+    fun wizard_welcome_dark() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
+                Surface { Box(modifier = Modifier.fillMaxSize()) { WelcomeSlide() } }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_welcome_dark.png")
+    }
+
+    // --- Wizard: Syncthing slide ---
+
+    @Test
+    fun wizard_syncthing_light() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                Surface {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        SyncthingSlide(LocalContext.current)
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_syncthing_light.png")
+    }
+
+    @Test
+    fun wizard_syncthing_dark() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
+                Surface {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        SyncthingSlide(LocalContext.current)
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_syncthing_dark.png")
+    }
+
+    // --- Wizard: Directory slide ---
+
+    @Test
+    fun wizard_directory_light() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                Surface {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        DirectorySlide(
+                            selectedPath = "/storage/emulated/0/Syncthing/bookmarks",
+                            error = null,
+                            onChooseDirectory = {},
+                        )
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_directory_light.png")
+    }
+
+    @Test
+    fun wizard_directory_dark() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
+                Surface {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        DirectorySlide(
+                            selectedPath = "/storage/emulated/0/Syncthing/bookmarks",
+                            error = null,
+                            onChooseDirectory = {},
+                        )
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_directory_dark.png")
+    }
+
+    // --- Wizard: Permission slide ---
+
+    @Test
+    fun wizard_permission_light() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                Surface {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        PermissionSlide(LocalContext.current, isGranted = false)
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_permission_light.png")
+    }
+
+    @Test
+    fun wizard_permission_dark() {
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
+                Surface {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        PermissionSlide(LocalContext.current, isGranted = false)
+                    }
+                }
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_permission_dark.png")
     }
 }
 

@@ -88,7 +88,7 @@ android {
         versionCode = computeVersionCode()
         versionName = computeVersionName()
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "dev.jspade.mybriefcase.bookmarks.TestRunner"
     }
 
     buildTypes {

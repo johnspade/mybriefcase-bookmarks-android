@@ -1,5 +1,7 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
+import android.os.Build
+import android.os.Environment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
@@ -49,6 +51,7 @@ class FolderViewModel(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val pollIntervalMs: Long = 10_000L,
     private val syncDirPath: String? = MyBriefcaseApp.instance.syncDir,
+    private val storagePermissionCheck: () -> Boolean = ::checkStoragePermission,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FolderUiState(syncRoot = syncDirPath))
     val uiState: StateFlow<FolderUiState> = _uiState.asStateFlow()
@@ -137,6 +140,13 @@ class FolderViewModel(
 
     fun refresh() {
         viewModelScope.launch(ioDispatcher) {
+            if (!hasStoragePermission()) {
+                _uiState.value =
+                    _uiState.value.copy(
+                        error = BookmarkError.PermissionDenied("Storage permission required"),
+                    )
+                return@launch
+            }
             try {
                 val changed = repository.triggerFullMerge()
                 if (changed) {
@@ -155,6 +165,13 @@ class FolderViewModel(
             viewModelScope.launch(ioDispatcher) {
                 while (isActive) {
                     delay(pollIntervalMs)
+                    if (!hasStoragePermission()) {
+                        _uiState.value =
+                            _uiState.value.copy(
+                                error = BookmarkError.PermissionDenied("Storage permission required"),
+                            )
+                        return@launch
+                    }
                     try {
                         val changed = repository.triggerFullMerge()
                         if (changed) {
@@ -350,6 +367,8 @@ class FolderViewModel(
         }
     }
 
+    private fun hasStoragePermission(): Boolean = storagePermissionCheck()
+
     private fun loadFolderContents(folderId: String) {
         viewModelScope.launch(ioDispatcher) {
             try {
@@ -369,3 +388,6 @@ class FolderViewModel(
         }
     }
 }
+
+private fun checkStoragePermission(): Boolean =
+    Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()

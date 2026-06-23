@@ -1,5 +1,8 @@
 package dev.jspade.mybriefcase.bookmarks.ui.folder
 
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -68,9 +71,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkFavicon
@@ -93,6 +98,7 @@ fun FolderScreen(
     onHistoryClick: ((bookmarkId: String) -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -103,6 +109,25 @@ fun FolderScreen(
         when (error) {
             is BookmarkError.NotFound -> {
                 viewModel.navigateUp()
+                viewModel.clearError()
+            }
+            is BookmarkError.PermissionDenied -> {
+                val result =
+                    snackbarHostState.showSnackbar(
+                        message = "Storage permission required. Grant access to sync bookmarks.",
+                        actionLabel = "Grant",
+                        duration = SnackbarDuration.Long,
+                    )
+                if (result == SnackbarResult.ActionPerformed &&
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                ) {
+                    val intent =
+                        Intent(
+                            Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                            "package:${context.packageName}".toUri(),
+                        )
+                    context.startActivity(intent)
+                }
                 viewModel.clearError()
             }
             is BookmarkError.IoError -> {

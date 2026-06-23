@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import org.junit.Rule
 import org.junit.Test
@@ -25,6 +26,7 @@ class SettingsScreenTest {
                 clientId = "test-client-id",
                 appVersion = "1.0",
                 onBack = {},
+                onChangeSyncDir = {},
                 onImport = {},
                 onExport = {},
             )
@@ -47,6 +49,7 @@ class SettingsScreenTest {
                 clientId = "test-client",
                 appVersion = "1.0",
                 onBack = {},
+                onChangeSyncDir = {},
                 onImport = {},
                 onExport = {},
             )
@@ -64,6 +67,7 @@ class SettingsScreenTest {
                 clientId = "my-device-client",
                 appVersion = "2.0",
                 onBack = {},
+                onChangeSyncDir = {},
                 onImport = {},
                 onExport = {},
             )
@@ -83,11 +87,32 @@ class SettingsScreenTest {
                 clientId = clientId,
                 appVersion = "1.0",
                 onBack = {},
+                onChangeSyncDir = {},
                 onImport = {},
                 onExport = {},
             )
         }
 
         composeTestRule.onNodeWithText(clientId).assertIsDisplayed()
+    }
+
+    @Test
+    fun `change sync dir button calls callback`() {
+        var called = false
+        composeTestRule.setContent {
+            SettingsScreen(
+                syncDir = "/test/path",
+                clientId = "test-client",
+                appVersion = "1.0",
+                onBack = {},
+                onChangeSyncDir = { called = true },
+                onImport = {},
+                onExport = {},
+            )
+        }
+
+        composeTestRule.onNodeWithTag("settings_change_sync_dir").performClick()
+
+        assert(called) { "Expected onChangeSyncDir to be called" }
     }
 }
