@@ -1,6 +1,7 @@
 package dev.jspade.mybriefcase.bookmarks.ui.screenshot
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
@@ -22,7 +25,9 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -544,16 +549,37 @@ private fun BookmarkDetailContent(bookmark: BookmarkDto) {
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
     ) {
-        Text(
-            text = bookmark.title,
-            style = MaterialTheme.typography.titleLarge,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = bookmark.url,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.primary,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier =
+                    Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                BookmarkFavicon(
+                    url = bookmark.url,
+                    favicon = bookmark.favicon,
+                    syncRoot = null,
+                    size = 32.dp,
+                )
+            }
+            Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+                Text(
+                    text = bookmark.title,
+                    style = MaterialTheme.typography.titleLarge,
+                )
+                Text(
+                    text = bookmark.url,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
         if (bookmark.notes.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(

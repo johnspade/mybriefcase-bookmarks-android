@@ -5,13 +5,17 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Edit
@@ -26,7 +30,9 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -47,6 +53,7 @@ fun BookmarkDetailSheet(
     onOpenInBrowser: (String) -> Unit,
     onShare: (String) -> Unit,
     onCopyUrl: (String) -> Unit,
+    syncRoot: String? = null,
 ) {
     val sheetState = rememberModalBottomSheetState()
 
@@ -61,18 +68,40 @@ fun BookmarkDetailSheet(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
-            Text(
-                text = bookmark.title,
-                style = MaterialTheme.typography.titleLarge,
-                modifier = Modifier.testTag("detail_title"),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = bookmark.url,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.testTag("detail_url"),
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier =
+                        Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                ) {
+                    BookmarkFavicon(
+                        url = bookmark.url,
+                        favicon = bookmark.favicon,
+                        syncRoot = syncRoot,
+                        size = 32.dp,
+                        modifier = Modifier.testTag("detail_favicon"),
+                    )
+                }
+                Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+                    Text(
+                        text = bookmark.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.testTag("detail_title"),
+                    )
+                    Text(
+                        text = bookmark.url,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.testTag("detail_url"),
+                    )
+                }
+            }
             if (bookmark.notes.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -155,6 +184,7 @@ fun BookmarkDetailSheetWithActions(
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
     onHistory: () -> Unit,
+    syncRoot: String? = null,
 ) {
     val context = LocalContext.current
     BookmarkDetailSheet(
@@ -162,6 +192,7 @@ fun BookmarkDetailSheetWithActions(
         onDismiss = onDismiss,
         onEdit = onEdit,
         onHistory = onHistory,
+        syncRoot = syncRoot,
         onOpenInBrowser = { url ->
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
             context.startActivity(intent)

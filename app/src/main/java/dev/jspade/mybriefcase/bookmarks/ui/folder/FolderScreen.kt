@@ -458,6 +458,7 @@ fun FolderScreen(
             faviconFetchEnabled = faviconFetchEnabled,
             faviconFetchState = uiState.faviconFetchState,
             onFetchFavicon = { url -> viewModel.fetchFavicon(url) },
+            onDeleteFavicon = { viewModel.deleteFavicon(uiState.selectedBookmark!!.id) },
             syncRoot = uiState.syncRoot,
         )
     }
@@ -487,6 +488,7 @@ fun FolderScreen(
                 showDetailSheet = false
                 onHistoryClick?.invoke(uiState.selectedBookmark!!.id)
             },
+            syncRoot = uiState.syncRoot,
         )
     }
 }

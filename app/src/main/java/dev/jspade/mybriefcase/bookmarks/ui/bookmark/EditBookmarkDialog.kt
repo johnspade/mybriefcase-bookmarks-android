@@ -42,6 +42,7 @@ fun EditBookmarkDialog(
     faviconFetchEnabled: Boolean = false,
     faviconFetchState: FaviconFetchState = FaviconFetchState.Idle,
     onFetchFavicon: (String) -> Unit = {},
+    onDeleteFavicon: (() -> Unit)? = null,
     syncRoot: String? = null,
 ) {
     var url by remember { mutableStateOf(bookmark.url) }
@@ -72,6 +73,20 @@ fun EditBookmarkDialog(
         title = { Text("Edit Bookmark") },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                if (faviconFetchEnabled) {
+                    FaviconHero(
+                        url = url,
+                        favicon =
+                            when (faviconFetchState) {
+                                is FaviconFetchState.Success -> faviconFetchState.filename
+                                else -> bookmark.favicon
+                            },
+                        syncRoot = syncRoot,
+                        fetchState = faviconFetchState,
+                        onFetch = { onFetchFavicon(url) },
+                        onDelete = onDeleteFavicon,
+                    )
+                }
                 OutlinedTextField(
                     value = url,
                     onValueChange = {
@@ -110,14 +125,6 @@ fun EditBookmarkDialog(
                             .fillMaxWidth()
                             .testTag("edit_bookmark_notes"),
                 )
-                if (faviconFetchEnabled) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    FaviconFetchButton(
-                        fetchState = faviconFetchState,
-                        onFetch = { onFetchFavicon(url) },
-                        syncRoot = syncRoot,
-                    )
-                }
                 if (navTree != null && currentFolderId != null) {
                     Spacer(modifier = Modifier.height(8.dp))
                     ExposedDropdownMenuBox(

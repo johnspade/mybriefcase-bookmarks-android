@@ -6,6 +6,7 @@ import dev.jspade.mybriefcase.bookmarks.data.FaviconFetcher
 import dev.jspade.mybriefcase.bookmarks.data.FetchResult
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconFetchState
 import kotlinx.coroutines.Dispatchers
+import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -123,6 +124,43 @@ class FolderViewModelFaviconTest {
 
             assertEquals(1, fakeRepo.setFaviconCalls.size)
             assertEquals("bm-1" to "abc123.png", fakeRepo.setFaviconCalls[0])
+        }
+
+    @Test
+    fun `deleteFavicon clears favicon and preserves selectedBookmark`() =
+        runTest {
+            val bookmark =
+                BookmarkDto(
+                    id = "bm-1",
+                    url = "https://example.com",
+                    title = "Example",
+                    notes = "",
+                    favicon = "icon.png",
+                    createdAt = "2024-06-01T12:00:00Z",
+                    updatedAt = "2024-06-01T12:00:00Z",
+                )
+            fakeRepo.bookmarks["bm-1"] = bookmark
+
+            val viewModel =
+                FolderViewModel(
+                    repository = fakeRepo,
+                    ioDispatcher = testDispatcher,
+                    syncDirPath = "/sync",
+                    faviconFetcher = fakeFetcher,
+                )
+            advanceUntilIdle()
+
+            viewModel.loadBookmarkDetail("bm-1")
+            advanceUntilIdle()
+            assertEquals("icon.png", viewModel.uiState.value.selectedBookmark?.favicon)
+
+            viewModel.deleteFavicon("bm-1")
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertEquals(FaviconFetchState.Idle, state.faviconFetchState)
+            assertEquals("bm-1", state.selectedBookmark?.id)
+            assertEquals(null, state.selectedBookmark?.favicon)
         }
 }
 

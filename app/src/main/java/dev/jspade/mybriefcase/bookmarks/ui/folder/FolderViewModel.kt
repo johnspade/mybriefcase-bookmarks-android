@@ -364,6 +364,23 @@ class FolderViewModel(
         }
     }
 
+    fun deleteFavicon(bookmarkId: String) {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                repository.setFavicon(bookmarkId, null)
+                val updated = repository.getBookmark(bookmarkId)
+                _uiState.value =
+                    _uiState.value.copy(
+                        selectedBookmark = updated,
+                        faviconFetchState = FaviconFetchState.Idle,
+                    )
+                loadFolderContents(_uiState.value.currentFolderId)
+            } catch (e: Exception) {
+                handleMutationError(e)
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }

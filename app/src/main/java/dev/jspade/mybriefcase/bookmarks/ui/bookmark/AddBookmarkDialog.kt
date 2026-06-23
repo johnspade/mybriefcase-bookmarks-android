@@ -40,6 +40,19 @@ fun AddBookmarkDialog(
         title = { Text("Add Bookmark") },
         text = {
             Column {
+                if (faviconFetchEnabled) {
+                    FaviconHero(
+                        url = url,
+                        favicon =
+                            when (faviconFetchState) {
+                                is FaviconFetchState.Success -> faviconFetchState.filename
+                                else -> null
+                            },
+                        syncRoot = syncRoot,
+                        fetchState = faviconFetchState,
+                        onFetch = { onFetchFavicon(url) },
+                    )
+                }
                 OutlinedTextField(
                     value = url,
                     onValueChange = {
@@ -67,14 +80,6 @@ fun AddBookmarkDialog(
                             .fillMaxWidth()
                             .testTag("add_bookmark_title"),
                 )
-                if (faviconFetchEnabled) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    FaviconFetchButton(
-                        fetchState = faviconFetchState,
-                        onFetch = { onFetchFavicon(url) },
-                        syncRoot = syncRoot,
-                    )
-                }
             }
         },
         confirmButton = {
