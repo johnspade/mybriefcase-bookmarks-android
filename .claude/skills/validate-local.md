@@ -1,9 +1,6 @@
 ---
 name: validate-local
 description: Run local CI validation with Nix (fast or full)
-metadata:
-  requires:
-    bins: ["nix"]
 ---
 
 # validate-local
