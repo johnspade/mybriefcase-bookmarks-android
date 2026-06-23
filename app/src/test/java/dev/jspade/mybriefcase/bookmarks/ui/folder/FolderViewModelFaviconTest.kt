@@ -6,7 +6,6 @@ import dev.jspade.mybriefcase.bookmarks.data.FaviconFetcher
 import dev.jspade.mybriefcase.bookmarks.data.FetchResult
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconFetchState
 import kotlinx.coroutines.Dispatchers
-import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -18,6 +17,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import uniffi.mybriefcase_bookmarks_ffi.BookmarkDto
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class FolderViewModelFaviconTest {
@@ -152,7 +152,11 @@ class FolderViewModelFaviconTest {
 
             viewModel.loadBookmarkDetail("bm-1")
             advanceUntilIdle()
-            assertEquals("icon.png", viewModel.uiState.value.selectedBookmark?.favicon)
+            assertEquals(
+                "icon.png",
+                viewModel.uiState.value.selectedBookmark
+                    ?.favicon,
+            )
 
             viewModel.deleteFavicon("bm-1")
             advanceUntilIdle()
