@@ -17,6 +17,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import dev.jspade.mybriefcase.bookmarks.BuildConfig
 import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog
@@ -131,7 +132,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             SettingsScreen(
                 syncDir = MyBriefcaseApp.instance.syncDir,
                 clientId = MyBriefcaseApp.instance.clientId,
-                appVersion = "1.0",
+                appVersion = BuildConfig.VERSION_NAME,
                 onBack = { currentScreen = Screen.FOLDER },
                 onImport = {
                     importLauncher.launch(arrayOf("text/html"))
