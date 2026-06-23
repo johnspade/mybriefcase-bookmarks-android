@@ -176,6 +176,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         }
         Screen.SETTINGS -> {
             val faviconSettings = MyBriefcaseApp.instance.faviconSettings
+            var fetchEnabled by remember { mutableStateOf(faviconSettings.fetchEnabled) }
+            var useDuckDuckGo by remember { mutableStateOf(faviconSettings.useDuckDuckGo) }
             SettingsScreen(
                 syncDir = MyBriefcaseApp.instance.syncDir,
                 clientId = MyBriefcaseApp.instance.clientId,
@@ -190,10 +192,16 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     val suggestedName = "bookmarks_${LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)}.html"
                     exportLauncher.launch(suggestedName)
                 },
-                faviconFetchEnabled = faviconSettings.fetchEnabled,
-                useDuckDuckGo = faviconSettings.useDuckDuckGo,
-                onFaviconFetchEnabledChange = { faviconSettings.setFetchEnabled(it) },
-                onUseDuckDuckGoChange = { faviconSettings.setUseDuckDuckGo(it) },
+                faviconFetchEnabled = fetchEnabled,
+                useDuckDuckGo = useDuckDuckGo,
+                onFaviconFetchEnabledChange = {
+                    fetchEnabled = it
+                    faviconSettings.setFetchEnabled(it)
+                },
+                onUseDuckDuckGoChange = {
+                    useDuckDuckGo = it
+                    faviconSettings.setUseDuckDuckGo(it)
+                },
             )
         }
         Screen.WIZARD -> {} // handled above with early return
