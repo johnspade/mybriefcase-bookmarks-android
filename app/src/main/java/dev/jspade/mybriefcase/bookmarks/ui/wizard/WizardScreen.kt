@@ -203,7 +203,7 @@ fun WizardScreen(
 }
 
 @Composable
-private fun WelcomeSlide() {
+internal fun WelcomeSlide() {
     Column(
         modifier =
             Modifier
@@ -235,7 +235,7 @@ private fun WelcomeSlide() {
 }
 
 @Composable
-private fun SyncthingSlide(context: android.content.Context) {
+internal fun SyncthingSlide(context: android.content.Context) {
     val isInstalled =
         try {
             context.packageManager.getPackageInfo(SYNCTHING_PACKAGE, 0)
@@ -295,7 +295,7 @@ private fun SyncthingSlide(context: android.content.Context) {
 }
 
 @Composable
-private fun DirectorySlide(
+internal fun DirectorySlide(
     selectedPath: String?,
     error: String?,
     onChooseDirectory: () -> Unit,
@@ -356,7 +356,7 @@ private fun DirectorySlide(
 }
 
 @Composable
-private fun PermissionSlide(
+internal fun PermissionSlide(
     context: android.content.Context,
     isGranted: Boolean,
 ) {
@@ -378,8 +378,10 @@ private fun PermissionSlide(
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text =
-                "Due to Android restrictions, the app requires permission to manage all files" +
-                    " in order to read from and write to synchronized folders in external storage",
+                "The app's native sync engine needs direct file-system access to your Syncthing" +
+                    " folder. Android's scoped storage doesn't support this, so the broad" +
+                    " \"All files\" permission is required — but the app only reads and writes" +
+                    " within your chosen sync directory.",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
         )
