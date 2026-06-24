@@ -8,6 +8,7 @@ import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
 import dev.jspade.mybriefcase.bookmarks.data.FaviconFetcher
+import dev.jspade.mybriefcase.bookmarks.data.FaviconFetcherImpl
 import dev.jspade.mybriefcase.bookmarks.data.FetchResult
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconFetchState
 import kotlinx.coroutines.CoroutineDispatcher
@@ -57,7 +58,7 @@ class FolderViewModel(
     private val syncDirPath: String? = MyBriefcaseApp.instance.syncDir,
     private val storagePermissionCheck: () -> Boolean = ::checkStoragePermission,
     private val faviconFetcher: FaviconFetcher? = null,
-    private val faviconFetcherFactory: (() -> FaviconFetcher?)? = ::defaultFaviconFetcher,
+    private val faviconFetcherFactory: (() -> FaviconFetcher)? = ::defaultFaviconFetcher,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(FolderUiState(syncRoot = syncDirPath))
     val uiState: StateFlow<FolderUiState> = _uiState.asStateFlow()
@@ -458,9 +459,4 @@ class FolderViewModel(
 private fun checkStoragePermission(): Boolean =
     Build.VERSION.SDK_INT < Build.VERSION_CODES.R || Environment.isExternalStorageManager()
 
-private fun defaultFaviconFetcher(): FaviconFetcher? =
-    try {
-        MyBriefcaseApp.instance.createFaviconFetcher()
-    } catch (_: UninitializedPropertyAccessException) {
-        null
-    }
+private fun defaultFaviconFetcher(): FaviconFetcher = FaviconFetcherImpl()

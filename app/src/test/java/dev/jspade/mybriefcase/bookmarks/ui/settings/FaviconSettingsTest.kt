@@ -20,7 +20,7 @@ class FaviconSettingsTest {
     val composeTestRule = createComposeRule()
 
     @Test
-    fun `master toggle shown and reflects state`() {
+    fun `favicon toggle shown and reflects state`() {
         composeTestRule.setContent {
             SettingsScreen(
                 syncDir = "/test",
@@ -31,9 +31,7 @@ class FaviconSettingsTest {
                 onImport = {},
                 onExport = {},
                 faviconFetchEnabled = true,
-                useDuckDuckGo = true,
                 onFaviconFetchEnabledChange = {},
-                onUseDuckDuckGoChange = {},
             )
         }
 
@@ -45,55 +43,7 @@ class FaviconSettingsTest {
     }
 
     @Test
-    fun `DuckDuckGo sub-toggle visible when master is on`() {
-        composeTestRule.setContent {
-            SettingsScreen(
-                syncDir = "/test",
-                clientId = "test",
-                appVersion = "1.0",
-                onBack = {},
-                onChangeSyncDir = {},
-                onImport = {},
-                onExport = {},
-                faviconFetchEnabled = true,
-                useDuckDuckGo = true,
-                onFaviconFetchEnabledChange = {},
-                onUseDuckDuckGoChange = {},
-            )
-        }
-
-        composeTestRule
-            .onNodeWithTag("settings_duckduckgo_toggle")
-            .performScrollTo()
-            .assertIsDisplayed()
-            .assertIsOn()
-    }
-
-    @Test
-    fun `DuckDuckGo sub-toggle hidden when master is off`() {
-        composeTestRule.setContent {
-            SettingsScreen(
-                syncDir = "/test",
-                clientId = "test",
-                appVersion = "1.0",
-                onBack = {},
-                onChangeSyncDir = {},
-                onImport = {},
-                onExport = {},
-                faviconFetchEnabled = false,
-                useDuckDuckGo = true,
-                onFaviconFetchEnabledChange = {},
-                onUseDuckDuckGoChange = {},
-            )
-        }
-
-        composeTestRule
-            .onNodeWithTag("settings_duckduckgo_toggle")
-            .assertDoesNotExist()
-    }
-
-    @Test
-    fun `master toggle calls callback with new value`() {
+    fun `favicon toggle calls callback with new value`() {
         val calls = mutableListOf<Boolean>()
         composeTestRule.setContent {
             SettingsScreen(
@@ -105,9 +55,7 @@ class FaviconSettingsTest {
                 onImport = {},
                 onExport = {},
                 faviconFetchEnabled = true,
-                useDuckDuckGo = true,
                 onFaviconFetchEnabledChange = { calls.add(it) },
-                onUseDuckDuckGoChange = {},
             )
         }
 

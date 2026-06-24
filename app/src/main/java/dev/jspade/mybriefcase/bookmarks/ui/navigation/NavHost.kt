@@ -179,7 +179,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         Screen.SETTINGS -> {
             val faviconSettings = MyBriefcaseApp.instance.faviconSettings
             var fetchEnabled by remember { mutableStateOf(faviconSettings.fetchEnabled) }
-            var useDuckDuckGo by remember { mutableStateOf(faviconSettings.useDuckDuckGo) }
             SettingsScreen(
                 syncDir = MyBriefcaseApp.instance.syncDir,
                 clientId = MyBriefcaseApp.instance.clientId,
@@ -195,14 +194,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     exportLauncher.launch(suggestedName)
                 },
                 faviconFetchEnabled = fetchEnabled,
-                useDuckDuckGo = useDuckDuckGo,
                 onFaviconFetchEnabledChange = {
                     fetchEnabled = it
                     faviconSettings.setFetchEnabled(it)
-                },
-                onUseDuckDuckGoChange = {
-                    useDuckDuckGo = it
-                    faviconSettings.setUseDuckDuckGo(it)
                 },
             )
         }

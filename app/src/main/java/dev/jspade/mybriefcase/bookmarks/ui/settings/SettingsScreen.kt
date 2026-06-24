@@ -39,9 +39,7 @@ fun SettingsScreen(
     onImport: () -> Unit,
     onExport: () -> Unit,
     faviconFetchEnabled: Boolean = true,
-    useDuckDuckGo: Boolean = true,
     onFaviconFetchEnabledChange: (Boolean) -> Unit = {},
-    onUseDuckDuckGoChange: (Boolean) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -146,7 +144,7 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "Fetch favicons",
+                    text = "Use DuckDuckGo service to fetch favicons",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f),
                 )
@@ -155,27 +153,6 @@ fun SettingsScreen(
                     onCheckedChange = onFaviconFetchEnabledChange,
                     modifier = Modifier.testTag("settings_favicon_toggle"),
                 )
-            }
-            if (faviconFetchEnabled) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Use DuckDuckGo service",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Switch(
-                        checked = useDuckDuckGo,
-                        onCheckedChange = onUseDuckDuckGoChange,
-                        modifier = Modifier.testTag("settings_duckduckgo_toggle"),
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
