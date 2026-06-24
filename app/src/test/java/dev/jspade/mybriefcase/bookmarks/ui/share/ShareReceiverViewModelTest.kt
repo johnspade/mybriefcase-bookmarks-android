@@ -165,9 +165,12 @@ class ShareReceiverViewModelTest {
     fun `not initialized sets isInitialized to false`() =
         runTest {
             val viewModel =
-                createViewModel(
+                ShareReceiverViewModel(
+                    repository = fakeRepo,
+                    ioDispatcher = testDispatcher,
                     extraText = "https://example.com",
-                    isAppInitialized = false,
+                    extraSubject = null,
+                    syncDirPath = null,
                 )
             advanceUntilIdle()
 
@@ -300,21 +303,18 @@ class ShareReceiverViewModelTest {
     private fun createViewModel(
         extraText: String? = null,
         extraSubject: String? = null,
-        isAppInitialized: Boolean = true,
         syncDirPath: String? = null,
         faviconFetchEnabled: Boolean = true,
-        faviconFetcher: FaviconFetcher? = null,
+        faviconFetcher: FaviconFetcher = FakeFaviconFetcher(),
     ): ShareReceiverViewModel =
         ShareReceiverViewModel(
             repository = fakeRepo,
             ioDispatcher = testDispatcher,
             extraText = extraText,
             extraSubject = extraSubject,
-            isAppInitialized = isAppInitialized,
             syncDirPath = syncDirPath,
             faviconFetchEnabled = faviconFetchEnabled,
             faviconFetcher = faviconFetcher,
-            faviconFetcherFactory = null,
         )
 }
 

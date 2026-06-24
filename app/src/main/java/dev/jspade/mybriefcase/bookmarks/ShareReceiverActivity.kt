@@ -25,7 +25,6 @@ class ShareReceiverActivity : ComponentActivity() {
                 repository = app.repository,
                 extraText = extraText,
                 extraSubject = extraSubject,
-                isAppInitialized = isInitialized,
                 syncDirPath = syncDir,
                 faviconFetchEnabled = if (isInitialized) app.faviconSettings.fetchEnabled else false,
             )

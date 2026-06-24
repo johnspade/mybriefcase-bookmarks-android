@@ -50,6 +50,7 @@ class ShareReceiverScreenTest {
                 ioDispatcher = testDispatcher,
                 extraText = "https://example.com",
                 extraSubject = "Example Title",
+                syncDirPath = "/tmp/sync",
             )
 
         composeTestRule.setContent {
@@ -70,6 +71,7 @@ class ShareReceiverScreenTest {
                 ioDispatcher = testDispatcher,
                 extraText = "https://example.com",
                 extraSubject = "Example",
+                syncDirPath = "/tmp/sync",
             )
 
         composeTestRule.setContent {
@@ -92,6 +94,7 @@ class ShareReceiverScreenTest {
                 ioDispatcher = testDispatcher,
                 extraText = "https://example.com",
                 extraSubject = null,
+                syncDirPath = "/tmp/sync",
             )
 
         composeTestRule.setContent {
@@ -113,6 +116,7 @@ class ShareReceiverScreenTest {
                 ioDispatcher = testDispatcher,
                 extraText = "https://example.com",
                 extraSubject = null,
+                syncDirPath = "/tmp/sync",
             )
 
         composeTestRule.setContent {
@@ -131,6 +135,7 @@ class ShareReceiverScreenTest {
                 ioDispatcher = testDispatcher,
                 extraText = "https://example.com",
                 extraSubject = "Test",
+                syncDirPath = "/tmp/sync",
             )
 
         composeTestRule.setContent {
@@ -158,7 +163,7 @@ class ShareReceiverScreenTest {
                 ioDispatcher = testDispatcher,
                 extraText = "https://example.com",
                 extraSubject = null,
-                isAppInitialized = false,
+                syncDirPath = null,
             )
 
         composeTestRule.setContent {

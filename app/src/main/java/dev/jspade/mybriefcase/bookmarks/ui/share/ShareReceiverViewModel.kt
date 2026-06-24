@@ -31,11 +31,9 @@ class ShareReceiverViewModel(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     extraText: String?,
     extraSubject: String?,
-    isAppInitialized: Boolean = true,
     private val syncDirPath: String? = null,
     private val faviconFetchEnabled: Boolean = true,
-    private val faviconFetcher: FaviconFetcher? = null,
-    private val faviconFetcherFactory: (() -> FaviconFetcher)? = ::defaultFaviconFetcher,
+    private val faviconFetcher: FaviconFetcher = FaviconFetcherImpl(),
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ShareReceiverUiState())
     val uiState: StateFlow<ShareReceiverUiState> = _uiState.asStateFlow()
@@ -49,9 +47,9 @@ class ShareReceiverViewModel(
             ShareReceiverUiState(
                 url = url,
                 title = extraSubject ?: "",
-                isInitialized = isAppInitialized,
+                isInitialized = syncDirPath != null,
             )
-        if (isAppInitialized) {
+        if (syncDirPath != null) {
             loadNavTree()
         }
     }
@@ -59,13 +57,12 @@ class ShareReceiverViewModel(
     private var fetchFaviconJob: Job? = null
 
     fun fetchFavicon(url: String) {
-        val fetcher = faviconFetcher ?: faviconFetcherFactory?.invoke() ?: return
         val syncRoot = syncDirPath ?: return
         _uiState.value = _uiState.value.copy(faviconFetchState = FaviconFetchState.Loading)
         fetchFaviconJob?.cancel()
         fetchFaviconJob =
             viewModelScope.launch(ioDispatcher) {
-                val result = fetcher.fetch(url, syncRoot)
+                val result = faviconFetcher.fetch(url, syncRoot)
                 val newState =
                     when (result) {
                         is FetchResult.Success -> FaviconFetchState.Success(result.filename)
@@ -111,8 +108,4 @@ class ShareReceiverViewModel(
         val regex = Regex("""https?://[^\s]+""")
         return regex.find(text)?.value ?: text
     }
-
-    private fun isValidUrl(url: String): Boolean = url.matches(Regex("""https?://.+"""))
 }
-
-private fun defaultFaviconFetcher(): FaviconFetcher = FaviconFetcherImpl()
