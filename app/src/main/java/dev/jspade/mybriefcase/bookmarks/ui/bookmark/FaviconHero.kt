@@ -30,6 +30,7 @@ fun FaviconHero(
     modifier: Modifier = Modifier,
     onDelete: (() -> Unit)? = null,
     fetchEnabled: Boolean = true,
+    fallbackUrl: String? = null,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -60,6 +61,12 @@ fun FaviconHero(
                             url = url,
                             favicon = favicon,
                             syncRoot = syncRoot,
+                            size = 32.dp,
+                            modifier = Modifier.testTag("favicon_hero_image"),
+                        )
+                    } else if (fallbackUrl != null) {
+                        LetterAvatar(
+                            url = fallbackUrl,
                             size = 32.dp,
                             modifier = Modifier.testTag("favicon_hero_image"),
                         )

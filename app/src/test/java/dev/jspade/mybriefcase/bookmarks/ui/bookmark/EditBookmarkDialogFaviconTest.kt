@@ -173,6 +173,54 @@ class EditBookmarkDialogFaviconTest {
     }
 
     @Test
+    fun `confirm passes FaviconAction Delete when delete clicked after fetch`() {
+        var receivedAction: FaviconAction? = null
+
+        composeTestRule.setContent {
+            EditBookmarkDialog(
+                bookmark = testBookmark,
+                onDismiss = {},
+                onConfirm = { _, _, _, _, action -> receivedAction = action },
+                faviconFetchEnabled = true,
+                faviconFetchState = FaviconFetchState.Success("fetched.png"),
+                onFetchFavicon = { _ -> },
+                syncRoot = "/test",
+            )
+        }
+
+        composeTestRule.onNodeWithTag("favicon_delete_button").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag("edit_bookmark_confirm").performClick()
+        composeTestRule.waitForIdle()
+
+        assertEquals(FaviconAction.Delete, receivedAction)
+    }
+
+    @Test
+    fun `delete after fetch hides favicon and shows letter avatar`() {
+        composeTestRule.setContent {
+            EditBookmarkDialog(
+                bookmark = testBookmark,
+                onDismiss = {},
+                onConfirm = { _, _, _, _, _ -> },
+                faviconFetchEnabled = true,
+                faviconFetchState = FaviconFetchState.Success("fetched.png"),
+                onFetchFavicon = { _ -> },
+                syncRoot = "/test",
+            )
+        }
+
+        composeTestRule.onNodeWithTag("favicon_delete_button").performScrollTo().performClick()
+        composeTestRule.waitForIdle()
+
+        // Delete button should be hidden after clicking it
+        composeTestRule.onNodeWithTag("favicon_delete_button").assertDoesNotExist()
+        // Dialog still visible
+        composeTestRule.onNodeWithTag("edit_bookmark_dialog").assertIsDisplayed()
+    }
+
+    @Test
     fun `delete hides favicon locally without dismiss`() {
         composeTestRule.setContent {
             EditBookmarkDialog(
