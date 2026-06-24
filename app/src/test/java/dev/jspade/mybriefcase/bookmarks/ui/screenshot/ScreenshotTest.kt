@@ -52,7 +52,7 @@ import java.io.File
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalRoborazziApi::class)
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], application = dev.jspade.mybriefcase.bookmarks.TestApp::class)
+@Config(sdk = [34], qualifiers = "w360dp-h780dp-xxhdpi", application = dev.jspade.mybriefcase.bookmarks.TestApp::class)
 class ScreenshotTest {
     @get:Rule
     val composeTestRule = createComposeRule()
@@ -256,6 +256,7 @@ class ScreenshotTest {
     // --- Add bookmark dialog ---
 
     @Test
+    @Config(qualifiers = "+w320dp-h780dp-xxhdpi")
     fun addBookmarkDialog_light() {
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
@@ -268,11 +269,11 @@ class ScreenshotTest {
                 )
             }
         }
-        composeTestRule.waitForIdle()
-        captureScreenRoboImage("src/test/snapshots/add_bookmark_dialog_light.png")
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/add_bookmark_dialog_light.png")
     }
 
     @Test
+    @Config(qualifiers = "+w320dp-h780dp-xxhdpi")
     fun addBookmarkDialog_dark() {
         composeTestRule.setContent {
             MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
@@ -285,13 +286,13 @@ class ScreenshotTest {
                 )
             }
         }
-        composeTestRule.waitForIdle()
-        captureScreenRoboImage("src/test/snapshots/add_bookmark_dialog_dark.png")
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/add_bookmark_dialog_dark.png")
     }
 
     // --- Edit bookmark dialog ---
 
     @Test
+    @Config(qualifiers = "+w320dp-h780dp-xxhdpi")
     fun editBookmarkDialog_light() {
         val bookmark =
             BookmarkDto(
@@ -315,11 +316,11 @@ class ScreenshotTest {
                 )
             }
         }
-        composeTestRule.waitForIdle()
-        captureScreenRoboImage("src/test/snapshots/edit_bookmark_dialog_light.png")
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/edit_bookmark_dialog_light.png")
     }
 
     @Test
+    @Config(qualifiers = "+w320dp-h780dp-xxhdpi")
     fun editBookmarkDialog_dark() {
         val bookmark =
             BookmarkDto(
@@ -343,8 +344,7 @@ class ScreenshotTest {
                 )
             }
         }
-        composeTestRule.waitForIdle()
-        captureScreenRoboImage("src/test/snapshots/edit_bookmark_dialog_dark.png")
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/edit_bookmark_dialog_dark.png")
     }
 
     // --- Settings screen ---
