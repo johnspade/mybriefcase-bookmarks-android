@@ -42,6 +42,11 @@ interface BookmarkRepository {
         notes: String?,
     )
 
+    suspend fun setFavicon(
+        bookmarkId: String,
+        favicon: String?,
+    )
+
     suspend fun deleteBookmark(bookmarkId: String)
 
     // Folders

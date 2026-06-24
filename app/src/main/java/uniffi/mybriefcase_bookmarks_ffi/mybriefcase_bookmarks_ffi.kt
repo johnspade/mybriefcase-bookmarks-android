@@ -751,6 +751,8 @@ internal interface UniffiForeignFutureCompleteVoid : com.sun.jna.Callback {
 
 
 
+
+
 // A JNA Library to expose the extern-C FFI definitions.
 // This is an implementation detail which will be called internally by the public API.
 
@@ -800,6 +802,8 @@ internal interface UniffiLib : Library {
     ): Unit
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_search_bookmarks(`query`: RustBuffer.ByValue,`sortBy`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
     ): RustBuffer.ByValue
+    fun uniffi_mybriefcase_bookmarks_ffi_fn_func_set_favicon(`bookmarkId`: RustBuffer.ByValue,`favicon`: RustBuffer.ByValue,uniffi_out_err: UniffiRustCallStatus, 
+    ): Unit
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_shutdown(uniffi_out_err: UniffiRustCallStatus, 
     ): Unit
     fun uniffi_mybriefcase_bookmarks_ffi_fn_func_trigger_full_merge(uniffi_out_err: UniffiRustCallStatus, 
@@ -952,6 +956,8 @@ internal interface UniffiLib : Library {
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_search_bookmarks(
     ): Short
+    fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_set_favicon(
+    ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_shutdown(
     ): Short
     fun uniffi_mybriefcase_bookmarks_ffi_checksum_func_trigger_full_merge(
@@ -1024,6 +1030,9 @@ private fun uniffiCheckApiChecksums(lib: UniffiLib) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_search_bookmarks() != 32213.toShort()) {
+        throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
+    }
+    if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_set_favicon() != 13555.toShort()) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_mybriefcase_bookmarks_ffi_checksum_func_shutdown() != 40517.toShort()) {
@@ -2259,6 +2268,15 @@ public object FfiConverterSequenceTypeFolderNavDto: FfiConverterRustBuffer<List<
 }
     )
     }
+    
+
+    @Throws(FfiException::class) fun `setFavicon`(`bookmarkId`: kotlin.String, `favicon`: kotlin.String?)
+        = 
+    uniffiRustCallWithError(FfiException) { _status ->
+    UniffiLib.INSTANCE.uniffi_mybriefcase_bookmarks_ffi_fn_func_set_favicon(
+        FfiConverterString.lower(`bookmarkId`),FfiConverterOptionalString.lower(`favicon`),_status)
+}
+    
     
  fun `shutdown`()
         = 

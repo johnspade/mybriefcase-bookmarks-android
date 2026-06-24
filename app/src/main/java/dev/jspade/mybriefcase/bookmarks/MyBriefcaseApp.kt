@@ -3,6 +3,8 @@ package dev.jspade.mybriefcase.bookmarks
 import android.app.Application
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepositoryImpl
+import dev.jspade.mybriefcase.bookmarks.data.FaviconSettings
+import dev.jspade.mybriefcase.bookmarks.ui.settings.FaviconSettingsImpl
 import dev.jspade.mybriefcase.bookmarks.ui.wizard.StartupDecision
 
 class MyBriefcaseApp : Application() {
@@ -15,12 +17,16 @@ class MyBriefcaseApp : Application() {
     lateinit var clientId: String
         private set
 
+    lateinit var faviconSettings: FaviconSettings
+        private set
+
     private var initialized = false
 
     override fun onCreate() {
         super.onCreate()
         instance = this
         repository = BookmarkRepositoryImpl()
+        faviconSettings = FaviconSettingsImpl(this)
 
         val persistedDir = StartupDecision.getPersistedSyncDir(this)
         if (persistedDir != null) {

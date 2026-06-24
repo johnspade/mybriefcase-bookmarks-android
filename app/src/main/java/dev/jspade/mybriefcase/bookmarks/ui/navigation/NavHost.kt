@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ import dev.jspade.mybriefcase.bookmarks.BuildConfig
 import dev.jspade.mybriefcase.bookmarks.MyBriefcaseApp
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconAction
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderScreen
 import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.history.HistoryScreen
@@ -158,6 +160,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     currentScreen = Screen.HISTORY
                 },
                 modifier = modifier,
+                faviconFetchEnabled = MyBriefcaseApp.instance.faviconSettings.fetchEnabled,
             )
         }
         Screen.SEARCH -> {
@@ -174,6 +177,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             )
         }
         Screen.SETTINGS -> {
+            val faviconSettings = MyBriefcaseApp.instance.faviconSettings
+            var fetchEnabled by remember { mutableStateOf(faviconSettings.fetchEnabled) }
             SettingsScreen(
                 syncDir = MyBriefcaseApp.instance.syncDir,
                 clientId = MyBriefcaseApp.instance.clientId,
@@ -188,6 +193,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     val suggestedName = "bookmarks_${LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)}.html"
                     exportLauncher.launch(suggestedName)
                 },
+                faviconFetchEnabled = fetchEnabled,
+                onFaviconFetchEnabledChange = {
+                    fetchEnabled = it
+                    faviconSettings.setFetchEnabled(it)
+                },
             )
         }
         Screen.WIZARD -> {} // handled above with early return
@@ -195,7 +205,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             val historyViewModel: HistoryViewModel = viewModel()
             val historyState by historyViewModel.uiState.collectAsState()
 
-            androidx.compose.runtime.LaunchedEffect(historyBookmarkId) {
+            LaunchedEffect(historyBookmarkId) {
                 historyViewModel.loadHistory(historyBookmarkId)
             }
 
@@ -249,6 +259,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     }
 
     if (showEditFromSearch && uiState.selectedBookmark != null) {
+        LaunchedEffect(Unit) { folderViewModel.clearFaviconFetchState() }
         EditBookmarkDialog(
             bookmark = uiState.selectedBookmark!!,
             navTree = uiState.navTree,
@@ -257,8 +268,15 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 showEditFromSearch = false
                 folderViewModel.clearSelectedBookmark()
             },
-            onConfirm = { url, title, notes, newFolderId ->
+            onConfirm = { url, title, notes, newFolderId, faviconAction ->
                 showEditFromSearch = false
+                when (faviconAction) {
+                    is FaviconAction.Set ->
+                        folderViewModel.saveFavicon(uiState.selectedBookmark!!.id, faviconAction.filename)
+                    is FaviconAction.Delete ->
+                        folderViewModel.deleteFavicon(uiState.selectedBookmark!!.id)
+                    FaviconAction.Keep -> {}
+                }
                 folderViewModel.updateBookmarkAndMove(
                     uiState.selectedBookmark!!.id,
                     url,
@@ -267,6 +285,10 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     newFolderId,
                 )
             },
+            faviconFetchEnabled = MyBriefcaseApp.instance.faviconSettings.fetchEnabled,
+            faviconFetchState = uiState.faviconFetchState,
+            onFetchFavicon = { url -> folderViewModel.fetchFavicon(url) },
+            syncRoot = uiState.syncRoot,
         )
     }
 

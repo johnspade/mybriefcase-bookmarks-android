@@ -79,6 +79,7 @@ import androidx.core.net.toUri
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkError
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkDetailSheetWithActions
 import dev.jspade.mybriefcase.bookmarks.ui.bookmark.BookmarkFavicon
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconAction
 import dev.jspade.mybriefcase.bookmarks.ui.search.displayName
 import kotlinx.coroutines.launch
 import uniffi.mybriefcase_bookmarks_ffi.BookmarkItemDto
@@ -96,6 +97,7 @@ fun FolderScreen(
     onSettingsClick: () -> Unit = {},
     onSearchClick: () -> Unit = {},
     onHistoryClick: ((bookmarkId: String) -> Unit)? = null,
+    faviconFetchEnabled: Boolean = true,
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -186,25 +188,21 @@ fun FolderScreen(
 
     // Folder CRUD Dialogs
     if (showCreateFolderDialog) {
+        LaunchedEffect(Unit) { viewModel.clearValidationError() }
         CreateFolderDialog(
             onConfirm = { title -> viewModel.createFolder(title) },
-            onDismiss = {
-                showCreateFolderDialog = false
-                viewModel.clearValidationError()
-            },
+            onDismiss = { showCreateFolderDialog = false },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
         )
     }
 
     renameFolderTarget?.let { folder ->
+        LaunchedEffect(Unit) { viewModel.clearValidationError() }
         RenameFolderDialog(
             currentTitle = folder.title,
             onConfirm = { newTitle -> viewModel.renameFolder(folder.id, newTitle) },
-            onDismiss = {
-                renameFolderTarget = null
-                viewModel.clearValidationError()
-            },
+            onDismiss = { renameFolderTarget = null },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
         )
@@ -412,18 +410,27 @@ fun FolderScreen(
     }
 
     if (showAddBookmarkDialog) {
+        LaunchedEffect(Unit) {
+            viewModel.clearValidationError()
+            viewModel.clearFaviconFetchState()
+        }
         dev.jspade.mybriefcase.bookmarks.ui.bookmark.AddBookmarkDialog(
-            onDismiss = {
-                showAddBookmarkDialog = false
-                viewModel.clearValidationError()
-            },
+            onDismiss = { showAddBookmarkDialog = false },
             onConfirm = { url, title -> viewModel.addBookmark(url, title) },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
+            faviconFetchEnabled = faviconFetchEnabled,
+            faviconFetchState = uiState.faviconFetchState,
+            onFetchFavicon = { url -> viewModel.fetchFavicon(url) },
+            syncRoot = uiState.syncRoot,
         )
     }
 
     if (showEditDialog && uiState.selectedBookmark != null) {
+        LaunchedEffect(Unit) {
+            viewModel.clearValidationError()
+            viewModel.clearFaviconFetchState()
+        }
         dev.jspade.mybriefcase.bookmarks.ui.bookmark.EditBookmarkDialog(
             bookmark = uiState.selectedBookmark!!,
             navTree = uiState.navTree,
@@ -431,9 +438,16 @@ fun FolderScreen(
             onDismiss = {
                 showEditDialog = false
                 viewModel.clearSelectedBookmark()
-                viewModel.clearValidationError()
             },
-            onConfirm = { url, title, notes, newFolderId ->
+            onConfirm = { url, title, notes, newFolderId, faviconAction ->
+                showEditDialog = false
+                when (faviconAction) {
+                    is FaviconAction.Set ->
+                        viewModel.saveFavicon(uiState.selectedBookmark!!.id, faviconAction.filename)
+                    is FaviconAction.Delete ->
+                        viewModel.deleteFavicon(uiState.selectedBookmark!!.id)
+                    FaviconAction.Keep -> {}
+                }
                 viewModel.updateBookmarkAndMove(
                     uiState.selectedBookmark!!.id,
                     url,
@@ -444,6 +458,10 @@ fun FolderScreen(
             },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
+            faviconFetchEnabled = faviconFetchEnabled,
+            faviconFetchState = uiState.faviconFetchState,
+            onFetchFavicon = { url -> viewModel.fetchFavicon(url) },
+            syncRoot = uiState.syncRoot,
         )
     }
 
@@ -472,6 +490,7 @@ fun FolderScreen(
                 showDetailSheet = false
                 onHistoryClick?.invoke(uiState.selectedBookmark!!.id)
             },
+            syncRoot = uiState.syncRoot,
         )
     }
 }

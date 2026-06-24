@@ -23,6 +23,10 @@ fun AddBookmarkDialog(
     onConfirm: (url: String, title: String) -> Unit,
     validationError: String? = null,
     onValidationErrorClear: () -> Unit = {},
+    faviconFetchEnabled: Boolean = false,
+    faviconFetchState: FaviconFetchState = FaviconFetchState.Idle,
+    onFetchFavicon: (String) -> Unit = {},
+    syncRoot: String? = null,
 ) {
     var url by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
@@ -36,6 +40,19 @@ fun AddBookmarkDialog(
         title = { Text("Add Bookmark") },
         text = {
             Column {
+                if (faviconFetchEnabled) {
+                    FaviconHero(
+                        url = url,
+                        favicon =
+                            when (faviconFetchState) {
+                                is FaviconFetchState.Success -> faviconFetchState.filename
+                                else -> null
+                            },
+                        syncRoot = syncRoot,
+                        fetchState = faviconFetchState,
+                        onFetch = { onFetchFavicon(url) },
+                    )
+                }
                 OutlinedTextField(
                     value = url,
                     onValueChange = {
