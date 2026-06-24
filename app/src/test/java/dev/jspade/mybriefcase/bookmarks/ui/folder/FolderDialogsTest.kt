@@ -536,7 +536,7 @@ class FolderDialogsTest {
         composeTestRule.setContent {
             AddBookmarkDialog(
                 onDismiss = {},
-                onConfirm = { _, _ -> },
+                onConfirm = { _, _, _ -> },
                 validationError = "URL must include a scheme (e.g. https://)",
             )
         }

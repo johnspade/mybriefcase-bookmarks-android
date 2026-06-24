@@ -56,7 +56,7 @@ class ShareReceiverScreenTest {
             ShareReceiverScreen(viewModel = viewModel, onFinish = {}, onRedirectToWizard = {})
         }
 
-        composeTestRule.onNodeWithTag("share_url_field").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("add_bookmark_url").assertIsDisplayed()
         composeTestRule.onNodeWithText("https://example.com").assertIsDisplayed()
         composeTestRule.onNodeWithText("Example Title").assertIsDisplayed()
     }
@@ -76,7 +76,7 @@ class ShareReceiverScreenTest {
             ShareReceiverScreen(viewModel = viewModel, onFinish = { finished = true }, onRedirectToWizard = {})
         }
 
-        composeTestRule.onNodeWithTag("share_save_button").performClick()
+        composeTestRule.onNodeWithTag("add_bookmark_confirm").performClick()
         composeTestRule.waitForIdle()
 
         assertTrue(finished)
@@ -98,31 +98,11 @@ class ShareReceiverScreenTest {
             ShareReceiverScreen(viewModel = viewModel, onFinish = { finished = true }, onRedirectToWizard = {})
         }
 
-        composeTestRule.onNodeWithTag("share_cancel_button").performClick()
+        composeTestRule.onNodeWithText("Cancel").performClick()
         composeTestRule.waitForIdle()
 
         assertTrue(finished)
         assertTrue(fakeRepo.addBookmarkCalls.isEmpty())
-    }
-
-    @Test
-    fun `shows validation error when URL is invalid`() {
-        val viewModel =
-            ShareReceiverViewModel(
-                repository = fakeRepo,
-                ioDispatcher = testDispatcher,
-                extraText = "not a url",
-                extraSubject = null,
-            )
-
-        composeTestRule.setContent {
-            ShareReceiverScreen(viewModel = viewModel, onFinish = {}, onRedirectToWizard = {})
-        }
-
-        composeTestRule.onNodeWithTag("share_save_button").performClick()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithText("Invalid URL").assertIsDisplayed()
     }
 
     @Test
@@ -139,7 +119,7 @@ class ShareReceiverScreenTest {
             ShareReceiverScreen(viewModel = viewModel, onFinish = {}, onRedirectToWizard = {})
         }
 
-        composeTestRule.onNodeWithTag("share_folder_picker").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("add_bookmark_folder_picker").assertIsDisplayed()
         composeTestRule.onNodeWithText("Bookmarks").assertIsDisplayed()
     }
 
@@ -157,16 +137,13 @@ class ShareReceiverScreenTest {
             ShareReceiverScreen(viewModel = viewModel, onFinish = {}, onRedirectToWizard = {})
         }
 
-        // Click to expand folder picker
-        composeTestRule.onNodeWithTag("share_folder_picker").performClick()
+        composeTestRule.onNodeWithTag("add_bookmark_folder_picker").performClick()
         composeTestRule.waitForIdle()
 
-        // Select "Work" folder
         composeTestRule.onNodeWithText("Work", substring = true).performClick()
         composeTestRule.waitForIdle()
 
-        // Save
-        composeTestRule.onNodeWithTag("share_save_button").performClick()
+        composeTestRule.onNodeWithTag("add_bookmark_confirm").performClick()
         composeTestRule.waitForIdle()
 
         assertEquals("folder-1", fakeRepo.addBookmarkCalls[0].first)

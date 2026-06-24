@@ -93,7 +93,7 @@ class BookmarkUiTest {
         composeTestRule.setContent {
             AddBookmarkDialog(
                 onDismiss = {},
-                onConfirm = { _, _ -> },
+                onConfirm = { _, _, _ -> },
             )
         }
 

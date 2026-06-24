@@ -416,13 +416,17 @@ fun FolderScreen(
         }
         dev.jspade.mybriefcase.bookmarks.ui.bookmark.AddBookmarkDialog(
             onDismiss = { showAddBookmarkDialog = false },
-            onConfirm = { url, title -> viewModel.addBookmark(url, title) },
+            onConfirm = { url, title, folderId ->
+                viewModel.addBookmark(url, title, folderId)
+            },
             validationError = uiState.validationError,
             onValidationErrorClear = { viewModel.clearValidationError() },
             faviconFetchEnabled = faviconFetchEnabled,
             faviconFetchState = uiState.faviconFetchState,
             onFetchFavicon = { url -> viewModel.fetchFavicon(url) },
             syncRoot = uiState.syncRoot,
+            navTree = uiState.navTree,
+            currentFolderId = uiState.currentFolderId,
         )
     }
 

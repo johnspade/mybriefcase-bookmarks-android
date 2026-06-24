@@ -19,9 +19,7 @@ import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 data class ShareReceiverUiState(
     val url: String = "",
     val title: String = "",
-    val selectedFolderId: String? = null,
     val navTree: FolderNavTreeDto? = null,
-    val urlError: String? = null,
     val isSaved: Boolean = false,
     val error: String? = null,
     val isInitialized: Boolean = true,
@@ -58,18 +56,6 @@ class ShareReceiverViewModel(
         }
     }
 
-    fun updateUrl(url: String) {
-        _uiState.value = _uiState.value.copy(url = url, urlError = null)
-    }
-
-    fun updateTitle(title: String) {
-        _uiState.value = _uiState.value.copy(title = title)
-    }
-
-    fun selectFolder(folderId: String) {
-        _uiState.value = _uiState.value.copy(selectedFolderId = folderId)
-    }
-
     private var fetchFaviconJob: Job? = null
 
     fun fetchFavicon(url: String) {
@@ -89,22 +75,12 @@ class ShareReceiverViewModel(
             }
     }
 
-    fun save() {
-        val state = _uiState.value
-        val url = state.url.trim()
-
-        if (url.isBlank()) {
-            _uiState.value = state.copy(urlError = "URL is required")
-            return
-        }
-        if (!isValidUrl(url)) {
-            _uiState.value = state.copy(urlError = "Invalid URL")
-            return
-        }
-
-        val folderId = state.selectedFolderId ?: state.navTree?.rootFolderId ?: return
-        val title = state.title.trim().ifEmpty { url }
-        val faviconState = state.faviconFetchState
+    fun save(
+        url: String,
+        title: String,
+        folderId: String,
+    ) {
+        val faviconState = _uiState.value.faviconFetchState
 
         viewModelScope.launch(ioDispatcher) {
             try {

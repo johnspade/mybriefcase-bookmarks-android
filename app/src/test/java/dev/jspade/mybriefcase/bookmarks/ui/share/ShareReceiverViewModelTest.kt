@@ -14,7 +14,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -99,38 +98,7 @@ class ShareReceiverViewModelTest {
         }
 
     @Test
-    fun `save with blank URL shows validation error`() =
-        runTest {
-            val viewModel = createViewModel(extraText = null)
-            advanceUntilIdle()
-
-            viewModel.updateUrl("")
-            viewModel.save()
-            advanceUntilIdle()
-
-            viewModel.uiState.test {
-                val state = expectMostRecentItem()
-                assertEquals("URL is required", state.urlError)
-            }
-        }
-
-    @Test
-    fun `save with invalid URL shows validation error`() =
-        runTest {
-            val viewModel = createViewModel(extraText = "not a url")
-            advanceUntilIdle()
-
-            viewModel.save()
-            advanceUntilIdle()
-
-            viewModel.uiState.test {
-                val state = expectMostRecentItem()
-                assertEquals("Invalid URL", state.urlError)
-            }
-        }
-
-    @Test
-    fun `save with valid URL calls repository addBookmark`() =
+    fun `save calls repository addBookmark`() =
         runTest {
             val viewModel =
                 createViewModel(
@@ -139,7 +107,7 @@ class ShareReceiverViewModelTest {
                 )
             advanceUntilIdle()
 
-            viewModel.save()
+            viewModel.save("https://example.com", "Example", "root-id")
             advanceUntilIdle()
 
             assertEquals(1, fakeRepo.addBookmarkCalls.size)
@@ -155,7 +123,7 @@ class ShareReceiverViewModelTest {
             val viewModel = createViewModel(extraText = "https://example.com")
             advanceUntilIdle()
 
-            viewModel.save()
+            viewModel.save("https://example.com", "https://example.com", "root-id")
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -165,13 +133,12 @@ class ShareReceiverViewModelTest {
         }
 
     @Test
-    fun `save uses selected folder when user picks one`() =
+    fun `save uses specified folder`() =
         runTest {
             val viewModel = createViewModel(extraText = "https://example.com")
             advanceUntilIdle()
 
-            viewModel.selectFolder("folder-1")
-            viewModel.save()
+            viewModel.save("https://example.com", "Example", "folder-1")
             advanceUntilIdle()
 
             assertEquals("folder-1", fakeRepo.addBookmarkCalls[0].first)
@@ -184,7 +151,7 @@ class ShareReceiverViewModelTest {
             advanceUntilIdle()
 
             fakeRepo.addBookmarkThrow = RuntimeException("disk full")
-            viewModel.save()
+            viewModel.save("https://example.com", "Example", "root-id")
             advanceUntilIdle()
 
             viewModel.uiState.test {
@@ -207,42 +174,6 @@ class ShareReceiverViewModelTest {
             viewModel.uiState.test {
                 val state = expectMostRecentItem()
                 assertEquals(false, state.isInitialized)
-            }
-        }
-
-    @Test
-    fun `save uses URL as title when title is blank`() =
-        runTest {
-            val viewModel =
-                createViewModel(
-                    extraText = "https://example.com",
-                    extraSubject = null,
-                )
-            advanceUntilIdle()
-
-            viewModel.save()
-            advanceUntilIdle()
-
-            val call = fakeRepo.addBookmarkCalls[0]
-            assertEquals("https://example.com", call.third)
-        }
-
-    @Test
-    fun `clearing url error on text change`() =
-        runTest {
-            val viewModel = createViewModel(extraText = null)
-            advanceUntilIdle()
-
-            viewModel.save()
-            advanceUntilIdle()
-
-            viewModel.updateUrl("https://fixed.com")
-            advanceUntilIdle()
-
-            viewModel.uiState.test {
-                val state = expectMostRecentItem()
-                assertNull(state.urlError)
-                assertEquals("https://fixed.com", state.url)
             }
         }
 
@@ -315,7 +246,7 @@ class ShareReceiverViewModelTest {
             viewModel.fetchFavicon("https://example.com")
             advanceUntilIdle()
 
-            viewModel.save()
+            viewModel.save("https://example.com", "Example", "root-id")
             advanceUntilIdle()
 
             assertEquals(1, fakeRepo.setFaviconCalls.size)
@@ -332,7 +263,7 @@ class ShareReceiverViewModelTest {
                 )
             advanceUntilIdle()
 
-            viewModel.save()
+            viewModel.save("https://example.com", "Example", "root-id")
             advanceUntilIdle()
 
             assertEquals(0, fakeRepo.setFaviconCalls.size)

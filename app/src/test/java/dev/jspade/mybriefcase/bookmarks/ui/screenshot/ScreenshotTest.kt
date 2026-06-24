@@ -261,7 +261,7 @@ class ScreenshotTest {
             MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
                 AddBookmarkDialog(
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     faviconFetchEnabled = true,
                     faviconFetchState = FaviconFetchState.Idle,
                     onFetchFavicon = {},
@@ -278,7 +278,7 @@ class ScreenshotTest {
             MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
                 AddBookmarkDialog(
                     onDismiss = {},
-                    onConfirm = { _, _ -> },
+                    onConfirm = { _, _, _ -> },
                     faviconFetchEnabled = true,
                     faviconFetchState = FaviconFetchState.Idle,
                     onFetchFavicon = {},
