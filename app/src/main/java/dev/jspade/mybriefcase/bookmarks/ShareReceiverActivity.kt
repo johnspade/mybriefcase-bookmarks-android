@@ -17,12 +17,17 @@ class ShareReceiverActivity : ComponentActivity() {
         val extraSubject = intent?.getStringExtra(Intent.EXTRA_SUBJECT)
         val isInitialized = StartupDecision.getPersistedSyncDir(this) != null
 
+        val app = MyBriefcaseApp.instance
+        val syncDir = if (isInitialized) app.syncDir else null
+
         val viewModel =
             ShareReceiverViewModel(
-                repository = MyBriefcaseApp.instance.repository,
+                repository = app.repository,
                 extraText = extraText,
                 extraSubject = extraSubject,
                 isAppInitialized = isInitialized,
+                syncDirPath = syncDir,
+                faviconFetchEnabled = if (isInitialized) app.faviconSettings.fetchEnabled else false,
             )
 
         setContent {
@@ -34,6 +39,7 @@ class ShareReceiverActivity : ComponentActivity() {
                         startActivity(Intent(this, MainActivity::class.java))
                         finish()
                     },
+                    syncRoot = syncDir,
                 )
             }
         }

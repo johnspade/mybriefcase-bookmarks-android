@@ -2,6 +2,9 @@ package dev.jspade.mybriefcase.bookmarks.ui.share
 
 import app.cash.turbine.test
 import dev.jspade.mybriefcase.bookmarks.data.FakeBookmarkRepository
+import dev.jspade.mybriefcase.bookmarks.data.FaviconFetcher
+import dev.jspade.mybriefcase.bookmarks.data.FetchResult
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconFetchState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -12,6 +15,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -242,10 +246,133 @@ class ShareReceiverViewModelTest {
             }
         }
 
+    @Test
+    fun `fetchFavicon sets loading then success state`() =
+        runTest {
+            val fakeFetcher = FakeFaviconFetcher()
+            fakeFetcher.result = FetchResult.Success("abc123.ico")
+            val viewModel =
+                createViewModel(
+                    extraText = "https://example.com",
+                    syncDirPath = "/tmp/sync",
+                    faviconFetcher = fakeFetcher,
+                )
+            advanceUntilIdle()
+
+            viewModel.fetchFavicon("https://example.com")
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.faviconFetchState is FaviconFetchState.Success)
+                assertEquals(
+                    "abc123.ico",
+                    (state.faviconFetchState as FaviconFetchState.Success).filename,
+                )
+            }
+        }
+
+    @Test
+    fun `fetchFavicon sets error state on failure`() =
+        runTest {
+            val fakeFetcher = FakeFaviconFetcher()
+            fakeFetcher.result = FetchResult.Failed("network error")
+            val viewModel =
+                createViewModel(
+                    extraText = "https://example.com",
+                    syncDirPath = "/tmp/sync",
+                    faviconFetcher = fakeFetcher,
+                )
+            advanceUntilIdle()
+
+            viewModel.fetchFavicon("https://example.com")
+            advanceUntilIdle()
+
+            viewModel.uiState.test {
+                val state = expectMostRecentItem()
+                assertTrue(state.faviconFetchState is FaviconFetchState.Error)
+                assertEquals(
+                    "network error",
+                    (state.faviconFetchState as FaviconFetchState.Error).message,
+                )
+            }
+        }
+
+    @Test
+    fun `save attaches favicon when fetch succeeded`() =
+        runTest {
+            val fakeFetcher = FakeFaviconFetcher()
+            fakeFetcher.result = FetchResult.Success("favicon.png")
+            val viewModel =
+                createViewModel(
+                    extraText = "https://example.com",
+                    extraSubject = "Example",
+                    syncDirPath = "/tmp/sync",
+                    faviconFetcher = fakeFetcher,
+                )
+            advanceUntilIdle()
+
+            viewModel.fetchFavicon("https://example.com")
+            advanceUntilIdle()
+
+            viewModel.save()
+            advanceUntilIdle()
+
+            assertEquals(1, fakeRepo.setFaviconCalls.size)
+            assertEquals("favicon.png", fakeRepo.setFaviconCalls[0].second)
+        }
+
+    @Test
+    fun `save does not call setFavicon when no favicon fetched`() =
+        runTest {
+            val viewModel =
+                createViewModel(
+                    extraText = "https://example.com",
+                    extraSubject = "Example",
+                )
+            advanceUntilIdle()
+
+            viewModel.save()
+            advanceUntilIdle()
+
+            assertEquals(0, fakeRepo.setFaviconCalls.size)
+        }
+
+    @Test
+    fun `isFaviconFetchEnabled is false when syncDirPath is null`() =
+        runTest {
+            val viewModel =
+                createViewModel(
+                    extraText = "https://example.com",
+                    syncDirPath = null,
+                    faviconFetchEnabled = true,
+                )
+            advanceUntilIdle()
+
+            assertEquals(false, viewModel.isFaviconFetchEnabled)
+        }
+
+    @Test
+    fun `isFaviconFetchEnabled is false when setting disabled`() =
+        runTest {
+            val viewModel =
+                createViewModel(
+                    extraText = "https://example.com",
+                    syncDirPath = "/tmp/sync",
+                    faviconFetchEnabled = false,
+                )
+            advanceUntilIdle()
+
+            assertEquals(false, viewModel.isFaviconFetchEnabled)
+        }
+
     private fun createViewModel(
         extraText: String? = null,
         extraSubject: String? = null,
         isAppInitialized: Boolean = true,
+        syncDirPath: String? = null,
+        faviconFetchEnabled: Boolean = true,
+        faviconFetcher: FaviconFetcher? = null,
     ): ShareReceiverViewModel =
         ShareReceiverViewModel(
             repository = fakeRepo,
@@ -253,5 +380,18 @@ class ShareReceiverViewModelTest {
             extraText = extraText,
             extraSubject = extraSubject,
             isAppInitialized = isAppInitialized,
+            syncDirPath = syncDirPath,
+            faviconFetchEnabled = faviconFetchEnabled,
+            faviconFetcher = faviconFetcher,
+            faviconFetcherFactory = null,
         )
+}
+
+private class FakeFaviconFetcher : FaviconFetcher {
+    var result: FetchResult = FetchResult.Failed("not configured")
+
+    override suspend fun fetch(
+        url: String,
+        syncRoot: String,
+    ): FetchResult = result
 }

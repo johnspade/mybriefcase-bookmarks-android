@@ -28,6 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconFetchState
+import dev.jspade.mybriefcase.bookmarks.ui.bookmark.FaviconHero
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavDto
 import uniffi.mybriefcase_bookmarks_ffi.FolderNavTreeDto
 
@@ -36,6 +38,7 @@ fun ShareReceiverScreen(
     viewModel: ShareReceiverViewModel,
     onFinish: () -> Unit,
     onRedirectToWizard: () -> Unit,
+    syncRoot: String? = null,
 ) {
     val state by viewModel.uiState.collectAsState()
 
@@ -66,6 +69,20 @@ fun ShareReceiverScreen(
         title = { Text("Save Bookmark") },
         text = {
             Column {
+                if (viewModel.isFaviconFetchEnabled) {
+                    val fetchState = state.faviconFetchState
+                    FaviconHero(
+                        url = state.url,
+                        favicon =
+                            when (fetchState) {
+                                is FaviconFetchState.Success -> fetchState.filename
+                                else -> null
+                            },
+                        syncRoot = syncRoot,
+                        fetchState = fetchState,
+                        onFetch = { viewModel.fetchFavicon(state.url) },
+                    )
+                }
                 OutlinedTextField(
                     value = state.url,
                     onValueChange = { viewModel.updateUrl(it) },
