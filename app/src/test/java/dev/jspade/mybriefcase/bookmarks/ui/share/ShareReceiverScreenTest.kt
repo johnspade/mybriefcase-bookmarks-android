@@ -162,7 +162,7 @@ class ShareReceiverScreenTest {
         composeTestRule.waitForIdle()
 
         // Select "Work" folder
-        composeTestRule.onNodeWithText("Work").performClick()
+        composeTestRule.onNodeWithText("Work", substring = true).performClick()
         composeTestRule.waitForIdle()
 
         // Save
