@@ -200,8 +200,9 @@ class FolderViewModel(
     fun addBookmark(
         url: String,
         title: String,
+        targetFolderId: String? = null,
     ) {
-        val folderId = _uiState.value.currentFolderId
+        val folderId = targetFolderId ?: _uiState.value.currentFolderId
         val faviconState = _uiState.value.faviconFetchState
         viewModelScope.launch(ioDispatcher) {
             try {

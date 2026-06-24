@@ -19,7 +19,7 @@ class AddBookmarkDialogFaviconTest {
         composeTestRule.setContent {
             AddBookmarkDialog(
                 onDismiss = {},
-                onConfirm = { _, _ -> },
+                onConfirm = { _, _, _ -> },
                 faviconFetchEnabled = true,
                 faviconFetchState = FaviconFetchState.Idle,
                 onFetchFavicon = { _ -> },
@@ -37,7 +37,7 @@ class AddBookmarkDialogFaviconTest {
         composeTestRule.setContent {
             AddBookmarkDialog(
                 onDismiss = {},
-                onConfirm = { _, _ -> },
+                onConfirm = { _, _, _ -> },
                 faviconFetchEnabled = false,
                 faviconFetchState = FaviconFetchState.Idle,
                 onFetchFavicon = { _ -> },
