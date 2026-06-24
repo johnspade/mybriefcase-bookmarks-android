@@ -440,6 +440,7 @@ fun FolderScreen(
                 viewModel.clearSelectedBookmark()
             },
             onConfirm = { url, title, notes, newFolderId, faviconAction ->
+                showEditDialog = false
                 when (faviconAction) {
                     is FaviconAction.Set ->
                         viewModel.saveFavicon(uiState.selectedBookmark!!.id, faviconAction.filename)

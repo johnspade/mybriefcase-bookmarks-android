@@ -55,13 +55,15 @@ fun FaviconHero(
                 }
 
                 else -> {
-                    BookmarkFavicon(
-                        url = url,
-                        favicon = favicon,
-                        syncRoot = syncRoot,
-                        size = 32.dp,
-                        modifier = Modifier.testTag("favicon_hero_image"),
-                    )
+                    if (favicon != null && syncRoot != null) {
+                        BookmarkFavicon(
+                            url = url,
+                            favicon = favicon,
+                            syncRoot = syncRoot,
+                            size = 32.dp,
+                            modifier = Modifier.testTag("favicon_hero_image"),
+                        )
+                    }
                 }
             }
         }
