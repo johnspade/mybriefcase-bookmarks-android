@@ -170,18 +170,18 @@
 
           gradle-lint = pkgs.writeShellScriptBin "gradle-lint" ''
             set -euo pipefail
-            ./gradlew detekt spotlessCheck lint
+            ./gradlew detekt spotlessCheck lint "$@"
           '';
 
           gradle-test = pkgs.writeShellScriptBin "gradle-test" ''
             set -euo pipefail
             cargo build --manifest-path rust/ffi/Cargo.toml --release
-            ./gradlew testDebugUnitTest
+            ./gradlew testDebugUnitTest -PskipRustBuild=true
           '';
 
           gradle-coverage = pkgs.writeShellScriptBin "gradle-coverage" ''
             set -euo pipefail
-            ./gradlew koverVerify
+            ./gradlew koverVerify -PskipRustBuild=true
           '';
 
           miri = pkgs.writeShellScriptBin "miri" ''
