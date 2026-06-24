@@ -1,5 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks.ui.share
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.jspade.mybriefcase.bookmarks.data.BookmarkRepository
@@ -97,15 +98,19 @@ class ShareReceiverViewModel(
             try {
                 val tree = repository.getFolderNavTree()
                 _uiState.value = _uiState.value.copy(navTree = tree)
-            } catch (_: Exception) {
-                // Non-fatal — folder picker won't be available
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to load folder nav tree", e)
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "ShareReceiverViewModel"
     }
 
     private fun extractUrl(text: String?): String {
         if (text == null) return ""
         val regex = Regex("""https?://[^\s]+""")
-        return regex.find(text)?.value ?: text
+        return regex.find(text)?.value?.trimEnd { it in ")}]>,;:!?.\"'" } ?: text
     }
 }

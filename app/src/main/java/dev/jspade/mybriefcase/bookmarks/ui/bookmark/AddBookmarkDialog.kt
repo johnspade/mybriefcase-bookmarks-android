@@ -1,5 +1,6 @@
 package dev.jspade.mybriefcase.bookmarks.ui.bookmark
 
+import android.util.Patterns
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,15 +40,16 @@ fun AddBookmarkDialog(
     syncRoot: String? = null,
     navTree: FolderNavTreeDto? = null,
     currentFolderId: String? = null,
+    confirmEnabled: Boolean = true,
 ) {
     var url by remember { mutableStateOf(initialUrl) }
     var title by remember { mutableStateOf(initialTitle) }
-    var urlError by remember { mutableStateOf(false) }
+    var urlErrorMessage by remember { mutableStateOf<String?>(null) }
     var selectedFolderId by remember { mutableStateOf(currentFolderId) }
     var folderPickerExpanded by remember { mutableStateOf(false) }
 
-    val showError = urlError || validationError != null
-    val errorText = validationError ?: if (urlError) "URL is required" else null
+    val showError = urlErrorMessage != null || validationError != null
+    val errorText = validationError ?: urlErrorMessage
 
     val folderMap =
         remember(navTree) {
@@ -84,7 +86,7 @@ fun AddBookmarkDialog(
                     value = url,
                     onValueChange = {
                         url = it
-                        urlError = false
+                        urlErrorMessage = null
                         if (validationError != null) onValidationErrorClear()
                     },
                     label = { Text("URL") },
@@ -149,8 +151,11 @@ fun AddBookmarkDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    if (url.isBlank()) {
-                        urlError = true
+                    val trimmedUrl = url.trim()
+                    if (trimmedUrl.isBlank()) {
+                        urlErrorMessage = "URL is required"
+                    } else if (!Patterns.WEB_URL.matcher(trimmedUrl).matches()) {
+                        urlErrorMessage = "Invalid URL format"
                     } else {
                         val folderId =
                             if (selectedFolderId != null && selectedFolderId != currentFolderId) {
@@ -158,9 +163,10 @@ fun AddBookmarkDialog(
                             } else {
                                 null
                             }
-                        onConfirm(url.trim(), title.trim().ifEmpty { url.trim() }, folderId)
+                        onConfirm(trimmedUrl, title.trim().ifEmpty { trimmedUrl }, folderId)
                     }
                 },
+                enabled = confirmEnabled,
                 modifier = Modifier.testTag("add_bookmark_confirm"),
             ) {
                 Text("Add")

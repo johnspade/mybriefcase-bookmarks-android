@@ -28,6 +28,8 @@ import dev.jspade.mybriefcase.bookmarks.ui.folder.FolderViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchScreen
 import dev.jspade.mybriefcase.bookmarks.ui.search.SearchViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.settings.SettingsScreen
+import dev.jspade.mybriefcase.bookmarks.ui.share.ShareReceiverScreen
+import dev.jspade.mybriefcase.bookmarks.ui.share.ShareReceiverViewModel
 import dev.jspade.mybriefcase.bookmarks.ui.theme.MyBriefcaseBookmarksTheme
 import dev.jspade.mybriefcase.bookmarks.ui.wizard.DirectorySlide
 import dev.jspade.mybriefcase.bookmarks.ui.wizard.PermissionSlide
@@ -603,5 +605,47 @@ class ScreenshotTest {
         }
         composeTestRule.waitForIdle()
         composeTestRule.onRoot().captureRoboImage("src/test/snapshots/wizard_permission_dark.png")
+    }
+
+    // --- Share receiver screen ---
+
+    @Test
+    @Config(qualifiers = "+w320dp-h780dp-xxhdpi")
+    fun shareReceiverScreen_light() {
+        val viewModel =
+            ShareReceiverViewModel(
+                repository = fakeRepo,
+                ioDispatcher = testDispatcher,
+                extraText = "https://example.com",
+                extraSubject = "Example Site",
+                syncDirPath = "/tmp/sync",
+            )
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = false, dynamicColor = false) {
+                ShareReceiverScreen(viewModel = viewModel, onFinish = {}, onRedirectToWizard = {})
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/share_receiver_light.png")
+    }
+
+    @Test
+    @Config(qualifiers = "+w320dp-h780dp-xxhdpi")
+    fun shareReceiverScreen_dark() {
+        val viewModel =
+            ShareReceiverViewModel(
+                repository = fakeRepo,
+                ioDispatcher = testDispatcher,
+                extraText = "https://example.com",
+                extraSubject = "Example Site",
+                syncDirPath = "/tmp/sync",
+            )
+        composeTestRule.setContent {
+            MyBriefcaseBookmarksTheme(darkTheme = true, dynamicColor = false) {
+                ShareReceiverScreen(viewModel = viewModel, onFinish = {}, onRedirectToWizard = {})
+            }
+        }
+        composeTestRule.waitForIdle()
+        composeTestRule.onRoot().captureRoboImage("src/test/snapshots/share_receiver_dark.png")
     }
 }
